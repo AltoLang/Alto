@@ -1,0 +1,36 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v5.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v5.0": {
+      "compiler/1.0.0": {
+        "dependencies": {
+          "Accel": "1.0.0"
+        },
+        "runtime": {
+          "compiler.dll": {}
+        }
+      },
+      "Accel/1.0.0": {
+        "runtime": {
+          "Accel.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "compiler/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Accel/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

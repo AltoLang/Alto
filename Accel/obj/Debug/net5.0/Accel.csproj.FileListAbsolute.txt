@@ -1,0 +1,12 @@
+C:\Users\Filip\source\Accell\Accel\bin\Debug\net5.0\Accel.deps.json
+C:\Users\Filip\source\Accell\Accel\bin\Debug\net5.0\Accel.dll
+C:\Users\Filip\source\Accell\Accel\bin\Debug\net5.0\ref\Accel.dll
+C:\Users\Filip\source\Accell\Accel\bin\Debug\net5.0\Accel.pdb
+C:\Users\Filip\source\Accell\Accel\obj\Debug\net5.0\Accel.csprojAssemblyReference.cache
+C:\Users\Filip\source\Accell\Accel\obj\Debug\net5.0\Accel.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Filip\source\Accell\Accel\obj\Debug\net5.0\Accel.AssemblyInfoInputs.cache
+C:\Users\Filip\source\Accell\Accel\obj\Debug\net5.0\Accel.AssemblyInfo.cs
+C:\Users\Filip\source\Accell\Accel\obj\Debug\net5.0\Accel.csproj.CoreCompileInputs.cache
+C:\Users\Filip\source\Accell\Accel\obj\Debug\net5.0\Accel.dll
+C:\Users\Filip\source\Accell\Accel\obj\Debug\net5.0\ref\Accel.dll
+C:\Users\Filip\source\Accell\Accel\obj\Debug\net5.0\Accel.pdb
