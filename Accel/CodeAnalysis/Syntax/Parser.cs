@@ -107,7 +107,6 @@ namespace compiler.CodeAnalysis.Syntax
                 var operatorToken = NextToken();
                 var right = ParseBinaryExpression(precedence);
                 left = new BinaryExpressionSyntax(left, operatorToken, right); 
-                Console.WriteLine(left);
             }
             return left;    
         }
