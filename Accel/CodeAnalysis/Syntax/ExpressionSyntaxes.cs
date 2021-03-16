@@ -97,7 +97,7 @@ namespace compiler.CodeAnalysis.Syntax
 
         public SyntaxToken IdentifierToken { get; }
 
-        public override SyntaxKind Kind => SyntaxKind.NameExpresion;
+        public override SyntaxKind Kind => SyntaxKind.NameExpression;
 
         public override IEnumerable<SyntaxNode> GetChildren()
         {

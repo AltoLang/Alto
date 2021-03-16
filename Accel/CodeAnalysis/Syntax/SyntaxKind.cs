@@ -35,7 +35,7 @@ namespace compiler.CodeAnalysis.Syntax
         BinaryExpression,
         ParenthesizedExpression,
         UnaryExpression,
-        NameExpresion,
+        NameExpression,
         AssignmentExpression,
     }
 }
