@@ -40,7 +40,6 @@ namespace compiler.CodeAnalysis.Syntax
                 case SyntaxKind.PlusToken:
                 case SyntaxKind.BangToken:
                 case SyntaxKind.MinusToken:
-                case SyntaxKind.PercentageToken:
                     return 6;
                 
                 default:

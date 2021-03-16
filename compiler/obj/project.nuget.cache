@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "DLIl4F0BRedZZRoCwPrNdMhvAclr2n7Je0Uql986xUSxEURLt/nP5n/srvsC3/dpkNU+SqT0K0LUlXuH4EuwIQ==",
+  "dgSpecHash": "T4iUxnEkEu0kKiED1kjWsoMGE9D6poeiq4JAwwyhUJZpirTfyts7U4ybQ06XjFrTR6jP2QDv7qSZ8Cs7dYNgOw==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Filip\\source\\Accell\\compiler\\compiler.csproj",
+  "projectFilePath": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

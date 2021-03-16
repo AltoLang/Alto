@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Filip\\source\\Accell\\Accel\\Accel.csproj",
+      "projectUniqueName": "C:\\Users\\Filip\\source\\Accel\\Accel\\Accel.csproj",
       "projectName": "Accel",
-      "projectPath": "C:\\Users\\Filip\\source\\Accell\\Accel\\Accel.csproj",
+      "projectPath": "C:\\Users\\Filip\\source\\Accel\\Accel\\Accel.csproj",
       "packagesPath": "C:\\Users\\Filip\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Filip\\source\\Accell\\Accel\\obj\\",
+      "outputPath": "C:\\Users\\Filip\\source\\Accel\\Accel\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

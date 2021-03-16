@@ -12,7 +12,7 @@ namespace compiler.CodeAnalysis.Syntax
         public Lexer(string text){
             _text = text;
         }
-
+        
         public DiagnosticBag Diagnostics => _diagnostics;
         private char Current => Peek(0);
         private char Lookahead => Peek(1);
@@ -80,10 +80,8 @@ namespace compiler.CodeAnalysis.Syntax
                     return new SyntaxToken(SyntaxKind.OpenParenthesesToken, _position++, "(", null);
                 case ')':
                     return new SyntaxToken(SyntaxKind.CloseParenthesesToken, _position++, ")", null);
-
                 case '%':
                     return new SyntaxToken(SyntaxKind.PercentageToken, _position++, "%", null);
-
                 case '!':
                     return new SyntaxToken(SyntaxKind.BangToken, _position++, "!", null);
                 case '&':
@@ -120,9 +118,7 @@ namespace compiler.CodeAnalysis.Syntax
                     }
                     break;
             }
-
-            _diagnostics.ReportBadCharacter(_position, Current);
-                
+            _diagnostics.ReportBadCharacter(_position, Current);   
             return new SyntaxToken(SyntaxKind.BadToken, _position++, _text.Substring(_position - 1, 1), null);
         }
     }

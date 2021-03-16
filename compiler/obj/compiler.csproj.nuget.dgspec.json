@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Filip\\source\\Accell\\compiler\\compiler.csproj": {}
+    "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Filip\\source\\Accell\\Accel\\Accel.csproj": {
+    "C:\\Users\\Filip\\source\\Accel\\Accel\\Accel.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Filip\\source\\Accell\\Accel\\Accel.csproj",
+        "projectUniqueName": "C:\\Users\\Filip\\source\\Accel\\Accel\\Accel.csproj",
         "projectName": "Accel",
-        "projectPath": "C:\\Users\\Filip\\source\\Accell\\Accel\\Accel.csproj",
+        "projectPath": "C:\\Users\\Filip\\source\\Accel\\Accel\\Accel.csproj",
         "packagesPath": "C:\\Users\\Filip\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Filip\\source\\Accell\\Accel\\obj\\",
+        "outputPath": "C:\\Users\\Filip\\source\\Accel\\Accel\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -61,14 +61,14 @@
         }
       }
     },
-    "C:\\Users\\Filip\\source\\Accell\\compiler\\compiler.csproj": {
+    "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Filip\\source\\Accell\\compiler\\compiler.csproj",
+        "projectUniqueName": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj",
         "projectName": "compiler",
-        "projectPath": "C:\\Users\\Filip\\source\\Accell\\compiler\\compiler.csproj",
+        "projectPath": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj",
         "packagesPath": "C:\\Users\\Filip\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Filip\\source\\Accell\\compiler\\obj\\",
+        "outputPath": "C:\\Users\\Filip\\source\\Accel\\compiler\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -88,8 +88,8 @@
           "net5.0": {
             "targetAlias": "net5.0",
             "projectReferences": {
-              "C:\\Users\\Filip\\source\\Accell\\Accel\\Accel.csproj": {
-                "projectPath": "C:\\Users\\Filip\\source\\Accell\\Accel\\Accel.csproj"
+              "C:\\Users\\Filip\\source\\Accel\\Accel\\Accel.csproj": {
+                "projectPath": "C:\\Users\\Filip\\source\\Accel\\Accel\\Accel.csproj"
               }
             }
           }
