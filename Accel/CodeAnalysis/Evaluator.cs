@@ -4,11 +4,9 @@ using compiler.CodeAnalysis.Binding;
 
 namespace compiler.CodeAnalysis
 {
-
     internal sealed class Evaluator
     {
         private readonly Dictionary<VariableSymbol, object> _variables;
-
         public BoundExpression _root { get; }
 
         public Evaluator(BoundExpression root, Dictionary<VariableSymbol, object> variables)

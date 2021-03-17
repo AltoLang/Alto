@@ -5,7 +5,6 @@ using compiler.CodeAnalysis.Syntax;
 
 namespace compiler.CodeAnalysis.Binding
 {
-
     internal sealed class Binder
     {
         private readonly DiagnosticBag _diagnostics = new DiagnosticBag();
@@ -17,6 +16,7 @@ namespace compiler.CodeAnalysis.Binding
         }
 
         public DiagnosticBag Diagnostics => _diagnostics;
+        
         public BoundExpression BindExpression(ExpressionSyntax syntax)
         {
             switch (syntax.Kind)
@@ -33,7 +33,6 @@ namespace compiler.CodeAnalysis.Binding
                     return BindNameExpression((NameExpressionSyntax)syntax);
                 case SyntaxKind.AssignmentExpression:
                     return BindAssignmentExpression((AssignmentExpresionSyntax)syntax);
-
                 default:
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
