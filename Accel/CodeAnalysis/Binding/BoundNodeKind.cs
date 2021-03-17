@@ -10,6 +10,7 @@ namespace compiler.CodeAnalysis.Binding
         UnaryExpression,
         LiteralExpression,
         VariableExpression,
-        AssignmentExpression
+        AssignmentExpression,
+        BinaryExpression
     }
 }
