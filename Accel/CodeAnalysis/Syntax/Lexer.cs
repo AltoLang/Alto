@@ -133,7 +133,7 @@ namespace compiler.CodeAnalysis.Syntax
             var text = SyntaxFacts.GetText(_kind);
             if (text == null)
                 text = _text.Substring(_start, length);
-
+            
             return new SyntaxToken(_kind, _start, text, _value);
         }
 
