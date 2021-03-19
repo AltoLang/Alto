@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "T4iUxnEkEu0kKiED1kjWsoMGE9D6poeiq4JAwwyhUJZpirTfyts7U4ybQ06XjFrTR6jP2QDv7qSZ8Cs7dYNgOw==",
+  "dgSpecHash": "dIbwzp5/g5KECHbK03MInFyO/3xFrwzrwfWhA3YkulYNpBHBB5WYOwLpmfh12+kHUamNzX6r+2bJESXezp8phQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\Filip\\.nuget\\packages\\system.collections.immutable\\5.0.0\\system.collections.immutable.5.0.0.nupkg.sha512"
+  ],
   "logs": []
 }

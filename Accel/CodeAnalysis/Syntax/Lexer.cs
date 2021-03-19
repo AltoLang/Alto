@@ -106,7 +106,6 @@ namespace compiler.CodeAnalysis.Syntax
                     }
                     break;
 
-
                 default:
 
                     if (char.IsDigit(Current))
