@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using compiler.CodeAnalysis.Syntax;
 using System.Collections.Immutable;
+using compiler.CodeAnalysis;
 
 namespace compiler.CodeAnalysis.Syntax
 {
@@ -78,7 +79,7 @@ namespace compiler.CodeAnalysis.Syntax
                         var identifierToken = NextToken();
                         var operatorToken = NextToken();
                         var right = ParseAssignmentExpression();
-                        return new AssignmentExpresionSyntax(identifierToken, operatorToken, right);
+                        return new AssignmentExpressionSyntax(identifierToken, operatorToken, right);
                 }
 
             }
@@ -143,7 +144,7 @@ namespace compiler.CodeAnalysis.Syntax
             var left = MatchToken(SyntaxKind.OpenParenthesesToken);
             var expression = ParseExpression();
             var right = MatchToken(SyntaxKind.CloseParenthesesToken);
-            return new ParenthesizedExpressionSyntax(left, expression, right);
+            return new compiler.CodeAnalysis.Syntax.ParenthesizedExpressionSyntax(left, expression, right);
         }
 
         private ExpressionSyntax ParseBooleanLiteral()
@@ -157,7 +158,7 @@ namespace compiler.CodeAnalysis.Syntax
         private ExpressionSyntax ParseNameExpression()
         {
             var identifierToken = MatchToken(SyntaxKind.IdentifierToken);
-            return new NameExpressionSyntax(identifierToken);
+            return new compiler.CodeAnalysis.Syntax.NameExpressionSyntax(identifierToken);
         }
 
     }

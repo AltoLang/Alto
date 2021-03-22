@@ -32,7 +32,7 @@ namespace compiler.CodeAnalysis.Binding
                 case SyntaxKind.NameExpression:
                     return BindNameExpression((NameExpressionSyntax)syntax);
                 case SyntaxKind.AssignmentExpression:
-                    return BindAssignmentExpression((AssignmentExpresionSyntax)syntax);
+                    return BindAssignmentExpression((AssignmentExpressionSyntax)syntax);
                 default:
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
@@ -52,7 +52,7 @@ namespace compiler.CodeAnalysis.Binding
             return new BoundVariableExpression(variable);
         }
 
-        private BoundExpression BindAssignmentExpression(AssignmentExpresionSyntax syntax)
+        private BoundExpression BindAssignmentExpression(AssignmentExpressionSyntax syntax)
         {
             var name = syntax.IdentifierToken.Text;
             var boundExpression = BindExpression(syntax.Expression);
