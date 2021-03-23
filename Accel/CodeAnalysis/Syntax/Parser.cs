@@ -68,7 +68,6 @@ namespace compiler.CodeAnalysis.Syntax
             return ParseAssignmentExpression();
         }
 
-
         private ExpressionSyntax ParseAssignmentExpression()
         {
             if (Peek(0).Kind == SyntaxKind.IdentifierToken)

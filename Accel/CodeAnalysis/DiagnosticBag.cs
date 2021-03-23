@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using compiler.CodeAnalysis.Syntax;
+using compiler.CodeAnalysis.Text;
 
 namespace compiler.CodeAnalysis
 {
