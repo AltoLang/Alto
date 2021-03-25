@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using compiler.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Syntax;
 using System.Reflection.Emit;
 
-namespace compiler.CodeAnalysis.Binding
+namespace Accel.CodeAnalysis.Binding
 {
     internal sealed class Binder
     {

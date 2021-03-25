@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using compiler.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Syntax;
 using Xunit;
 
 namespace Accel.Tests.CodeAnalysis.Syntax

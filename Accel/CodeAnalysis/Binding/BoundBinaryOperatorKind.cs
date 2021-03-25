@@ -1,4 +1,4 @@
-namespace compiler.CodeAnalysis.Binding
+namespace Accel.CodeAnalysis.Binding
 {
     internal enum BoundBinaryOperatorKind
     {

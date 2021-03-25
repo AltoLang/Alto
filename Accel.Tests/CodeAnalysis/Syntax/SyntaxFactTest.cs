@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-using compiler.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Syntax;
 
 namespace Accel.Tests.CodeAnalysis.Syntax
 {

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using Xunit;
 using System.Linq;
 
-using compiler.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Syntax;
 using System;
 
 namespace Accel.Tests.CodeAnalysis.Syntax

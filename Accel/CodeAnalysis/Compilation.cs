@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using compiler.CodeAnalysis.Binding;
-using compiler.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Binding;
+using Accel.CodeAnalysis.Syntax;
 using System.Collections.Immutable;
 
-namespace compiler.CodeAnalysis
+namespace Accel.CodeAnalysis
 {
     public sealed class Compilation
     {

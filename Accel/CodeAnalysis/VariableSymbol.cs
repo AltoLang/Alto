@@ -1,6 +1,6 @@
 using System;
 
-namespace compiler.CodeAnalysis
+namespace Accel.CodeAnalysis
 {
     public sealed class VariableSymbol
     {

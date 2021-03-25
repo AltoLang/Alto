@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using compiler.CodeAnalysis;
-using compiler.CodeAnalysis.Syntax;
-using compiler.CodeAnalysis.Text;
+using Accel.CodeAnalysis;
+using Accel.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Text;
 
-namespace compiler
+namespace REPL
 {
     internal static class Program
     {

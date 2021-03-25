@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using compiler.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Syntax;
 using System.Collections.Immutable;
-using compiler.CodeAnalysis.Text;
+using Accel.CodeAnalysis.Text;
 
-namespace compiler.CodeAnalysis.Syntax
+namespace Accel.CodeAnalysis.Syntax
 {
     public sealed class SyntaxTree
     {

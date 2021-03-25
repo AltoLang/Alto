@@ -1,7 +1,7 @@
 using System;
-using compiler.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Syntax;
 
-namespace compiler.CodeAnalysis.Binding
+namespace Accel.CodeAnalysis.Binding
 {
     internal sealed class BoundUnaryOperator
     {

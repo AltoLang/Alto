@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using compiler.CodeAnalysis.Binding;
+using Accel.CodeAnalysis.Binding;
 
-namespace compiler.CodeAnalysis
+namespace Accel.CodeAnalysis
 {
     internal sealed class Evaluator
     {

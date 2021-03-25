@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace compiler.CodeAnalysis.Syntax
+namespace Accel.CodeAnalysis.Syntax
 {
     public static class SyntaxFacts
     {

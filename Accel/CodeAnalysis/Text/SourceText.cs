@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Immutable;
 
-namespace compiler.CodeAnalysis.Text
+namespace Accel.CodeAnalysis.Text
 {
     public sealed class SourceText
     {

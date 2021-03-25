@@ -1,7 +1,7 @@
 using System;
-using compiler.CodeAnalysis.Text;
+using Accel.CodeAnalysis.Text;
 
-namespace compiler.CodeAnalysis
+namespace Accel.CodeAnalysis
 {
     public struct Diagnostic
     {

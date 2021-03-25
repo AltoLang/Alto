@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 
-using compiler.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Syntax;
 
-namespace compiler.CodeAnalysis.Binding
+namespace Accel.CodeAnalysis.Binding
 {
     internal enum BoundUnaryOperatorKind
     {

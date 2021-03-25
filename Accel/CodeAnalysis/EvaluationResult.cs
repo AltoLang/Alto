@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Collections.Immutable;
 
-namespace compiler.CodeAnalysis
+namespace Accel.CodeAnalysis
 {
     public sealed class EvaluationResult
     {

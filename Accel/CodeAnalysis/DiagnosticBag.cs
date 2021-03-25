@@ -1,10 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using compiler.CodeAnalysis.Syntax;
-using compiler.CodeAnalysis.Text;
+using Accel.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Text;
 
-namespace compiler.CodeAnalysis
+namespace Accel.CodeAnalysis
 {
     public sealed class DiagnosticBag : IEnumerable<Diagnostic>
     {

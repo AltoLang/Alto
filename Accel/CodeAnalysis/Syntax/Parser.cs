@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using compiler.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis.Syntax;
 using System.Collections.Immutable;
-using compiler.CodeAnalysis;
-using compiler.CodeAnalysis.Text;
+using Accel.CodeAnalysis;
+using Accel.CodeAnalysis.Text;
 
-namespace compiler.CodeAnalysis.Syntax
+namespace Accel.CodeAnalysis.Syntax
 {
     internal sealed class Parser
     {
@@ -146,7 +146,7 @@ namespace compiler.CodeAnalysis.Syntax
             var left = MatchToken(SyntaxKind.OpenParenthesesToken);
             var expression = ParseExpression();
             var right = MatchToken(SyntaxKind.CloseParenthesesToken);
-            return new compiler.CodeAnalysis.Syntax.ParenthesizedExpressionSyntax(left, expression, right);
+            return new Accel.CodeAnalysis.Syntax.ParenthesizedExpressionSyntax(left, expression, right);
         }
 
         private ExpressionSyntax ParseBooleanLiteral()
@@ -160,7 +160,7 @@ namespace compiler.CodeAnalysis.Syntax
         private ExpressionSyntax ParseNameExpression()
         {
             var identifierToken = MatchToken(SyntaxKind.IdentifierToken);
-            return new compiler.CodeAnalysis.Syntax.NameExpressionSyntax(identifierToken);
+            return new Accel.CodeAnalysis.Syntax.NameExpressionSyntax(identifierToken);
         }
 
     }

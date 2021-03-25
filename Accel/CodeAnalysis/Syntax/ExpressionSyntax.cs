@@ -1,4 +1,4 @@
-namespace compiler.CodeAnalysis.Syntax
+namespace Accel.CodeAnalysis.Syntax
 {
     public abstract class ExpressionSyntax : SyntaxNode
     {

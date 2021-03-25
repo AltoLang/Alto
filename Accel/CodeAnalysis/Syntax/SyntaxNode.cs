@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using compiler.CodeAnalysis.Text;
+using Accel.CodeAnalysis.Text;
 
-namespace compiler.CodeAnalysis.Syntax
+namespace Accel.CodeAnalysis.Syntax
 {
     public abstract class SyntaxNode
     {

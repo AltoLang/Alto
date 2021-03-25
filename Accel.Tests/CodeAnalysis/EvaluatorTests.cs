@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 
-using compiler.CodeAnalysis.Syntax;
-using compiler.CodeAnalysis;
+using Accel.CodeAnalysis.Syntax;
+using Accel.CodeAnalysis;
 
 namespace Accel.Tests.CodeAnalysis
 {
