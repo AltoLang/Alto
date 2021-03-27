@@ -52,7 +52,7 @@ namespace Accel.CodeAnalysis.Text
             var position = 0;
             var lineStart = 0;
 
-            while (position < text.Length)
+            while (position < text.Length)  
             { 
                 var lineBreakWidth = GetLineBreakWidth(text, position);
                 if (lineBreakWidth == 0)

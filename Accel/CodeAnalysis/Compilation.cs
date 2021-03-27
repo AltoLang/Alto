@@ -19,7 +19,7 @@ namespace Accel.CodeAnalysis
         public EvaluationResult Evaluate(Dictionary<VariableSymbol, object> variables)
         {
             var binder = new Binder(variables);
-            var boundExpression = binder.BindExpression(Syntax.Root);
+            var boundExpression = binder.BindExpression(Syntax.Root.Expression);
 
             var diagnostics = Syntax.Diagnostics.Concat(binder.Diagnostics).ToArray();
             if (diagnostics.Any())

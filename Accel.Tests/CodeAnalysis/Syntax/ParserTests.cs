@@ -22,7 +22,7 @@ namespace Accel.Tests.CodeAnalysis.Syntax
 
             if (op1Precedence >= op2Precedence)
             {
-                using (var e = new AssertingEnumerator(expression))
+                using (var e = new AssertingEnumerator(expression.Expression))
                 {
                     e.AssertNode(SyntaxKind.BinaryExpression);
                     e.AssertNode(SyntaxKind.BinaryExpression);
@@ -38,7 +38,7 @@ namespace Accel.Tests.CodeAnalysis.Syntax
             } 
             else
             {
-                using (var e = new AssertingEnumerator(expression))
+                using (var e = new AssertingEnumerator(expression.Expression))
                 {
                     e.AssertNode(SyntaxKind.BinaryExpression);
                     e.AssertNode(SyntaxKind.NameExpression);
@@ -70,7 +70,7 @@ namespace Accel.Tests.CodeAnalysis.Syntax
 
             if (unaryPrecedence <= binaryPrecedence)
             {
-                using (var e = new AssertingEnumerator(expression))
+                using (var e = new AssertingEnumerator(expression.Expression))
                 {
                     e.AssertNode(SyntaxKind.BinaryExpression);
                     e.AssertNode(SyntaxKind.UnaryExpression);
@@ -84,7 +84,7 @@ namespace Accel.Tests.CodeAnalysis.Syntax
             } 
             else
             {
-                using (var e = new AssertingEnumerator(expression))
+                using (var e = new AssertingEnumerator(expression.Expression))
                 {
                     e.AssertNode(SyntaxKind.UnaryExpression);
                     e.AssertToken(unaryKind, unaryText);

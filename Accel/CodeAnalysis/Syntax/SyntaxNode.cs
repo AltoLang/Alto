@@ -64,7 +64,7 @@ namespace Accel.CodeAnalysis.Syntax
             writer.Write(marker);
 
             if (isToConsole)
-                Console.ForegroundColor = node is SyntaxToken ? ConsoleColor.Black : ConsoleColor.Cyan;
+                Console.ForegroundColor = node is SyntaxToken ? ConsoleColor.Blue : ConsoleColor.Cyan;
             
             writer.Write(node.Kind);
 

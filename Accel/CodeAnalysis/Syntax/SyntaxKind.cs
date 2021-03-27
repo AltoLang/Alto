@@ -30,6 +30,9 @@ namespace Accel.CodeAnalysis.Syntax
         FalseKeyword,
         TrueKeyword,
 
+        //Nodes
+        CompilationUnit,
+
         //Expression Tokens     
         LiteralExpression,
         BinaryExpression,
