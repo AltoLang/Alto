@@ -8,19 +8,19 @@
     ".NETCoreApp,Version=v5.0": {
       "compiler/1.0.0": {
         "dependencies": {
-          "Accel": "1.0.0"
+          "Alto": "1.0.0"
         },
         "runtime": {
           "compiler.dll": {}
         }
       },
       "System.Collections.Immutable/5.0.0": {},
-      "Accel/1.0.0": {
+      "Alto/1.0.0": {
         "dependencies": {
           "System.Collections.Immutable": "5.0.0"
         },
         "runtime": {
-          "Accel.dll": {}
+          "Alto.dll": {}
         }
       }
     }
@@ -38,7 +38,7 @@
       "path": "system.collections.immutable/5.0.0",
       "hashPath": "system.collections.immutable.5.0.0.nupkg.sha512"
     },
-    "Accel/1.0.0": {
+    "Alto/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

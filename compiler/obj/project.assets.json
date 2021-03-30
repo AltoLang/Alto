@@ -11,17 +11,17 @@
           "lib/netstandard2.0/System.Collections.Immutable.dll": {}
         }
       },
-      "Accel/1.0.0": {
+      "Alto/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v5.0",
         "dependencies": {
           "System.Collections.Immutable": "5.0.0"
         },
         "compile": {
-          "bin/placeholder/Accel.dll": {}
+          "bin/placeholder/Alto.dll": {}
         },
         "runtime": {
-          "bin/placeholder/Accel.dll": {}
+          "bin/placeholder/Alto.dll": {}
         }
       }
     }
@@ -53,15 +53,15 @@
         "version.txt"
       ]
     },
-    "Accel/1.0.0": {
+    "Alto/1.0.0": {
       "type": "project",
-      "path": "../Accel/Accel.csproj",
-      "msbuildProject": "../Accel/Accel.csproj"
+      "path": "../Alto/Alto.csproj",
+      "msbuildProject": "../Alto/Alto.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net5.0": [
-      "Accel >= 1.0.0"
+      "Alto >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -95,8 +95,8 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "projectReferences": {
-            "C:\\Users\\Filip\\source\\Accel\\Accel\\Accel.csproj": {
-              "projectPath": "C:\\Users\\Filip\\source\\Accel\\Accel\\Accel.csproj"
+            "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj": {
+              "projectPath": "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj"
             }
           }
         }

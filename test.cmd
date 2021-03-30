@@ -1,6 +1,6 @@
 @echo off
 
-cd Accel.Tests
+cd Alto.Tests
 dotnet build 
 cd ..
-dotnet test .\Accel.Tests\Accel.Tests.csproj
+dotnet test .\Alto.Tests\Alto.Tests.csproj

@@ -1,10 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Accel.Tests",
-    "\\Accel.Tests\\CodeAnalysis",
-    "\\Accel.Tests\\CodeAnalysis\\Syntax"
+    "\\Alto.Tests",
+    "\\Alto.Tests\\CodeAnalysis",
+    "\\Alto.Tests\\CodeAnalysis\\Syntax"
   ],
-  "SelectedNode": "\\Accel.Tests\\CodeAnalysis\\Syntax\\ParserTests.cs",
+  "SelectedNode": "\\Alto.Tests\\CodeAnalysis\\Syntax\\ParserTests.cs",
   "PreviewInSolutionExplorer": false
 }

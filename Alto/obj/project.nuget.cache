@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "bS28xj8mGeEThfCXhvdT+q4wmZjWtLEympeTLcsZeHC8dzsGzysxvz6y75ZU/zdq9GXXEO7hpjJ/QxlcYkBYVw==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Filip\\.nuget\\packages\\system.collections.immutable\\5.0.0\\system.collections.immutable.5.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}
