@@ -65,5 +65,17 @@ namespace Accel.CodeAnalysis
             var message = $"Binary operator {text} is not defined for type {leftType} and {rightType}";
             Report(span, message);
         }
+
+        public void ReportVariableAlreadyDeclared(TextSpan span, string name)
+        {
+            var message = $"Variable '{name}' is already declared in the current scope.";
+            Report(span, message);
+        }
+
+        internal void VariableCannotConvert(TextSpan span, Type fromType, Type toType)
+        {
+            var message = $"Cannot convert type '{fromType} to type '{toType}'.";
+            Report(span, message);
+        }
     }
 }

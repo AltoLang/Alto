@@ -15,6 +15,7 @@ namespace REPL
             var showTree = false;
             var variables = new Dictionary<VariableSymbol, object>();
             var textBuilder = new StringBuilder();
+            Compilation previous = null;
 
             while (true)
             {
@@ -47,6 +48,11 @@ namespace REPL
                         Console.Clear();
                         continue;
                     }
+                    else if (input.ToLower() == "#reset")
+                    {
+                        previous = null;
+                        continue;
+                    }
                 }
 
                 textBuilder.AppendLine(input);
@@ -56,8 +62,17 @@ namespace REPL
 
                 if (!isBlank && syntaxTree.Diagnostics.Any())
                     continue;
+                
+                Compilation compilation;
+                if (previous == null)
+                {
+                    compilation = new Compilation(syntaxTree);
+                } 
+                else
+                {
+                    compilation = previous.ContinueWith(syntaxTree);
+                }
 
-                var compilation = new Compilation(syntaxTree);
                 var result = compilation.Evaluate(variables);
 
                 var diagnostics = result.Diagnostics;
@@ -69,11 +84,13 @@ namespace REPL
                     Console.ResetColor();
                 }
 
-                if (!diagnostics.Any())
+                if (!result.Diagnostics.Any())
                 {
                     Console.ForegroundColor = ConsoleColor.Magenta;
                     Console.WriteLine(result.Value);
                     Console.ResetColor();
+
+                    previous = compilation;
                 }
                 else
                 {

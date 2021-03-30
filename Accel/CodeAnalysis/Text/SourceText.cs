@@ -81,7 +81,7 @@ namespace Accel.CodeAnalysis.Text
             var line = new TextLine(sourceText, lineStart, lineLength, lineLengthIncludingLineBreak);
             result.Add(line);
         }
-
+        
         private static int GetLineBreakWidth(string text, int i)
         {
             var c = text[i];
