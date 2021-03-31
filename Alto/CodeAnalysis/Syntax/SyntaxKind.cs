@@ -19,6 +19,8 @@ namespace Alto.CodeAnalysis.Syntax
         PercentageToken,
         OpenParenthesesToken,
         CloseParenthesesToken,  
+        OpenBraceToken,
+        CloseBraceToken,
         BangToken,
         AmpersandAmpersandToken,
         PipePipeToken,
@@ -29,6 +31,8 @@ namespace Alto.CodeAnalysis.Syntax
         //Keywords
         FalseKeyword,
         TrueKeyword,
+        VarKeyword,
+        LetKeyword,
 
         //Nodes
         CompilationUnit,
@@ -40,5 +44,10 @@ namespace Alto.CodeAnalysis.Syntax
         UnaryExpression,
         NameExpression,
         AssignmentExpression,
+
+        //Statements
+        BlockStatement,
+        ExpressionStatement,
+        VariableDeclaration,
     }
 }

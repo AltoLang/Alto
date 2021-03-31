@@ -21,7 +21,7 @@ namespace Alto.CodeAnalysis.Binding
         {
             var parentScope = CreateParentScope(previous);
             var binder = new Binder(parentScope);
-            var expression = binder.BindExpression(syntax.Expression);
+            var expression = binder.BindStatement(syntax.Statement);
             var variables = binder._scope.GetDeclaredVariables();
             var diagnostics = binder.Diagnostics.ToImmutableArray();
             
@@ -56,8 +56,58 @@ namespace Alto.CodeAnalysis.Binding
         }
 
         public DiagnosticBag Diagnostics => _diagnostics;
+
+        private BoundStatement BindStatement(StatementSyntax syntax)
+        {
+            switch (syntax.Kind)
+            {
+                case SyntaxKind.BlockStatement:
+                    return BindBlockStatement((BlockStatementSyntax)syntax);
+                case SyntaxKind.ExpressionStatement:
+                    return BindExpressionStatement((ExpressionStatementSyntax)syntax);
+                case SyntaxKind.VariableDeclaration:
+                    return BindVariableDeclaration((VariableDeclarationSyntax)syntax);
+                default:
+                    throw new Exception($"Unexpected syntax {syntax.Kind}");
+            }
+        }
+
+        private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax syntax)
+        {
+            var name = syntax.Identifier.Text;
+            var isReadOnly = syntax.Keyword.Kind == SyntaxKind.LetKeyword;
+            var initializer = BindExpression(syntax.Initializer);
+            var variable = new VariableSymbol(name, isReadOnly, initializer.Type);
+
+            if (!_scope.TryDeclare(variable))
+                _diagnostics.ReportVariableAlreadyDeclared(syntax.Identifier.Span, name);
+
+            return new BoundVariableDeclaration(variable, initializer);
+        }
+
+        private BoundStatement BindBlockStatement(BlockStatementSyntax syntax)
+        {
+            var statements = ImmutableArray.CreateBuilder<BoundStatement>();
+            _scope = new BoundScope(_scope);
+
+            foreach (var statementSyntax in syntax.Statements)
+            {
+                var statement = BindStatement(statementSyntax);
+                statements.Add(statement);
+            }
+
+            _scope = _scope.Parent;
+
+            return new BoundBlockStatement(statements.ToImmutable());
+        }
         
-        public BoundExpression BindExpression(ExpressionSyntax syntax)
+        private BoundStatement BindExpressionStatement(ExpressionStatementSyntax syntax)
+        {
+            var expression = BindExpression(syntax.Expression);
+            return new BoundExpressionStatement(expression);
+        }
+
+        private BoundExpression BindExpression(ExpressionSyntax syntax)
         {
             switch (syntax.Kind)
             {
@@ -77,6 +127,7 @@ namespace Alto.CodeAnalysis.Binding
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
         }
+
         private BoundExpression BindNameExpression(NameExpressionSyntax syntax)
         {
             var name = syntax.IdentifierToken.Text;
@@ -97,8 +148,13 @@ namespace Alto.CodeAnalysis.Binding
 
             if (!_scope.TryLookup(name, out var variable))
             {
-                variable = new VariableSymbol(name, boundExpression.Type);
-                _scope.TryDeclare(variable);
+                _diagnostics.ReportUndefinedName(syntax.IdentifierToken.Span, name);
+                return boundExpression;
+            }
+
+            if (variable.IsReadOnly)
+            {
+                _diagnostics.ReportCannotAssign(syntax.AssignmentToken.Span, name);
             }
 
             if (boundExpression.Type != variable.Type)
