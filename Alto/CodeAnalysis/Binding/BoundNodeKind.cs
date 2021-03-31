@@ -7,10 +7,15 @@ namespace Alto.CodeAnalysis.Binding
 {
     internal enum BoundNodeKind
     {
+        // Expressions
         UnaryExpression,
         LiteralExpression,
         VariableExpression,
         AssignmentExpression,
-        BinaryExpression
+        BinaryExpression,
+
+        // Statements
+        BlockStatement,
+        ExpressionStatement
     }
 }

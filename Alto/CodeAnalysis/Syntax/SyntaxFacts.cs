@@ -78,6 +78,10 @@ namespace Alto.CodeAnalysis.Syntax
                     return "(";
                 case SyntaxKind.CloseParenthesesToken: 
                     return ")";
+                case SyntaxKind.OpenBraceToken: 
+                    return "{";
+                case SyntaxKind.CloseBraceToken: 
+                    return "}";
                 case SyntaxKind.BangToken: 
                     return "!";
                 case SyntaxKind.AmpersandAmpersandToken: 

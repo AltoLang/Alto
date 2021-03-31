@@ -65,6 +65,16 @@ namespace Alto.CodeAnalysis.Syntax
                     _kind = SyntaxKind.CloseParenthesesToken;
                     _position++;
                     break;
+
+                case '{':
+                    _kind = SyntaxKind.OpenBraceToken;
+                    _position++;
+                    break;
+                case '}':
+                    _kind = SyntaxKind.CloseBraceToken;
+                    _position++;
+                    break;
+
                 case '%':
                     _kind = SyntaxKind.PercentageToken;
                     _position++;
