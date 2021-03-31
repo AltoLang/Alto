@@ -77,5 +77,11 @@ namespace Alto.CodeAnalysis
             var message = $"Cannot convert type '{fromType} to type '{toType}'.";
             Report(span, message);
         }
+
+        internal void ReportCannotAssign(TextSpan span, string name)
+        {
+            var message = $"Cannot assign to variable '{name}'.";
+            Report(span, message);
+        }
     }
 }

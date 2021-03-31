@@ -31,6 +31,8 @@ namespace Alto.CodeAnalysis.Syntax
         //Keywords
         FalseKeyword,
         TrueKeyword,
+        VarKeyword,
+        LetKeyword,
 
         //Nodes
         CompilationUnit,
@@ -46,5 +48,6 @@ namespace Alto.CodeAnalysis.Syntax
         //Statements
         BlockStatement,
         ExpressionStatement,
+        VariableDeclaration,
     }
 }
