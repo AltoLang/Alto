@@ -31,7 +31,7 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("154 ~= 6541", true)]
         [InlineData("1 == 1 && true", true)]
         [InlineData("true || 9873 == 8574", true)]
-        [InlineData("(a = 10) * 20", 200)]
+        [InlineData("{ var a = 0 (a = 10) * (a * 2) }", 200)]
         public void SyntaxFact_GetText_RoundTrips(string text, object expectedValue)
         {
             var syntaxTree = SyntaxTree.Parse(text);
