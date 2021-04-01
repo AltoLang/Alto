@@ -32,6 +32,18 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("154 ~= 6541", true)]
         [InlineData("1 == 1 && true", true)]
         [InlineData("true || 9873 == 8574", true)]
+        [InlineData("1 > 0", true)]
+        [InlineData("1 >= 1", true)]
+        [InlineData("1 <= 1", true)]
+        [InlineData("8 <= 80", true)]
+        [InlineData("2 < 80", true)]
+        [InlineData("50 <= 50", true)]
+        [InlineData("1 < 0", false)]
+        [InlineData("1 >= 11", false)]
+        [InlineData("15 <= 1", false)]
+        [InlineData("80056 <= 80", false)]
+        [InlineData("2 > 80", false)]
+        [InlineData("125 <= 50", false)]
         [InlineData("{ var a = 0 (a = 10) * (a * 2) }", 200)]
         public void Evaluator_Computes_CorrectValues(string text, object expectedValue)
         {
