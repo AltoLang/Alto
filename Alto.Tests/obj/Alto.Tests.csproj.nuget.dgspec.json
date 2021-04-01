@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Filip\\source\\Accel\\Alto.Tests\\Alto.Tests.csproj": {}
+    "C:\\Users\\Filip\\source\\Alto\\Alto.Tests\\Alto.Tests.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Filip\\source\\Accel\\Alto.Tests\\Alto.Tests.csproj": {
+    "C:\\Users\\Filip\\source\\Alto\\Alto.Tests\\Alto.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Filip\\source\\Accel\\Alto.Tests\\Alto.Tests.csproj",
+        "projectUniqueName": "C:\\Users\\Filip\\source\\Alto\\Alto.Tests\\Alto.Tests.csproj",
         "projectName": "Alto.Tests",
-        "projectPath": "C:\\Users\\Filip\\source\\Accel\\Alto.Tests\\Alto.Tests.csproj",
+        "projectPath": "C:\\Users\\Filip\\source\\Alto\\Alto.Tests\\Alto.Tests.csproj",
         "packagesPath": "C:\\Users\\Filip\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Filip\\source\\Accel\\Alto.Tests\\obj\\",
+        "outputPath": "C:\\Users\\Filip\\source\\Alto\\Alto.Tests\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -31,11 +31,11 @@
           "net5.0": {
             "targetAlias": "net5.0",
             "projectReferences": {
-              "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj": {
-                "projectPath": "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj"
+              "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj": {
+                "projectPath": "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj"
               },
-              "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj": {
-                "projectPath": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj"
+              "C:\\Users\\Filip\\source\\Alto\\compiler\\compiler.csproj": {
+                "projectPath": "C:\\Users\\Filip\\source\\Alto\\compiler\\compiler.csproj"
               }
             }
           }
@@ -90,14 +90,14 @@
         }
       }
     },
-    "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj": {
+    "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj",
+        "projectUniqueName": "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj",
         "projectName": "Alto",
-        "projectPath": "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj",
+        "projectPath": "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj",
         "packagesPath": "C:\\Users\\Filip\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Filip\\source\\Accel\\Alto\\obj\\",
+        "outputPath": "C:\\Users\\Filip\\source\\Alto\\Alto\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -153,14 +153,14 @@
         }
       }
     },
-    "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj": {
+    "C:\\Users\\Filip\\source\\Alto\\compiler\\compiler.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj",
+        "projectUniqueName": "C:\\Users\\Filip\\source\\Alto\\compiler\\compiler.csproj",
         "projectName": "compiler",
-        "projectPath": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj",
+        "projectPath": "C:\\Users\\Filip\\source\\Alto\\compiler\\compiler.csproj",
         "packagesPath": "C:\\Users\\Filip\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Filip\\source\\Accel\\compiler\\obj\\",
+        "outputPath": "C:\\Users\\Filip\\source\\Alto\\compiler\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -180,8 +180,8 @@
           "net5.0": {
             "targetAlias": "net5.0",
             "projectReferences": {
-              "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj": {
-                "projectPath": "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj"
+              "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj": {
+                "projectPath": "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj"
               }
             }
           }

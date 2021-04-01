@@ -71,11 +71,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj",
+      "projectUniqueName": "C:\\Users\\Filip\\source\\Alto\\compiler\\compiler.csproj",
       "projectName": "compiler",
-      "projectPath": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj",
+      "projectPath": "C:\\Users\\Filip\\source\\Alto\\compiler\\compiler.csproj",
       "packagesPath": "C:\\Users\\Filip\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Filip\\source\\Accel\\compiler\\obj\\",
+      "outputPath": "C:\\Users\\Filip\\source\\Alto\\compiler\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -95,8 +95,8 @@
         "net5.0": {
           "targetAlias": "net5.0",
           "projectReferences": {
-            "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj": {
-              "projectPath": "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj"
+            "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj": {
+              "projectPath": "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj"
             }
           }
         }
