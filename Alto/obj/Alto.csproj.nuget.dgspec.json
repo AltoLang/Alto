@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj": {}
+    "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj": {
+    "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj",
+        "projectUniqueName": "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj",
         "projectName": "Alto",
-        "projectPath": "C:\\Users\\Filip\\source\\Accel\\Alto\\Alto.csproj",
+        "projectPath": "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj",
         "packagesPath": "C:\\Users\\Filip\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Filip\\source\\Accel\\Alto\\obj\\",
+        "outputPath": "C:\\Users\\Filip\\source\\Alto\\Alto\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"

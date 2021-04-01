@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "yYPos/0O9/qNmEsaLcaoSXSxkfQ7kV36UbGKKsWs5RzUwKd66a1vvz6RQ8H1egdkIzPifGShpgWfqf1w/wWyvg==",
+  "dgSpecHash": "NOK8DF2F+oy14Zjkr9Y8T8B0RkWxYqFH6OLW9gxy7Zk80+j8Fca4oJzVerxeNU54QsjGv21z96pV9aOGK9sCgQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\Filip\\source\\Accel\\Alto.Tests\\Alto.Tests.csproj",
+  "projectFilePath": "C:\\Users\\Filip\\source\\Alto\\Alto.Tests\\Alto.Tests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Filip\\.nuget\\packages\\coverlet.collector\\1.3.0\\coverlet.collector.1.3.0.nupkg.sha512",
     "C:\\Users\\Filip\\.nuget\\packages\\microsoft.codecoverage\\16.7.1\\microsoft.codecoverage.16.7.1.nupkg.sha512",

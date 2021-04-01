@@ -159,7 +159,7 @@ namespace Alto.CodeAnalysis.Binding
 
             if (boundExpression.Type != variable.Type)
             {
-                Diagnostics.VariableCannotConvert(syntax.Expression.Span, boundExpression.Type, variable.Type);
+                Diagnostics.VariableCannotConvert(syntax.Expression.Span, variable.Type, boundExpression.Type);
                 return boundExpression;
             }
 
