@@ -120,6 +120,15 @@ namespace Alto.CodeAnalysis
                     return Equals(left, right);
                 case BoundBinaryOperatorKind.NotEquals:
                     return !Equals(left, right);
+                case BoundBinaryOperatorKind.LesserThan:
+                    return (int)left < (int)right;
+                case BoundBinaryOperatorKind.LesserOrEqualTo:
+                    return (int)left <= (int)right;
+                case BoundBinaryOperatorKind.GreaterThan:
+                    return (int)left > (int)right;
+                case BoundBinaryOperatorKind.GreaterOrEqualTo:
+                    return (int)left >= (int)right;
+                
                 default:
                     throw new Exception($"Unexpected binary operator {b.Op.Kind}");
             }

@@ -109,6 +109,30 @@ namespace Alto.CodeAnalysis.Syntax
                         _kind = SyntaxKind.EqualsEqualsToken;
                     }
                     break;
+                case '<':
+                    if (Lookahead != '=')
+                    {
+                        _position++;
+                        _kind = SyntaxKind.LesserToken;
+                    }
+                    else
+                    {
+                        _position += 2;
+                        _kind = SyntaxKind.LesserOrEqualsToken;
+                    }
+                    break;
+                case '>':
+                    if (Lookahead != '=')
+                    {
+                        _position++;
+                        _kind = SyntaxKind.GreaterToken;
+                    }
+                    else
+                    {
+                        _position += 2;
+                        _kind = SyntaxKind.GreaterOrEqualsToken;
+                    }
+                    break;
                 case '~':
                     if (Lookahead == '=')
                     {

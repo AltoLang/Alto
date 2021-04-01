@@ -11,5 +11,9 @@ namespace Alto.CodeAnalysis.Binding
         LogicalOR,
         Equals,
         NotEquals,
+        LesserThan,
+        LesserOrEqualTo,
+        GreaterThan,
+        GreaterOrEqualTo,
     }
 }

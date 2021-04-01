@@ -21,6 +21,10 @@ namespace Alto.CodeAnalysis.Syntax
 
                 case SyntaxKind.EqualsEqualsToken:
                 case SyntaxKind.BangEqualsToken:
+                case SyntaxKind.GreaterOrEqualsToken:
+                case SyntaxKind.GreaterToken:
+                case SyntaxKind.LesserOrEqualsToken:
+                case SyntaxKind.LesserToken:
                     return 3;
 
                 case SyntaxKind.AmpersandAmpersandToken:
@@ -96,6 +100,14 @@ namespace Alto.CodeAnalysis.Syntax
                     return "==";
                 case SyntaxKind.BangEqualsToken: 
                     return "~=";
+                case SyntaxKind.LesserToken:
+                    return "<";
+                case SyntaxKind.LesserOrEqualsToken:
+                    return "<=";
+                case SyntaxKind.GreaterOrEqualsToken:
+                    return ">=";
+                case SyntaxKind.GreaterToken:
+                    return ">";
                 case SyntaxKind.EqualsToken: 
                     return "=";
                 case SyntaxKind.FalseKeyword:

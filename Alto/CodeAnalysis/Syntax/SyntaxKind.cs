@@ -27,6 +27,10 @@ namespace Alto.CodeAnalysis.Syntax
         EqualsEqualsToken,
         BangEqualsToken,
         EqualsToken,
+        LesserOrEqualsToken,
+        LesserToken,
+        GreaterToken,
+        GreaterOrEqualsToken,
 
         //Keywords
         FalseKeyword,
