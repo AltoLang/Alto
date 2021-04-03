@@ -121,7 +121,7 @@ namespace Alto.Tests.CodeAnalysis.Syntax
             if (t1Kind == SyntaxKind.IdentifierToken && t2Kind == SyntaxKind.IdentifierToken)
                 return true;
 
-             if (t1IsKeyword && t2IsKeyword)
+            if (t1IsKeyword && t2IsKeyword)
                 return true;
 
             if (t1IsKeyword && t2Kind == SyntaxKind.IdentifierToken)
@@ -143,6 +143,18 @@ namespace Alto.Tests.CodeAnalysis.Syntax
                 return true;
 
             if (t1Kind == SyntaxKind.EqualsToken && t2Kind == SyntaxKind.EqualsEqualsToken)
+                return true;
+
+            if (t1Kind == SyntaxKind.LesserToken && t2Kind == SyntaxKind.EqualsToken)
+                return true;
+
+            if (t1Kind == SyntaxKind.LesserToken && t2Kind == SyntaxKind.EqualsEqualsToken)
+                return true;
+
+            if (t1Kind == SyntaxKind.GreaterToken && t2Kind == SyntaxKind.EqualsToken)
+                return true;
+
+            if (t1Kind == SyntaxKind.GreaterToken && t2Kind == SyntaxKind.EqualsEqualsToken)
                 return true;
             
             return false;

@@ -27,15 +27,22 @@ namespace Alto.CodeAnalysis.Syntax
         EqualsEqualsToken,
         BangEqualsToken,
         EqualsToken,
+        LesserOrEqualsToken,
+        LesserToken,
+        GreaterToken,
+        GreaterOrEqualsToken,
 
         //Keywords
         FalseKeyword,
         TrueKeyword,
         VarKeyword,
         LetKeyword,
+        IfKeyword,
+        ElseKeyword,
 
         //Nodes
         CompilationUnit,
+        ElseClause,
 
         //Expression Tokens     
         LiteralExpression,
@@ -49,5 +56,6 @@ namespace Alto.CodeAnalysis.Syntax
         BlockStatement,
         ExpressionStatement,
         VariableDeclaration,
+        IfStatement,
     }
 }

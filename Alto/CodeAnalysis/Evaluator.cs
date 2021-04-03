@@ -35,9 +35,22 @@ namespace Alto.CodeAnalysis
                 case BoundNodeKind.VariableDeclaration:
                     EvaluateVariableDeclaration((BoundVariableDeclaration)node);
                     break;
+                case BoundNodeKind.IfStatement:
+                    EvaluateIfStatement((BoundIfStatement)node);
+                    break;
                 default:
                     throw new Exception($"Unexpected node {node.Kind}");
             }
+        }
+
+        private void EvaluateIfStatement(BoundIfStatement node)
+        {
+            var condition = (bool)EvaluateExpression(node.Condition);
+
+            if (condition)
+                EvaluateStatement(node.ThenStatement);
+            else if (node.ElseStatement != null)
+                EvaluateStatement(node.ElseStatement);
         }
 
         private void EvaluateVariableDeclaration(BoundVariableDeclaration node)
@@ -45,7 +58,7 @@ namespace Alto.CodeAnalysis
             var value = EvaluateExpression(node.Initializer);
             _variables[node.Variable] = value;
             _lastValue = value;
-        }
+        }   
 
         private void EvaluateExpressionStatement(BoundExpressionStatement node)
         {
@@ -120,6 +133,15 @@ namespace Alto.CodeAnalysis
                     return Equals(left, right);
                 case BoundBinaryOperatorKind.NotEquals:
                     return !Equals(left, right);
+                case BoundBinaryOperatorKind.LesserThan:
+                    return (int)left < (int)right;
+                case BoundBinaryOperatorKind.LesserOrEqualTo:
+                    return (int)left <= (int)right;
+                case BoundBinaryOperatorKind.GreaterThan:
+                    return (int)left > (int)right;
+                case BoundBinaryOperatorKind.GreaterOrEqualTo:
+                    return (int)left >= (int)right;
+                
                 default:
                     throw new Exception($"Unexpected binary operator {b.Op.Kind}");
             }

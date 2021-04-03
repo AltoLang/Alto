@@ -17,6 +17,7 @@ namespace Alto.CodeAnalysis.Binding
         // Statements
         BlockStatement,
         ExpressionStatement,
-        VariableDeclaration
+        VariableDeclaration,
+        IfStatement
     }
 }
