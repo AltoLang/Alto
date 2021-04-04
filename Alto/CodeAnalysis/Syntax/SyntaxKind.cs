@@ -59,5 +59,8 @@ namespace Alto.CodeAnalysis.Syntax
         VariableDeclaration,
         IfStatement,
         WhileStatement,
+        //Temp
+        PrintKeyword,
+        PrintStatement,
     }
 }

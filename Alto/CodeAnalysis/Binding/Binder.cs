@@ -71,9 +71,19 @@ namespace Alto.CodeAnalysis.Binding
                     return BindIfStatement((IfStatementSyntax)syntax);
                 case SyntaxKind.WhileStatement:
                     return BindWhileStatement((WhileStatementSyntax)syntax);
+                case SyntaxKind.PrintStatement:
+                    //Temp
+                    return BindPrintStatement((PrintStatementSyntax)syntax);
                 default:
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
+        }
+
+        private BoundStatement BindPrintStatement(PrintStatementSyntax syntax)
+        {
+            //TEMP
+            var print = BindExpression(syntax.Print);
+            return new BoundPrintStatement((BoundExpression)print);
         }
 
         private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax syntax)
@@ -103,7 +113,7 @@ namespace Alto.CodeAnalysis.Binding
             var body = BindStatement(syntax.Body);
             return new BoundWhileStatement(condition, body);
         }
-
+        
         private BoundStatement BindBlockStatement(BlockStatementSyntax syntax)
         {
             var statements = ImmutableArray.CreateBuilder<BoundStatement>();
@@ -159,7 +169,6 @@ namespace Alto.CodeAnalysis.Binding
         private BoundExpression BindNameExpression(NameExpressionSyntax syntax)
         {
             var name = syntax.IdentifierToken.Text;
-
             if (_scope.TryLookup(name, out var variable) == false)
             {
                 _diagnostics.ReportUndefinedName(syntax.IdentifierToken.Span, name);
