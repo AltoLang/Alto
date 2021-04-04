@@ -12,4 +12,5 @@ namespace Alto.CodeAnalysis.Binding
         public BoundExpression Condition { get; }
         public BoundStatement Body { get; }
     }
-}
+} 
+

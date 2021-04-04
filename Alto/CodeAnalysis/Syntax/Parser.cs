@@ -81,9 +81,20 @@ namespace Alto.CodeAnalysis.Syntax
                     return ParseIfStatement();
                 case SyntaxKind.WhileKeyword:
                     return ParseWhileStatement();
+                case SyntaxKind.PrintKeyword:
+                    //Temp
+                    return ParsePrintStatement();
                 default:
                     return ParseExpressionStatement();
             }
+        }
+
+        private StatementSyntax ParsePrintStatement()
+        {
+            // TEMP
+            var keyword = MatchToken(SyntaxKind.PrintKeyword);
+            var print = ParseExpression();
+            return new PrintStatementSyntax(keyword, print);
         }
 
         private StatementSyntax ParseVariableDeclaration()
@@ -104,6 +115,15 @@ namespace Alto.CodeAnalysis.Syntax
             var statement = ParseStatement();
             var elseClause = ParseElseClause();
             return new IfStatementSyntax(keyword, condition, statement, elseClause);
+        }
+        
+        private StatementSyntax ParseWhileStatement()
+        {
+            var keyword = MatchToken(SyntaxKind.WhileKeyword);
+            var condition = ParseExpression();
+            var body = ParseStatement();
+
+            return new WhileStatementSyntax(keyword, condition, body);
         }
 
         private ElseClauseSyntax ParseElseClause()
