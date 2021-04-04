@@ -67,6 +67,11 @@ namespace Alto.CodeAnalysis.Syntax
                     return SyntaxKind.IfKeyword;
                 case "else":
                     return SyntaxKind.ElseKeyword;
+                case "while":
+                    return SyntaxKind.WhileKeyword;
+                case "print":
+                    //Temp
+                    return SyntaxKind.PrintKeyword;
                 default:
                     return SyntaxKind.IdentifierToken;
             }
@@ -126,6 +131,11 @@ namespace Alto.CodeAnalysis.Syntax
                     return "if";
                 case SyntaxKind.ElseKeyword:
                     return "else";
+                case SyntaxKind.WhileKeyword:
+                    return "while";
+                case SyntaxKind.PrintKeyword:
+                    //Temp
+                    return "print";
                 default:
                     return null;
             }

@@ -18,6 +18,10 @@ namespace Alto.CodeAnalysis.Binding
         BlockStatement,
         ExpressionStatement,
         VariableDeclaration,
-        IfStatement
+        IfStatement,
+        WhileStatement,
+
+        //TEMP
+        PrintStatement
     }
 }

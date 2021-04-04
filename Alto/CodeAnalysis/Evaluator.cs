@@ -38,9 +38,38 @@ namespace Alto.CodeAnalysis
                 case BoundNodeKind.IfStatement:
                     EvaluateIfStatement((BoundIfStatement)node);
                     break;
+                case BoundNodeKind.WhileStatement:
+                    EvaluateWhileStatement((BoundWhileStatement)node);
+                    break;
+                case BoundNodeKind.PrintStatement:
+                    //TEMP
+                    EvaluatePrintStatement((BoundPrintStatement)node);
+                    break;
                 default:
                     throw new Exception($"Unexpected node {node.Kind}");
             }
+        }
+
+        private void EvaluatePrintStatement(BoundPrintStatement node)
+        {
+            //TEMP
+            try
+            {
+                var print = (int)EvaluateExpression(node.Print);
+                Console.WriteLine(print.ToString());
+            } 
+            catch
+            {
+                try
+                {
+                    var print = (bool)EvaluateExpression(node.Print);
+                    Console.WriteLine(print.ToString());
+                }
+                catch
+                {
+                }
+            }
+            
         }
 
         private void EvaluateIfStatement(BoundIfStatement node)
@@ -52,6 +81,13 @@ namespace Alto.CodeAnalysis
             else if (node.ElseStatement != null)
                 EvaluateStatement(node.ElseStatement);
         }
+
+        private void EvaluateWhileStatement(BoundWhileStatement node)
+        {
+            while ((bool)EvaluateExpression(node.Condition))
+                EvaluateStatement(node.Body);
+        }
+        
 
         private void EvaluateVariableDeclaration(BoundVariableDeclaration node)
         {
