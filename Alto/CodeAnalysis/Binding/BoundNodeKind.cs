@@ -23,5 +23,6 @@ namespace Alto.CodeAnalysis.Binding
 
         //TEMP
         PrintStatement
+        WhileStatement
     }
 }

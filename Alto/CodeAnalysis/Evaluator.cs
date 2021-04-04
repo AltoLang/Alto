@@ -87,7 +87,6 @@ namespace Alto.CodeAnalysis
             while ((bool)EvaluateExpression(node.Condition))
                 EvaluateStatement(node.Body);
         }
-        
 
         private void EvaluateVariableDeclaration(BoundVariableDeclaration node)
         {

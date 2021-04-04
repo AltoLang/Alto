@@ -13,3 +13,4 @@ namespace Alto.CodeAnalysis.Binding
         public BoundStatement Body { get; }
     }
 } 
+
