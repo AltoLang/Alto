@@ -50,6 +50,7 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("{ var a = true if true { a = false} a }", false)]
         [InlineData("{ var a = 800 if a ~= 800 { a = 0} a }", 800)]
         [InlineData("{var foo = false if foo {25 * 4} else {foo = !foo} foo }", true)]
+        [InlineData("{ var n = 0 var m = 10 while m ~= 0 { n = n + m m = m - 1 } n}", 55)]
         public void Evaluator_Computes_CorrectValues(string text, object expectedValue)
         {
             AssertValue(text, expectedValue);
