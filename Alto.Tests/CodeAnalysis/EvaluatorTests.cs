@@ -79,7 +79,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluator_VariableUndefined()
+        public void Evaluator_NameExpression_Reports_Undefined()
         {
             var text = @"
                 {
@@ -99,7 +99,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluator_Assigned_Reports_CannotAssign()
+        public void Evaluator_AssignedExpression_Reports_CannotAssign()
         {
             var text = @"
                 {
@@ -116,7 +116,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluator_Assigned_Reports_CannotConvert()
+        public void Evaluator_AssignedExpression_Reports_CannotConvert()
         {
             var text = @"
                 {
@@ -133,7 +133,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluato_IfStatement_Reports_CannotConvert()
+        public void Evaluator_IfStatement_Reports_CannotConvert()
         {
             var text = @"
                 {
@@ -153,7 +153,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluato_WhileStatement_Reports_CannotConvert()
+        public void Evaluator_WhileStatement_Reports_CannotConvert()
         {
             var text = @"
                 {
@@ -173,7 +173,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluato_ForStatement_Reports_CannotConvert_LowerBound()
+        public void Evaluator_ForStatement_Reports_CannotConvert_LowerBound()
         {
             var text = @"
                 {
@@ -193,7 +193,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluato_ForStatement_Reports_CannotConvert_UpperBound()
+        public void Evaluator_ForStatement_Reports_CannotConvert_UpperBound()
         {
             var text = @"
                     {var result = 0 for i = 0 to true [{]result = result + i} result}
@@ -207,7 +207,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluator_Unary_Reports_Undefined()
+        public void Evaluator_UnaryExpression_Reports_Undefined()
         {
             var text = @"[+]true";
 
@@ -219,7 +219,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluator_Binary_Reports_Undefined()
+        public void Evaluator_BinaryExpression_Reports_Undefined()
         {
             var text = @"10 [%] false";
 
