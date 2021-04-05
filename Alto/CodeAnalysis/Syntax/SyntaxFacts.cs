@@ -69,6 +69,10 @@ namespace Alto.CodeAnalysis.Syntax
                     return SyntaxKind.ElseKeyword;
                 case "while":
                     return SyntaxKind.WhileKeyword;
+                case "for":
+                    return SyntaxKind.ForKeyword;
+                case "to":
+                    return SyntaxKind.ToKeyword;
                 case "print":
                     //Temp
                     return SyntaxKind.PrintKeyword;
@@ -133,6 +137,10 @@ namespace Alto.CodeAnalysis.Syntax
                     return "else";
                 case SyntaxKind.WhileKeyword:
                     return "while";
+                case SyntaxKind.ForKeyword:
+                    return "for";
+                case SyntaxKind.ToKeyword:
+                    return "to";
                 case SyntaxKind.PrintKeyword:
                     //Temp
                     return "print";

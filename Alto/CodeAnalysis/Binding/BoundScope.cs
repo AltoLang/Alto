@@ -27,7 +27,7 @@ namespace Alto.CodeAnalysis.Binding
 
         public bool TryDeclare(VariableSymbol variable)
         {
-            if (_variables.ContainsKey(variable.Name))
+            if (_variables .ContainsKey(variable.Name))
                 return false;
 
             _variables.Add(variable.Name, variable);

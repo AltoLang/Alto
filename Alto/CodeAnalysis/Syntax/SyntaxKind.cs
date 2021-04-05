@@ -40,7 +40,9 @@ namespace Alto.CodeAnalysis.Syntax
         IfKeyword,
         ElseKeyword,
         WhileKeyword,
-
+        ForKeyword,
+        ToKeyword,
+        
         //Nodes
         CompilationUnit,
         ElseClause,
@@ -59,6 +61,8 @@ namespace Alto.CodeAnalysis.Syntax
         VariableDeclaration,
         IfStatement,
         WhileStatement,
+        ForStatement,
+
         //Temp
         PrintKeyword,
         PrintStatement,
