@@ -51,6 +51,7 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("{ var a = 800 if a ~= 800 { a = 0} a }", 800)]
         [InlineData("{var foo = false if foo {25 * 4} else {foo = !foo} foo }", true)]
         [InlineData("{ var n = 0 var m = 10 while m ~= 0 { n = n + m m = m - 1 } n}", 55)]
+        [InlineData("{var result = 0 for i = 0 to 10 {result = result + i} result}", 55)]
         public void Evaluator_Computes_CorrectValues(string text, object expectedValue)
         {
             AssertValue(text, expectedValue);
@@ -132,6 +133,80 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
+        public void Evaluato_IfStatement_Reports_CannotConvert()
+        {
+            var text = @"
+                {
+                    var x = 10
+                    if [10]
+                    {
+                        x = 0
+                    }
+                }
+            ";
+
+            var diagnostics = @"
+                Cannot convert type 'System.Int32' to type 'System.Boolean'.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluato_WhileStatement_Reports_CannotConvert()
+        {
+            var text = @"
+                {
+                    var x = 10
+                    while [10]
+                    {
+                        x = 0
+                    }
+                }
+            ";
+
+            var diagnostics = @"
+                Cannot convert type 'System.Int32' to type 'System.Boolean'.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluato_ForStatement_Reports_CannotConvert_LowerBound()
+        {
+            var text = @"
+                {
+                    var x = 10
+                    for var index = [false] to 25
+                    {
+                        x = 0
+                    }
+                }
+            ";
+
+            var diagnostics = @"
+                Cannot convert type 'System.Boolean' to type 'System.Int32'.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluato_ForStatement_Reports_CannotConvert_UpperBound()
+        {
+            var text = @"
+                    {var result = 0 for i = 0 to true [{]result = result + i} result}
+            ";
+
+            var diagnostics = @"
+                Cannot convert type 'System.Boolean' to type 'System.Int32'.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
         public void Evaluator_Unary_Reports_Undefined()
         {
             var text = @"[+]true";
@@ -177,7 +252,7 @@ namespace Alto.Tests.CodeAnalysis
 
                 var expectedSpan = annotatedText.Spans[i];
                 var actualSpan = result.Diagnostics[i].Span;
-                Assert.Equal(expectedSpan, actualSpan);
+                Assert.Equal(actualSpan, expectedSpan);
             }
         }
 
