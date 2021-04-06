@@ -125,6 +125,7 @@ namespace Alto.CodeAnalysis.Binding
 
             var name = syntax.Identifier.Text;
             var variable = new VariableSymbol(name, true, typeof(int));
+            
             if (!_scope.TryDeclare(variable))
                 _diagnostics.ReportVariableAlreadyDeclared(syntax.Identifier.Span, name);
             
@@ -190,6 +191,10 @@ namespace Alto.CodeAnalysis.Binding
         private BoundExpression BindNameExpression(NameExpressionSyntax syntax)
         {
             var name = syntax.IdentifierToken.Text;
+
+            if (string.IsNullOrEmpty(name))
+                return new BoundLiteralExpression(0);
+                
             if (_scope.TryLookup(name, out var variable) == false)
             {
                 _diagnostics.ReportUndefinedName(syntax.IdentifierToken.Span, name);

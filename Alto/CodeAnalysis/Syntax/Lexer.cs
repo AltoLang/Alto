@@ -185,7 +185,8 @@ namespace Alto.CodeAnalysis.Syntax
                 _position++;
             
             var length = _position - _start;
-            _kind = SyntaxFacts.GetKeywordKind(_text.ToString(_start, length));
+            var text = _text.ToString(_start, length);
+            _kind = SyntaxFacts.GetKeywordKind(text);
         }
 
         private void ReadNumberToken()

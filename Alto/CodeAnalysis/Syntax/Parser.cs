@@ -54,8 +54,8 @@ namespace Alto.CodeAnalysis.Syntax
         
         private SyntaxToken MatchToken(SyntaxKind kind)
         {
-           if (Current.Kind == kind)
-            return NextToken();
+            if (Current.Kind == kind)
+                return NextToken();
 
             _diagnostics.ReportUnexpectedToken(Current.Span, Current.Kind, kind);
             return new SyntaxToken(kind, Current.Position, null, null);
@@ -158,8 +158,14 @@ namespace Alto.CodeAnalysis.Syntax
 
             while (Current.Kind != SyntaxKind.EndOfFileToken && Current.Kind != SyntaxKind.CloseBraceToken)
             {
+                var startToken = Current;
+
                 var statement = ParseStatement();
                 statements.Add(statement);
+
+                // Skip current token in order to avoide an infinite loop.
+                if (Current == startToken)
+                    NextToken();
             }
 
             var closeBraceToken = MatchToken(SyntaxKind.CloseBraceToken);
