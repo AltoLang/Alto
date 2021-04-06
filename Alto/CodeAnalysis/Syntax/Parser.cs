@@ -54,8 +54,8 @@ namespace Alto.CodeAnalysis.Syntax
         
         private SyntaxToken MatchToken(SyntaxKind kind)
         {
-           if (Current.Kind == kind)
-            return NextToken();
+            if (Current.Kind == kind)
+                return NextToken();
 
             _diagnostics.ReportUnexpectedToken(Current.Span, Current.Kind, kind);
             return new SyntaxToken(kind, Current.Position, null, null);
@@ -81,6 +81,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return ParseIfStatement();
                 case SyntaxKind.WhileKeyword:
                     return ParseWhileStatement();
+                case SyntaxKind.ForKeyword:
+                    return ParseForStatement();
                 case SyntaxKind.PrintKeyword:
                     //Temp
                     return ParsePrintStatement();
@@ -88,6 +90,7 @@ namespace Alto.CodeAnalysis.Syntax
                     return ParseExpressionStatement();
             }
         }
+
 
         private StatementSyntax ParsePrintStatement()
         {
@@ -117,6 +120,18 @@ namespace Alto.CodeAnalysis.Syntax
             return new IfStatementSyntax(keyword, condition, statement, elseClause);
         }
 
+        private StatementSyntax ParseForStatement()
+        {
+            var keyword = MatchToken(SyntaxKind.ForKeyword);
+            var identifier = MatchToken(SyntaxKind.IdentifierToken);
+            var equalsToken = MatchToken(SyntaxKind.EqualsToken);
+            var lowerBound = ParseExpression();
+            var toKeyword = MatchToken(SyntaxKind.ToKeyword);
+            var upperBound = ParseExpression();
+            var body = ParseStatement();
+            return new ForStatementSyntax(keyword, identifier, equalsToken, lowerBound, toKeyword, upperBound, body);
+        }
+
         private ElseClauseSyntax ParseElseClause()
         {
             if (Current.Kind != SyntaxKind.ElseKeyword)
@@ -143,8 +158,14 @@ namespace Alto.CodeAnalysis.Syntax
 
             while (Current.Kind != SyntaxKind.EndOfFileToken && Current.Kind != SyntaxKind.CloseBraceToken)
             {
+                var startToken = Current;
+
                 var statement = ParseStatement();
                 statements.Add(statement);
+
+                // Skip current token in order to avoide an infinite loop.
+                if (Current == startToken)
+                    NextToken();
             }
 
             var closeBraceToken = MatchToken(SyntaxKind.CloseBraceToken);

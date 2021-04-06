@@ -20,6 +20,7 @@ namespace Alto.CodeAnalysis.Binding
         VariableDeclaration,
         IfStatement,
         WhileStatement,
+        ForStatement,
 
         //TEMP
         PrintStatement,

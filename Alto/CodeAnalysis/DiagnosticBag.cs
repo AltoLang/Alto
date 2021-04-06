@@ -44,7 +44,7 @@ namespace Alto.CodeAnalysis
 
         public void ReportUnexpectedToken(TextSpan span, SyntaxKind kind, SyntaxKind expectedKind)
         {
-            var message = $"Unexpeced token <{kind}, expected <{expectedKind}>";
+            var message = $"Unexpeced token <{kind}>, expected <{expectedKind}>.";
             Report(span, message);
         }
 
@@ -86,7 +86,7 @@ namespace Alto.CodeAnalysis
 
         internal void ReportCannotConvert(TextSpan span, Type type, Type targetType)
         {
-            var message = $"Cannot convert type '{type}' to '{targetType}'.";
+            var message = $"Cannot convert type '{type}' to type '{targetType}'.";
             Report(span, message);
         }
     }
