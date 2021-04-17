@@ -32,6 +32,8 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("154 ~= 6541", true)]
         [InlineData("1 == 1 && true", true)]
         [InlineData("true || 9873 == 8574", true)]
+        [InlineData("true && true", true)]
+        [InlineData("false || false", false)]
         [InlineData("1 > 0", true)]
         [InlineData("1 >= 1", true)]
         [InlineData("1 <= 1", true)]

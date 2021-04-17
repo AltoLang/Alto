@@ -74,6 +74,7 @@ namespace Alto.Tests.CodeAnalysis.Syntax
             foreach ( var t in GetTokens().Concat(GetSeparators()))
                 yield return new object[] { t.kind, t.text };
         }
+        
         public static IEnumerable<object[]> GetTokensPairsData()
         {
             foreach ( var t in GetTokenPairs())
