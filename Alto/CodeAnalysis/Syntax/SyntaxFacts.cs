@@ -28,9 +28,12 @@ namespace Alto.CodeAnalysis.Syntax
                     return 3;
 
                 case SyntaxKind.AmpersandAmpersandToken:
+                case SyntaxKind.AmpersandToken:
                     return 2;
                 
                 case SyntaxKind.PipePipeToken:
+                case SyntaxKind.PipeToken:
+                case SyntaxKind.HatToken:
                     return 1;
                 
                 default:
@@ -44,6 +47,7 @@ namespace Alto.CodeAnalysis.Syntax
                 case SyntaxKind.PlusToken:
                 case SyntaxKind.BangToken:
                 case SyntaxKind.MinusToken:
+                case SyntaxKind.TildeToken:
                     return 6;
                 
                 default:
@@ -105,6 +109,14 @@ namespace Alto.CodeAnalysis.Syntax
                     return "}";
                 case SyntaxKind.BangToken: 
                     return "!";
+                case SyntaxKind.TildeToken:
+                    return "~";
+                case SyntaxKind.AmpersandToken:
+                    return "&";
+                case SyntaxKind.PipeToken:
+                    return "|";
+                case SyntaxKind.HatToken:
+                    return "^";
                 case SyntaxKind.AmpersandAmpersandToken: 
                     return "&&";
                 case SyntaxKind.PipePipeToken: 

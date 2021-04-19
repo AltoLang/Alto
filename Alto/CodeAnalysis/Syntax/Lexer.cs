@@ -83,18 +83,44 @@ namespace Alto.CodeAnalysis.Syntax
                     _kind = SyntaxKind.BangToken;
                     _position++;
                     break;
-                case '&':
-                    if (Lookahead == '&')
+                case '~':
+                    if (Lookahead == '=')
                     {
-                        _kind = SyntaxKind.AmpersandAmpersandToken;
                         _position += 2;
+                        _kind = SyntaxKind.BangEqualsToken;
+                    }
+                    else
+                    {
+                        _kind = SyntaxKind.TildeToken;
+                        _position++;
+                    }
+                    break;
+                case '^':
+                    _kind = SyntaxKind.HatToken;
+                    _position++;
+                    break;
+                case '&':
+                    _position++;
+                    if (Current != '&')
+                    {
+                        _kind = SyntaxKind.AmpersandToken;
+                    }
+                    else
+                    {
+                        _position++;
+                        _kind = SyntaxKind.AmpersandAmpersandToken;
                     }
                     break;
                 case '|':
-                    if (Lookahead == '|')
+                    _position++;
+                    if (Current != '|')
                     {
+                        _kind = SyntaxKind.PipeToken;
+                    }
+                    else
+                    {
+                        _position++;
                         _kind = SyntaxKind.PipePipeToken;
-                        _position += 2;
                     }
                     break;
                 case '=':
@@ -133,14 +159,6 @@ namespace Alto.CodeAnalysis.Syntax
                         _kind = SyntaxKind.GreaterOrEqualsToken;
                     }
                     break;
-                case '~':
-                    if (Lookahead == '=')
-                    {
-                        _position += 2;
-                        _kind = SyntaxKind.BangEqualsToken;
-                    }
-                    break;
-
                 default:
 
                     if (char.IsDigit(Current))

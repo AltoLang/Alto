@@ -9,6 +9,7 @@ namespace Alto.CodeAnalysis.Binding
     {
         Indentity,
         Negation,
-        LogicalNegation
+        LogicalNegation,
+        OnesComplement
     }
 }

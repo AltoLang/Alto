@@ -31,6 +31,10 @@ namespace Alto.CodeAnalysis.Syntax
         LesserToken,
         GreaterToken,
         GreaterOrEqualsToken,
+        TildeToken,
+        AmpersandToken,
+        PipeToken,
+        HatToken,
 
         //Keywords
         FalseKeyword,

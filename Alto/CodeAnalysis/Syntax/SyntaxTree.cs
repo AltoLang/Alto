@@ -15,7 +15,7 @@ namespace Alto.CodeAnalysis.Syntax
             var root = parser.ParseCompilationUnit();
 
             Text = text;
-            Diagnostics = parser.Diagnostics.ToImmutableArray()
+            Diagnostics = parser.Diagnostics.ToImmutableArray();
             Root = root;
         }
 
