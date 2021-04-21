@@ -13,6 +13,7 @@ namespace REPL
         private static void Main()
         {
             var showTree = false;
+            var showProgram = false; 
             var variables = new Dictionary<VariableSymbol, object>();
             var textBuilder = new StringBuilder();
             Compilation previous = null;
@@ -40,6 +41,14 @@ namespace REPL
                         showTree = !showTree;
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.WriteLine(showTree ? "Showing parse trees" : "Not showing parse trees");
+                        Console.ResetColor();
+                        continue;
+                    }
+                    else if (input.ToLower() == "#showprogram")
+                    {
+                        showProgram = !showProgram;
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        Console.WriteLine(showProgram ? "Showing bound trees" : "Not showing bound trees");
                         Console.ResetColor();
                         continue;
                     }
@@ -81,6 +90,13 @@ namespace REPL
                 {
                     Console.ForegroundColor = ConsoleColor.DarkGray;
                     syntaxTree.Root.WriteTo(Console.Out);
+                    Console.ResetColor();
+                }
+
+                if (showProgram)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    compilation.EmitTree(Console.Out);
                     Console.ResetColor();
                 }
 
