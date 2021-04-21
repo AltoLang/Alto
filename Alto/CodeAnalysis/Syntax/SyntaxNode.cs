@@ -65,15 +65,7 @@ namespace Alto.CodeAnalysis.Syntax
 
             writer.Write(marker);
 
-            if (isToConsole)
-                Console.ForegroundColor = node is SyntaxToken ? ConsoleColor.Blue : ConsoleColor.Cyan;
-            
-            writer.Write(node.Kind);
-
-            if (node is SyntaxToken t && t.Value != null)
-            {
-                writer.Write(" " + t.Value);
-            }
+            WriteNode(writer, node);
 
             if (isToConsole)
                 Console.ResetColor();
@@ -87,6 +79,13 @@ namespace Alto.CodeAnalysis.Syntax
 
             foreach (var child in node.GetChildren())
                 PrettyPrint(writer, child, indent, child == lastChild);
+        }
+
+        private static void WriteNode(TextWriter writer, SyntaxNode node)
+        {
+            // TODO: Handle unary & binary expressions
+            // TODO: Change colors
+            writer.Write(node.Kind);
         }
 
         public override string ToString()

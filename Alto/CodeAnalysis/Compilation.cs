@@ -5,6 +5,7 @@ using Alto.CodeAnalysis.Binding;
 using Alto.CodeAnalysis.Syntax;
 using System.Collections.Immutable;
 using System.Threading;
+using System.IO;
 
 namespace Alto.CodeAnalysis
 {
@@ -58,6 +59,11 @@ namespace Alto.CodeAnalysis
             var value = evaluator.Evaluate();
 
             return new EvaluationResult(ImmutableArray<Diagnostic>.Empty, value);
+        }
+
+        public void EmitTree(TextWriter writer)
+        {
+            GlobalScope.Statement.WriteTo(writer);
         }
     }
 }
