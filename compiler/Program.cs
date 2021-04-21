@@ -48,7 +48,7 @@ namespace REPL
                     {
                         showProgram = !showProgram;
                         Console.ForegroundColor = ConsoleColor.DarkGray;
-                        Console.WriteLine(showTree ? "Showing bound trees" : "Not showing bound trees");
+                        Console.WriteLine(showProgram ? "Showing bound trees" : "Not showing bound trees");
                         Console.ResetColor();
                         continue;
                     }
