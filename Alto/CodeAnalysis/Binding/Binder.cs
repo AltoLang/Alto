@@ -247,7 +247,7 @@ namespace Alto.CodeAnalysis.Binding
 
             return new BoundUnaryExpression(boundOperator, boundOperand);
         }
-
+        
         private BoundExpression BindBinaryExpression(BinaryExpressionSyntax syntax)
         {
             var boundLeft = BindExpression(syntax.Left);
