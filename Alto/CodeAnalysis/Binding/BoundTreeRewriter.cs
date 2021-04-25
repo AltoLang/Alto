@@ -10,7 +10,7 @@ namespace Alto.CodeAnalysis.Binding
             switch (node.Kind)
             {       
                 case BoundNodeKind.BlockStatement:
-                    //return RewriteBlockStatement((BoundBlockStatement)node);
+                    return RewriteBlockStatement((BoundBlockStatement)node);
                 case BoundNodeKind.ExpressionStatement:
                     return RewriteExpressionStatement((BoundExpressionStatement)node);
                 case BoundNodeKind.VariableDeclaration:
