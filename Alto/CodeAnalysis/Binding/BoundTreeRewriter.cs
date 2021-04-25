@@ -46,7 +46,7 @@ namespace Alto.CodeAnalysis.Binding
             }
         }
 
-        private BoundStatement RewriteBlockStatement(BoundBlockStatement node)
+        protected virtual BoundStatement RewriteBlockStatement(BoundBlockStatement node)
         {
             ImmutableArray<BoundStatement>.Builder builder = null;
 
@@ -76,7 +76,7 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundBlockStatement(builder.MoveToImmutable());
         } 
 
-        private BoundStatement RewriteExpressionStatement(BoundExpressionStatement node)
+        protected virtual BoundStatement RewriteExpressionStatement(BoundExpressionStatement node)
         {
             var expression = RewriteExpression(node.Expression);
             if (expression == node.Expression)
@@ -85,7 +85,7 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundExpressionStatement(expression);
         }
 
-        private BoundStatement RewriteVariableDeclaration(BoundVariableDeclaration node)
+        protected virtual BoundStatement RewriteVariableDeclaration(BoundVariableDeclaration node)
         {
             var initializer = RewriteExpression(node.Initializer);
 
@@ -95,7 +95,7 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundVariableDeclaration(node.Variable, initializer);
         }
 
-        private BoundStatement RewriteIfStatement(BoundIfStatement node)
+        protected virtual BoundStatement RewriteIfStatement(BoundIfStatement node)
         {
             var condition = RewriteExpression(node.Condition);
             var thenStatement = RewriteStatement(node.ThenStatement);
@@ -107,7 +107,7 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundIfStatement(condition, thenStatement, elseStatement);
         }
 
-        private BoundStatement RewriteWhileStatement(BoundWhileStatement node)
+        protected virtual BoundStatement RewriteWhileStatement(BoundWhileStatement node)
         {
             var condition = RewriteExpression(node.Condition);
             var body = RewriteStatement(node.Body);
@@ -118,7 +118,7 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundWhileStatement(condition, body);
         }
 
-        private BoundStatement RewriteForStatement(BoundForStatement node)
+        protected virtual BoundStatement RewriteForStatement(BoundForStatement node)
         {
             var lowerBound = RewriteExpression(node.LowerBound);
             var upperBound = RewriteExpression(node.UpperBound);
