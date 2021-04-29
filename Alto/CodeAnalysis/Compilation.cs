@@ -54,7 +54,7 @@ namespace Alto.CodeAnalysis
         {
             var diagnostics = SyntaxTree.Diagnostics.Concat(GlobalScope.Diagnostics).ToImmutableArray();
             if (diagnostics.Any())
-                return new EvaluationResult(diagnostics.ToImmutableArray(), null);
+                return new EvaluationResult(diagnostics, null);
 
             var statement = GetStatement();
             var evaluator = new Evaluator(statement, variables);
@@ -69,7 +69,7 @@ namespace Alto.CodeAnalysis
             statement.WriteTo(writer);
         }
 
-        private BoundStatement GetStatement()
+        private BoundBlockStatement GetStatement()
         {
             var result = GlobalScope.Statement;
             return Lowerer.Lower(result);

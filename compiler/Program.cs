@@ -82,10 +82,6 @@ namespace REPL
                     compilation = previous.ContinueWith(syntaxTree);
                 }
 
-                var result = compilation.Evaluate(variables);
-
-                var diagnostics = result.Diagnostics;
-
                 if (showTree)
                 {
                     Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -99,6 +95,10 @@ namespace REPL
                     compilation.EmitTree(Console.Out);
                     Console.ResetColor();
                 }
+
+                var result = compilation.Evaluate(variables);
+
+                var diagnostics = result.Diagnostics;
 
                 if (!result.Diagnostics.Any())
                 {

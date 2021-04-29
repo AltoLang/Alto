@@ -3,32 +3,33 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Alto.CodeAnalysis.Syntax;
-using Alto.CodeAnalysis.Text;
 
 namespace Alto.CodeAnalysis.Binding
 {
     internal abstract class BoundNode
     {
-        public abstract BoundNodeKind Kind {get;}
+        public abstract BoundNodeKind Kind { get; }
 
         public IEnumerable<BoundNode> GetChildren()
         {
             var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
             foreach (var property in properties)
             {
                 if (typeof(BoundNode).IsAssignableFrom(property.PropertyType))
                 {
-                    var child = (BoundNode) property.GetValue(this);
+                    var child = (BoundNode)property.GetValue(this);
                     if (child != null)
                         yield return child;
                 }
                 else if (typeof(IEnumerable<BoundNode>).IsAssignableFrom(property.PropertyType))
                 {
-                    var children = (IEnumerable<BoundNode>) property.GetValue(this);
+                    var children = (IEnumerable<BoundNode>)property.GetValue(this);
                     foreach (var child in children)
+                    {
                         if (child != null)
                             yield return child;
+                    }
                 }
             }
         }
@@ -36,21 +37,23 @@ namespace Alto.CodeAnalysis.Binding
         private IEnumerable<(string Name, object Value)> GetProperties()
         {
             var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
             foreach (var property in properties)
             {
-                if (property.Name == nameof(Kind) || property.Name == nameof(BoundBinaryExpression.Op))
-                    continue;
-                
-                if (typeof(BoundNode).IsAssignableFrom(property.PropertyType) || typeof(IEnumerable<BoundNode>).IsAssignableFrom(property.PropertyType))
+                if (property.Name == nameof(Kind) ||
+                    property.Name == nameof(BoundBinaryExpression.Op))
                     continue;
 
-                var value = property.GetValue(this);
-                    if (value != null)
-                        yield return (property.Name, value);
+                if (typeof(BoundNode).IsAssignableFrom(property.PropertyType) ||
+                    typeof(IEnumerable<BoundNode>).IsAssignableFrom(property.PropertyType))
+                    continue;
+
+                var value = property.GetValue(this);                
+                if (value != null)
+                    yield return (property.Name, value);
             }
         }
 
-        
         public void WriteTo(TextWriter writer)
         {
             PrettyPrint(writer, this);
@@ -58,13 +61,11 @@ namespace Alto.CodeAnalysis.Binding
 
         private static void PrettyPrint(TextWriter writer, BoundNode node, string indent = "", bool isLast = true)
         {
-            // └──
-            // │
-            // ├──
-
             var isToConsole = writer == Console.Out;
-
             var marker = isLast ? "└──" : "├──";
+
+            if (isToConsole)
+                Console.ForegroundColor = ConsoleColor.DarkGray;
 
             writer.Write(indent);
             writer.Write(marker);
@@ -76,17 +77,16 @@ namespace Alto.CodeAnalysis.Binding
             writer.Write(text);
 
             var isFirstProperty = true;
+
             foreach (var p in node.GetProperties())
             {
                 if (isFirstProperty)
-                {
                     isFirstProperty = false;
-                }
                 else
                 {
                     if (isToConsole)
                         Console.ForegroundColor = ConsoleColor.DarkGray;
-                    
+
                     writer.Write(",");
                 }
 
@@ -94,12 +94,12 @@ namespace Alto.CodeAnalysis.Binding
 
                 if (isToConsole)
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                
+
                 writer.Write(p.Name);
 
                 if (isToConsole)
                     Console.ForegroundColor = ConsoleColor.DarkGray;
-                
+
                 writer.Write(" = ");
 
                 if (isToConsole)
@@ -113,8 +113,7 @@ namespace Alto.CodeAnalysis.Binding
 
             writer.WriteLine();
 
-            //indent += "    ";
-            indent += isLast ? "   " : "│   ";
+            indent += isLast ? "   " : "│  ";
 
             var lastChild = node.GetChildren().LastOrDefault();
 
@@ -137,7 +136,7 @@ namespace Alto.CodeAnalysis.Binding
         {
             if (node is BoundExpression)
                 return ConsoleColor.Blue;
-            
+
             if (node is BoundStatement)
                 return ConsoleColor.Cyan;
 

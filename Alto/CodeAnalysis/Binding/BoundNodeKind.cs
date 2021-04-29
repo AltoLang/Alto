@@ -21,6 +21,9 @@ namespace Alto.CodeAnalysis.Binding
         IfStatement,
         WhileStatement,
         ForStatement,
+        GotoStatement,
+        ConditionalGotoStatement,
+        LabelStatement,
 
         //TEMP
         PrintStatement,
