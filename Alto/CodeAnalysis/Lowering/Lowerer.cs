@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using Alto.CodeAnalysis.Binding;
 using Alto.CodeAnalysis.Syntax;
 
@@ -6,24 +9,146 @@ namespace Alto.CodeAnalysis.Lowering
 {
     internal sealed class Lowerer : BoundTreeRewriter
     {
+        private int _labelCount;
+
         private Lowerer()
         {
             
         }
 
-        public static BoundStatement Lower(BoundStatement statement)
+        private LabelSymbol GenerateLabel()
         {
-            var lowerer = new Lowerer();
-            return lowerer.RewriteStatement(statement);
+            var name = $"Label{++_labelCount}";
+            return new LabelSymbol(name);
         }
 
+        public static BoundBlockStatement Lower(BoundStatement statement)
+        {
+            Console.WriteLine(statement.Kind.ToString());
+            var lowerer = new Lowerer();
+            var result = lowerer.RewriteStatement(statement);
+            var flat = Flatten(result);
+            return flat;
+        }
+
+        private static BoundBlockStatement Flatten(BoundStatement statement)
+        {
+            var builder = ImmutableArray.CreateBuilder<BoundStatement>();
+            var stack = new Stack<BoundStatement>();
+            stack.Push(statement);
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                if (current is BoundBlockStatement block)
+                    foreach (var s in block.Statements.Reverse())
+                        stack.Push(s);
+                
+                else
+                    builder.Add(current);
+            }
+
+            return new BoundBlockStatement(builder.ToImmutable());
+        }
+
+        protected override BoundStatement RewriteIfStatement(BoundIfStatement node)
+        {
+            if (node.ElseStatement == null)
+            {
+                // if (true == true)
+                //     x = x + 1
+                //
+                // ----->
+                //
+                // gotoFalse (true == true) end
+                // x = x + 1
+                // end:
+
+                var endLabel = GenerateLabel();
+                var gotoFalse = new BoundConditionalGotoStatement(endLabel, node.Condition, true);
+                var endLabelStatement = new BoundLabelStatement(endLabel);
+                var result = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(gotoFalse, node.ThenStatement, endLabelStatement));
+
+                return RewriteStatement(result);
+            }
+            else
+            {
+                // if (true == true)
+                //     x = x + 1
+                // else
+                //     y = x
+                //
+                // ----->
+                //
+                // gotoFalse (true == true) else
+                // x = x + 1
+                // goto end
+                // else:
+                // y = x
+                // end:
+
+                var elseLabel = GenerateLabel();
+                var endLabel = GenerateLabel();
+                var gotoFalse = new BoundConditionalGotoStatement(elseLabel, node.Condition, true);
+                var gotoEndStatement = new BoundGotoStatement(endLabel);
+                var elseLabelStatement = new BoundLabelStatement(elseLabel);
+                var endLabelStatement = new BoundLabelStatement(endLabel);
+                var result = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(
+                    gotoFalse,
+                    node.ThenStatement,
+                    gotoEndStatement,
+                    elseLabelStatement,
+                    node.ElseStatement,
+                    endLabelStatement
+                ));
+
+                return RewriteStatement(result);
+            }
+        }
+
+        protected override BoundStatement RewriteWhileStatement(BoundWhileStatement node)
+        {
+            // while true
+            //    x = x + 1
+            //
+            // ------->
+            //
+            // goto check
+            // continue:
+            //     x = x + 1
+            // check:
+            //     gotoFalse true end
+            // end:
+
+            var continueLabel = GenerateLabel();
+            var checkLabel = GenerateLabel();
+            var endLabel = GenerateLabel();
+
+            var gotoCheck = new BoundGotoStatement(checkLabel);
+            var continueLabelStatement = new BoundLabelStatement(continueLabel);
+            var checkLabelStatement = new BoundLabelStatement(checkLabel);
+            var gotoTrue = new BoundConditionalGotoStatement(continueLabel, node.Condition, false);
+            var endLabelStatement = new BoundLabelStatement(endLabel);
+            var result = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(
+                    gotoCheck, 
+                    continueLabelStatement, 
+                    node.Body,
+                    checkLabelStatement, 
+                    gotoTrue, 
+                    endLabelStatement
+                )
+            );
+
+            return RewriteStatement(result);
+        }
+        
         protected override BoundStatement RewriteForStatement(BoundForStatement node)
         {
             // for i = 0 to 10
             //    print i
-
-            // --->
-
+            //
+            // ----->
+            //
             //{
             //     var i = 0
             //     while (i <= upper)

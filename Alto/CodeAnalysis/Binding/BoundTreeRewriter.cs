@@ -21,7 +21,15 @@ namespace Alto.CodeAnalysis.Binding
                     return RewriteWhileStatement((BoundWhileStatement)node);
                 case BoundNodeKind.ForStatement:
                     return RewriteForStatement((BoundForStatement)node);
-
+                case BoundNodeKind.GotoStatement:
+                    return RewriteGotoStatement((BoundGotoStatement)node);
+                case BoundNodeKind.ConditionalGotoStatement:
+                    return RewriteConditionalGotoStatement((BoundConditionalGotoStatement)node);
+                case BoundNodeKind.LabelStatement:
+                    return RewriteLabelStatement((BoundLabelStatement)node);
+                //temp
+                case BoundNodeKind.PrintStatement:
+                    return RewritePrintStatement((BoundPrintStatement)node);
                 default:
                     throw new Exception($"Unexpected node: {node.Kind}.");
             }
@@ -45,17 +53,16 @@ namespace Alto.CodeAnalysis.Binding
                     throw new Exception($"Unexpected node: {node.Kind}.");
             }
         }
-
+        
         protected virtual BoundStatement RewriteBlockStatement(BoundBlockStatement node)
         {
             ImmutableArray<BoundStatement>.Builder builder = null;
 
-            for (var i = 0; i > node.Statements.Length; i++)
+            for (var i = 0; i< node.Statements.Length; i++)
             {
                 var oldStatement = node.Statements[i];
                 var newStatement = RewriteStatement(oldStatement);
-
-                if (oldStatement != newStatement)
+                if (newStatement != oldStatement)
                 {
                     if (builder == null)
                     {
@@ -63,7 +70,7 @@ namespace Alto.CodeAnalysis.Binding
 
                         for (var j = 0; j < i; j++)
                             builder.Add(node.Statements[j]);
-                    }
+                    }                    
                 }
 
                 if (builder != null)
@@ -74,8 +81,7 @@ namespace Alto.CodeAnalysis.Binding
                 return node;
 
             return new BoundBlockStatement(builder.MoveToImmutable());
-        } 
-
+        }
         protected virtual BoundStatement RewriteExpressionStatement(BoundExpressionStatement node)
         {
             var expression = RewriteExpression(node.Expression);
@@ -95,12 +101,11 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundVariableDeclaration(node.Variable, initializer);
         }
 
-        protected virtual BoundStatement RewriteIfStatement(BoundIfStatement node)
+         protected virtual BoundStatement RewriteIfStatement(BoundIfStatement node)
         {
             var condition = RewriteExpression(node.Condition);
             var thenStatement = RewriteStatement(node.ThenStatement);
             var elseStatement = node.ElseStatement == null ? null : RewriteStatement(node.ElseStatement);
-
             if (condition == node.Condition && thenStatement == node.ThenStatement && elseStatement == node.ElseStatement)
                 return node;
 
@@ -130,9 +135,35 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundForStatement(node.Variable, lowerBound, upperBound, body);
         }
 
+        protected virtual BoundStatement RewriteLabelStatement(BoundLabelStatement node)
+        {
+            return node;
+        }
+
+         private BoundStatement RewritePrintStatement(BoundPrintStatement node)
+        {
+            return node;
+        }
+
+        protected virtual BoundStatement RewriteConditionalGotoStatement(BoundConditionalGotoStatement node)
+        {
+            var condition = RewriteExpression(node.Condition);
+            
+            if (condition == node.Condition)
+                return node;
+
+            return new BoundConditionalGotoStatement(node.Label, condition, node.JumpIfFalse);
+        }
+
+        protected virtual BoundStatement RewriteGotoStatement(BoundGotoStatement node)
+        {
+            return node;
+        }
+
         protected virtual BoundExpression RewriteUnaryExpression(BoundUnaryExpression node)
         {
             var operand = RewriteExpression(node.Operand);
+
             if (operand == node.Operand)
                 return node;
 
@@ -152,6 +183,7 @@ namespace Alto.CodeAnalysis.Binding
         protected virtual BoundExpression RewriteAssignmentExpression(BoundAssignmentExpression node)
         {
             var expression = RewriteExpression(node.Expression);
+            
             if (expression == node.Expression)
                 return node;
 
