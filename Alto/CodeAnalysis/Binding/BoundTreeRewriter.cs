@@ -79,7 +79,7 @@ namespace Alto.CodeAnalysis.Binding
 
             if (builder == null)
                 return node;
-
+            
             return new BoundBlockStatement(builder.MoveToImmutable());
         }
         protected virtual BoundStatement RewriteExpressionStatement(BoundExpressionStatement node)
