@@ -208,7 +208,8 @@ namespace Alto.CodeAnalysis.Syntax
                 var operatorToken = NextToken();
                 var operand = ParseBinaryExpression();
                 left = new UnaryExpressionSyntax(operatorToken, operand);
-            } else
+            } 
+            else
             {
                 left = ParsePrimaryExpression();
             }
@@ -259,7 +260,7 @@ namespace Alto.CodeAnalysis.Syntax
             var right = MatchToken(SyntaxKind.CloseParenthesesToken);
             return new Alto.CodeAnalysis.Syntax.ParenthesizedExpressionSyntax(left, expression, right);
         }
-
+ 
         private ExpressionSyntax ParseBooleanLiteral()
         {
             var isTrue = Current.Kind == SyntaxKind.TrueKeyword;
