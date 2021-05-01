@@ -79,7 +79,7 @@ namespace Alto.CodeAnalysis.Binding
 
             if (builder == null)
                 return node;
-
+            
             return new BoundBlockStatement(builder.MoveToImmutable());
         }
         protected virtual BoundStatement RewriteExpressionStatement(BoundExpressionStatement node)
@@ -152,7 +152,7 @@ namespace Alto.CodeAnalysis.Binding
             if (condition == node.Condition)
                 return node;
 
-            return new BoundConditionalGotoStatement(node.Label, condition, node.JumpIfFalse);
+            return new BoundConditionalGotoStatement(node.Label, condition, node.JumpIfTrue);
         }
 
         protected virtual BoundStatement RewriteGotoStatement(BoundGotoStatement node)
