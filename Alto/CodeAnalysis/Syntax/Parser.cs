@@ -258,7 +258,7 @@ namespace Alto.CodeAnalysis.Syntax
             var left = MatchToken(SyntaxKind.OpenParenthesesToken);
             var expression = ParseExpression();
             var right = MatchToken(SyntaxKind.CloseParenthesesToken);
-            return new Alto.CodeAnalysis.Syntax.ParenthesizedExpressionSyntax(left, expression, right);
+            return new ParenthesizedExpressionSyntax(left, expression, right);
         }
  
         private ExpressionSyntax ParseBooleanLiteral()
@@ -272,7 +272,7 @@ namespace Alto.CodeAnalysis.Syntax
         private ExpressionSyntax ParseNameExpression()
         {
             var identifierToken = MatchToken(SyntaxKind.IdentifierToken);
-            return new Alto.CodeAnalysis.Syntax.NameExpressionSyntax(identifierToken);
+            return new NameExpressionSyntax(identifierToken);
         }
 
     }
