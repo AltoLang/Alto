@@ -24,7 +24,6 @@ namespace Alto.CodeAnalysis.Lowering
 
         public static BoundBlockStatement Lower(BoundStatement statement)
         {
-            Console.WriteLine(statement.Kind.ToString());
             var lowerer = new Lowerer();
             var result = lowerer.RewriteStatement(statement);
             var flat = Flatten(result);
