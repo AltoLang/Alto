@@ -61,8 +61,7 @@ namespace REPL
                         Console.Write("· ");
                     Console.ResetColor();
 
-
-                    Console.WriteLine(line);
+                    Console.WriteLine(line + new string(' ', Console.WindowWidth - line.Length));
                     lineCount++;
                 }
 
@@ -158,6 +157,12 @@ namespace REPL
                     case ConsoleKey.DownArrow:
                         HandleDownArrow(document, view);
                         break;
+                    case ConsoleKey.Backspace:
+                        HandleBackspace(document, view);
+                        break;
+                    case ConsoleKey.Delete:
+                        HandleDelete(document, view);
+                        break;
                     case ConsoleKey.F5:
                         HandleRunKey(document, view);
                         break;
@@ -208,6 +213,35 @@ namespace REPL
         {
             if (view.CurrentCharacter > 0)
                 view.CurrentCharacter--;
+        }
+
+        private void HandleBackspace(ObservableCollection<string> document, SubmissionView view)
+        {
+            var start = view.CurrentCharacter;
+            if (start == 0)
+                return;
+                
+            var lineIndex = view.CurrentLineIndex;
+            var line = document[lineIndex];
+            
+            var before = line.Substring(0, start - 1);
+            var after = line.Substring(start);
+            document[lineIndex] = before + after;
+            view.CurrentCharacter--;
+        }
+
+        private void HandleDelete(ObservableCollection<string> document, SubmissionView view)
+        {
+            var lineIndex = view.CurrentLineIndex;
+            var line = document[lineIndex];
+
+            var start = view.CurrentCharacter;
+            if (start > line.Length - 1)
+                return;
+            
+            var before = line.Substring(0, start);
+            var after = line.Substring(start + 1);
+            document[lineIndex] = before + after;
         }
 
         private void HandleEnter(ObservableCollection<string> document, SubmissionView view)
