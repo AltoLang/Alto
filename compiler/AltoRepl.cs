@@ -127,9 +127,12 @@ namespace REPL
 
         protected override bool IsCompleteSubmission(string text)
         {
+            if (string.IsNullOrEmpty(text))
+                return true;
+
             var syntaxTree = SyntaxTree.Parse(text);
 
-            if (string.IsNullOrEmpty(text) || syntaxTree.Diagnostics.Any())
+            if (syntaxTree.Diagnostics.Any())
                 return false;
 
             return true;

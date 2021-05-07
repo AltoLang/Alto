@@ -7,17 +7,20 @@ namespace REPL
 {
     internal abstract class Repl
     {
-        private string _submissionText;
+        private bool _done;
 
         public void Run()
         {
             while (true)
             {
                 var text = EditSubmission();
-                if (text == null)
+                if (string.IsNullOrEmpty(text))
                     return;
-                
-                EvaluateSubmission(text);
+
+                if (!text.Contains(System.Environment.NewLine) && text.StartsWith("#"))
+                    EvaluateMetaCommand(text);
+                else
+                    EvaluateSubmission(text);
             }
         }
 
@@ -112,17 +115,23 @@ namespace REPL
 
         private string EditSubmission()
         {
-            _submissionText = null;
+            _done = false;
             var document = new ObservableCollection<string>() { "" };
             var view = new SubmissionView(document);
 
-            while (_submissionText == null)
+            while (!_done)
             {
                 var key = Console.ReadKey(true);
                 HandleKey(key, document, view);
             }
 
-            return _submissionText;
+            Console.WriteLine();
+
+            if (document.Count == 1 && document[0].Length == 0)
+                return null;
+
+            var result = string.Join(Environment.NewLine, document);
+            return result;
         }
 
         private void HandleKey(ConsoleKeyInfo key, ObservableCollection<string> document, SubmissionView view)
@@ -133,6 +142,9 @@ namespace REPL
                 {
                     case ConsoleKey.Enter:
                         HandleEnter(document, view);
+                        break;
+                    case ConsoleKey.Tab:
+                        HandleTab(document, view);
                         break;
                     case ConsoleKey.LeftArrow:
                         HandleLeftArrow(document, view);
@@ -201,9 +213,9 @@ namespace REPL
         private void HandleEnter(ObservableCollection<string> document, SubmissionView view)
         {
             var submissionText = string.Join(Environment.NewLine, document);
-            if (IsCompleteSubmission(submissionText))
+            if (submissionText.StartsWith("#") || IsCompleteSubmission(submissionText))
             {
-                _submissionText = submissionText;
+                _done = true;
                 return;
             }
 
@@ -212,48 +224,11 @@ namespace REPL
             view.CurrentLineIndex = document.Count - 1;
         }
 
+        private void HandleTab(ObservableCollection<string> document, SubmissionView view) => HandleTyping(document, view, "    ");
+
         private void HandleRunKey(ObservableCollection<string> document, SubmissionView view)
         {
-            _submissionText = string.Join(Environment.NewLine, document);
-        }
-
-        private string EditSubmissionOld()
-        {        
-            var textBuilder = new StringBuilder();
-
-            while (true)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                if (textBuilder.Length == 0)
-                    Console.Write("» ");
-                else
-                    Console.Write("· ");
-                Console.ResetColor();
-
-                textBuilder.Clear();
-                
-                string input = Console.ReadLine();
-                var isBlank = string.IsNullOrWhiteSpace(input);
-
-                if (textBuilder.Length == 0)
-                {
-                    if (isBlank)
-                        return null;
-                    
-                    if (input.StartsWith("#"))
-                    {
-                        EvaluateMetaCommand(input);
-                        return null;
-                    }
-                }
-
-                textBuilder.AppendLine(input);
-                var text = textBuilder.ToString();
-                if (!IsCompleteSubmission(text))
-                    continue;
-
-                return text;
-            }
+            _done = true;
         }
 
         protected virtual void EvaluateMetaCommand(string input)
