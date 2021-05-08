@@ -99,6 +99,7 @@ namespace REPL
                     }
                 }
             }
+            
             public int CurrentCharacter { 
                 get => _currentCharacter; 
                 set 
@@ -162,6 +163,12 @@ namespace REPL
                         break;
                     case ConsoleKey.Delete:
                         HandleDelete(document, view);
+                        break;
+                    case ConsoleKey.Home:
+                        HandleHome(document, view);
+                        break;
+                    case ConsoleKey.End:
+                        HandleEnd(document, view);
                         break;
                     case ConsoleKey.F5:
                         HandleRunKey(document, view);
@@ -242,6 +249,16 @@ namespace REPL
             var before = line.Substring(0, start);
             var after = line.Substring(start + 1);
             document[lineIndex] = before + after;
+        }
+
+        private void HandleEnd(ObservableCollection<string> document, SubmissionView view)
+        {
+            view.CurrentCharacter = document[view.CurrentLineIndex].Length;
+        }
+
+        private void HandleHome(ObservableCollection<string> document, SubmissionView view)
+        {
+            view.CurrentCharacter = 0;
         }
 
         private void HandleEnter(ObservableCollection<string> document, SubmissionView view)
