@@ -150,6 +150,9 @@ namespace REPL
                 HandleKey(key, document, view);
             }
 
+            view.CurrentLineIndex = document.Count - 1;
+            view.CurrentCharacter = document[view.CurrentLine].Length;
+
             Console.WriteLine();
 
             if (document.Count == 1 && document[0].Length == 0)
@@ -205,7 +208,7 @@ namespace REPL
                         HandlePageDown(document, view);
                         break;
                     case ConsoleKey.F5:
-                        HandleRunKey(document, view);
+                        HandleSubmitKey(document, view);
                         break;
                 }
             }
@@ -214,7 +217,7 @@ namespace REPL
                 switch (key.Key)
                 {
                     case ConsoleKey.Enter:
-                        HandleRunKey(document, view);
+                        InsertLine(document, view);
                         break;
                 }
             }
@@ -260,15 +263,28 @@ namespace REPL
         {
             var start = view.CurrentCharacter;
             if (start == 0)
-                return;
+            {
+                // merge lines
+                if (view.CurrentLineIndex == 0)
+                    return;
                 
-            var lineIndex = view.CurrentLineIndex;
-            var line = document[lineIndex];
+                var currentLine = document[view.CurrentLineIndex];
+                var previousLine = document[view.CurrentLineIndex - 1];
+                document.RemoveAt(view.CurrentLineIndex);
+                view.CurrentLineIndex--;
+                document[view.CurrentLineIndex] = previousLine + currentLine;
+                view.CurrentCharacter = previousLine.Length;
+            }
+            else
+            {
+                var lineIndex = view.CurrentLineIndex;
+                var line = document[lineIndex];
             
-            var before = line.Substring(0, start - 1);
-            var after = line.Substring(start);
-            document[lineIndex] = before + after;
-            view.CurrentCharacter--;
+                var before = line.Substring(0, start - 1);
+                var after = line.Substring(start);
+                document[lineIndex] = before + after;
+                view.CurrentCharacter--;
+            }
         }
 
         private void HandleDelete(ObservableCollection<string> document, SubmissionView view)
@@ -304,9 +320,7 @@ namespace REPL
                 return;
             }
 
-            document.Add(string.Empty);
-            view.CurrentCharacter = 0;
-            view.CurrentLineIndex = document.Count - 1;
+            InsertLine(document, view);
         }
 
         private void HandleEscape(ObservableCollection<string> document, SubmissionView view)
@@ -333,9 +347,20 @@ namespace REPL
 
         private void HandleTab(ObservableCollection<string> document, SubmissionView view) => HandleTyping(document, view, "    ");
 
-        private void HandleRunKey(ObservableCollection<string> document, SubmissionView view)
+        private void HandleSubmitKey(ObservableCollection<string> document, SubmissionView view)
         {
             _done = true;
+        }
+
+        private static void InsertLine(ObservableCollection<string> document, SubmissionView view)
+        {
+            var remainder = document[view.CurrentLineIndex].Substring(view.CurrentCharacter);
+            document[view.CurrentLineIndex] = document[view.CurrentLineIndex].Substring(0, view.CurrentCharacter);
+
+            var lineIndex = view.CurrentLineIndex + 1;
+            document.Insert(lineIndex, remainder);
+            view.CurrentCharacter = 0;
+            view.CurrentLineIndex = lineIndex;
         }
 
         private void UpdateDocumentFromHistory(ObservableCollection<string> document, SubmissionView view)

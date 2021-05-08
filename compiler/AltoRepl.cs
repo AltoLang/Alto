@@ -97,6 +97,29 @@ namespace REPL
             }
         }
 
+        protected override void RenderLine(string line)
+        {
+            var tokens = SyntaxTree.ParseTokens(line);
+            foreach (var token in tokens)
+            {
+                var isKeyword = token.Kind.ToString().EndsWith("Keyword");
+                var isNumber = token.Kind == SyntaxKind.NumberToken;
+                var isBool = token.Text.ToLower() == "true" || token.Text.ToLower() == "false";
+
+                if (isKeyword && !isBool)
+                    Console.ForegroundColor = ConsoleColor.DarkCyan;
+                else if (isNumber)
+                    Console.ForegroundColor = ConsoleColor.Green;
+                else if (isBool)
+                    Console.ForegroundColor = ConsoleColor.DarkGreen;
+                else
+                    Console.ForegroundColor = ConsoleColor.Gray;
+
+                Console.Write(token.Text);
+                Console.ResetColor();
+            }
+        }
+
         protected override void EvaluateMetaCommand(string input)
         {
             switch (input.ToLower())
