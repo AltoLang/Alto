@@ -26,16 +26,16 @@ namespace REPL
 
         private sealed class SubmissionView
         {
-            private readonly ObservableCollection<string> _submissionCocument;
+            private readonly ObservableCollection<string> _submissionDocument;
             private readonly int _cursorTop;
             private int _renderedLineCount;
             private int _currentLineIndex;
             private int _currentCharacter;
 
-            public SubmissionView(ObservableCollection<string> submissionCocument)
+            public SubmissionView(ObservableCollection<string> submissionDocument)
             {
-                _submissionCocument = submissionCocument;
-                _submissionCocument.CollectionChanged += SubmissionDocumentChanged;
+                _submissionDocument = submissionDocument;
+                _submissionDocument.CollectionChanged += SubmissionDocumentChanged;
                 _cursorTop = Console.CursorTop;
                 Render();
             }
@@ -51,7 +51,7 @@ namespace REPL
 
                 var lineCount = 0;
 
-                foreach (var line in _submissionCocument)
+                foreach (var line in _submissionDocument)
                 {
                     Console.SetCursorPosition(0, _cursorTop + lineCount);
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -94,7 +94,7 @@ namespace REPL
                 {
                     if (_currentLineIndex != value)
                     {
-                        _currentLineIndex = value; 
+                        _currentLineIndex = value;
                         UpdateCursorPosition();
                     }
                 }
@@ -212,7 +212,7 @@ namespace REPL
         private void HandleRightArrow(ObservableCollection<string> document, SubmissionView view)
         {
             var line = document[view.CurrentLineIndex];
-            if (view.CurrentCharacter < line.Length - 1)
+            if (view.CurrentCharacter <= line.Length - 1)
                 view.CurrentCharacter++;
         }
 
