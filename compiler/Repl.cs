@@ -47,13 +47,13 @@ namespace REPL
 
             private void Render()
             {
-                Console.SetCursorPosition(0, _cursorTop);
                 Console.CursorVisible = false;
 
                 var lineCount = 0;
 
                 foreach (var line in _submissionCocument)
                 {
+                    Console.SetCursorPosition(0, _cursorTop + lineCount);
                     Console.ForegroundColor = ConsoleColor.Green;
                     if (lineCount == 0)
                         Console.Write("» ");
@@ -92,7 +92,7 @@ namespace REPL
                 get => _currentLineIndex; 
                 set 
                 {
-                    if (_currentCharacter != value)
+                    if (_currentLineIndex != value)
                     {
                         _currentLineIndex = value; 
                         UpdateCursorPosition();
