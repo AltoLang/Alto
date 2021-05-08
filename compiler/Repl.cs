@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Text;
@@ -7,6 +8,8 @@ namespace REPL
 {
     internal abstract class Repl
     {
+        private List<string> _submissionHistory = new List<string>();
+        private int _submissionHistoryIndex;
         private bool _done;
 
         public void Run()
@@ -21,19 +24,25 @@ namespace REPL
                     EvaluateMetaCommand(text);
                 else
                     EvaluateSubmission(text);
+
+                _submissionHistory.Add(text);
+                _submissionHistoryIndex = 0;
             }
         }
 
         private sealed class SubmissionView
         {
+            private readonly Action<string> _lineRenderer;
             private readonly ObservableCollection<string> _submissionDocument;
             private readonly int _cursorTop;
             private int _renderedLineCount;
             private int _currentLineIndex;
             private int _currentCharacter;
+            private int _currentLine;
 
-            public SubmissionView(ObservableCollection<string> submissionDocument)
+            public SubmissionView(Action<string> lineRenderer, ObservableCollection<string> submissionDocument)
             {
+                _lineRenderer = lineRenderer;
                 _submissionDocument = submissionDocument;
                 _submissionDocument.CollectionChanged += SubmissionDocumentChanged;
                 _cursorTop = Console.CursorTop;
@@ -60,8 +69,8 @@ namespace REPL
                     else
                         Console.Write("· ");
                     Console.ResetColor();
-
-                    Console.WriteLine(line + new string(' ', Console.WindowWidth - line.Length));
+                    _lineRenderer(line);
+                    Console.WriteLine(new string(' ', Console.WindowWidth - line.Length));
                     lineCount++;
                 }
 
@@ -69,8 +78,9 @@ namespace REPL
                 if (numberOfBlankLines > 0)
                 {
                     var blankLine = new string(' ', Console.WindowWidth);
-                    while (numberOfBlankLines > 0)
+                    for (var i = 0; i < numberOfBlankLines; i++)
                     {
+                        Console.SetCursorPosition(0, _cursorTop + lineCount + i);
                         Console.WriteLine(blankLine);
                     }
                 }
@@ -87,6 +97,20 @@ namespace REPL
                 Console.CursorLeft = 2 + _currentCharacter;
             }
 
+            public int CurrentLine
+            {
+                get => _currentLine;
+                set
+                {
+                    if (_currentLine != value)
+                    {
+                        _currentLine = value;
+                        _currentCharacter = Math.Min(_submissionDocument[_currentLine].Length, _currentCharacter);
+                        UpdateCursorPosition();
+                    }
+                }
+            }
+
             public int CurrentLineIndex 
             { 
                 get => _currentLineIndex; 
@@ -95,6 +119,7 @@ namespace REPL
                     if (_currentLineIndex != value)
                     {
                         _currentLineIndex = value;
+                        _currentCharacter = Math.Min(_submissionDocument[_currentLineIndex].Length, _currentCharacter);
                         UpdateCursorPosition();
                     }
                 }
@@ -117,7 +142,7 @@ namespace REPL
         {
             _done = false;
             var document = new ObservableCollection<string>() { "" };
-            var view = new SubmissionView(document);
+            var view = new SubmissionView(RenderLine, document);
 
             while (!_done)
             {
@@ -142,6 +167,9 @@ namespace REPL
                 {
                     case ConsoleKey.Enter:
                         HandleEnter(document, view);
+                        break;
+                    case ConsoleKey.Escape:
+                        HandleEscape(document, view);
                         break;
                     case ConsoleKey.Tab:
                         HandleTab(document, view);
@@ -169,6 +197,12 @@ namespace REPL
                         break;
                     case ConsoleKey.End:
                         HandleEnd(document, view);
+                        break;
+                    case ConsoleKey.PageUp:
+                        HandlePageUp(document, view);
+                        break;
+                    case ConsoleKey.PageDown:
+                        HandlePageDown(document, view);
                         break;
                     case ConsoleKey.F5:
                         HandleRunKey(document, view);
@@ -275,11 +309,56 @@ namespace REPL
             view.CurrentLineIndex = document.Count - 1;
         }
 
+        private void HandleEscape(ObservableCollection<string> document, SubmissionView view)
+        {
+            document[view.CurrentLineIndex] = string.Empty;
+            view.CurrentCharacter = 0;
+        }
+
+        private void HandlePageUp(ObservableCollection<string> document, SubmissionView view)
+        {
+            _submissionHistoryIndex--;
+            if (_submissionHistoryIndex < 0)
+                _submissionHistoryIndex = _submissionHistory.Count - 1;
+            UpdateDocumentFromHistory(document, view);
+        }
+
+        private void HandlePageDown(ObservableCollection<string> document, SubmissionView view)
+        {
+            _submissionHistoryIndex++;
+            if (_submissionHistoryIndex > _submissionHistory.Count - 1)
+                _submissionHistoryIndex = 0;
+            UpdateDocumentFromHistory(document, view);
+        }
+
         private void HandleTab(ObservableCollection<string> document, SubmissionView view) => HandleTyping(document, view, "    ");
 
         private void HandleRunKey(ObservableCollection<string> document, SubmissionView view)
         {
             _done = true;
+        }
+
+        private void UpdateDocumentFromHistory(ObservableCollection<string> document, SubmissionView view)
+        {
+            document.Clear();
+            
+            var historyItem = _submissionHistory[_submissionHistoryIndex];
+            var lines = historyItem.Split(System.Environment.NewLine);
+            foreach (var line in lines)
+                document.Add(line);
+
+            view.CurrentLine = document.Count - 1;
+            view.CurrentCharacter = document[view.CurrentLineIndex].Length;
+        }
+
+        protected void ClearHistory()
+        {
+            _submissionHistory.Clear();
+        }
+
+        protected virtual void RenderLine(string line)
+        {
+            Console.Write(line);
         }
 
         protected virtual void EvaluateMetaCommand(string input)
