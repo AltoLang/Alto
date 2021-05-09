@@ -364,9 +364,11 @@ namespace REPL
         }
 
         private void UpdateDocumentFromHistory(ObservableCollection<string> document, SubmissionView view)
-        {
-            document.Clear();
+        {   
+            if (_submissionHistory.Count == 0)
+                return;
             
+            document.Clear();
             var historyItem = _submissionHistory[_submissionHistoryIndex];
             var lines = historyItem.Split(System.Environment.NewLine);
             foreach (var line in lines)
