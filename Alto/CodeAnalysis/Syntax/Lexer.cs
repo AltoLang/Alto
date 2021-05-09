@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Alto.CodeAnalysis.Text;
 
 namespace Alto.CodeAnalysis.Syntax
