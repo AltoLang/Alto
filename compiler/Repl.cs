@@ -294,7 +294,16 @@ namespace REPL
 
             var start = view.CurrentCharacter;
             if (start > line.Length - 1)
+            {
+                if (view.CurrentLineIndex == document.Count - 1)
+                    return;
+
+                var nextLine = document[view.CurrentLineIndex + 1];
+                document[view.CurrentLineIndex] += nextLine;
+                document.RemoveAt(view.CurrentLineIndex + 1);
+
                 return;
+            }
             
             var before = line.Substring(0, start);
             var after = line.Substring(start + 1);
@@ -364,9 +373,11 @@ namespace REPL
         }
 
         private void UpdateDocumentFromHistory(ObservableCollection<string> document, SubmissionView view)
-        {
-            document.Clear();
+        {   
+            if (_submissionHistory.Count == 0)
+                return;
             
+            document.Clear();
             var historyItem = _submissionHistory[_submissionHistoryIndex];
             var lines = historyItem.Split(System.Environment.NewLine);
             foreach (var line in lines)
