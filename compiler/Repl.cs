@@ -294,7 +294,16 @@ namespace REPL
 
             var start = view.CurrentCharacter;
             if (start > line.Length - 1)
+            {
+                if (view.CurrentLineIndex == document.Count - 1)
+                    return;
+
+                var nextLine = document[view.CurrentLineIndex + 1];
+                document[view.CurrentLineIndex] += nextLine;
+                document.RemoveAt(view.CurrentLineIndex + 1);
+
                 return;
+            }
             
             var before = line.Substring(0, start);
             var after = line.Substring(start + 1);
