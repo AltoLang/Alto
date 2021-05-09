@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Alto.CodeAnalysis.Text;
 
 namespace Alto.CodeAnalysis.Syntax
@@ -169,7 +166,7 @@ namespace Alto.CodeAnalysis.Syntax
                     {
                         ReadWhiteSpaceToken();
                     }
-                    else if (char.IsLetter(Current))
+                    else if (char.IsLetter(Current) || Current == '_')
                     {
                         ReadIdentifierOrKeyword();
                     }
@@ -199,7 +196,7 @@ namespace Alto.CodeAnalysis.Syntax
 
         private void ReadIdentifierOrKeyword()
         {
-            while (char.IsLetter(Current))
+            while (char.IsLetter(Current) || Current == '_')
                 _position++;
             
             var length = _position - _start;
