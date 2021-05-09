@@ -165,7 +165,7 @@ namespace Alto.CodeAnalysis.Syntax
                     {
                         ReadNumberToken();
                     }
-                    else if (char.IsWhiteSpace(Current))
+                    else if (char.IsWhiteSpace(Current) || char == '_')
                     {
                         ReadWhiteSpaceToken();
                     }
