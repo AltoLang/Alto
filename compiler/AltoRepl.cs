@@ -155,18 +155,10 @@ namespace REPL
 
             var syntaxTree = SyntaxTree.Parse(text);
 
-            if (GetLastToken(syntaxTree.Root.Statement).IsMissing)
+            if (syntaxTree.Root.Statement.GetLastToken().IsMissing)
                 return false;
 
             return true;
-        }
-
-        private static SyntaxToken GetLastToken(SyntaxNode node)
-        {
-            if (node is SyntaxToken token)
-                return token;
-
-            return GetLastToken(node.GetChildren().Last());
         }
     }
 }
