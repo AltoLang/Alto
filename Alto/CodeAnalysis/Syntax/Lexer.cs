@@ -2,6 +2,11 @@ using Alto.CodeAnalysis.Text;
 
 namespace Alto.CodeAnalysis.Syntax
 {
+
+    /// <summary>
+    /// Here, we lex the input text into their respective SyntaxTokens.
+    /// </summary>
+
     internal class Lexer
     {
         private readonly SourceText _text;

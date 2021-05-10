@@ -104,6 +104,7 @@ namespace REPL
             {
                 var isKeyword = token.Kind.ToString().EndsWith("Keyword");
                 var isNumber = token.Kind == SyntaxKind.NumberToken;
+                var isIdentifier = token.Kind == SyntaxKind.IdentifierToken;
                 var isBool = token.Text.ToLower() == "true" || token.Text.ToLower() == "false";
 
                 if (isKeyword && !isBool)
@@ -112,6 +113,9 @@ namespace REPL
                     Console.ForegroundColor = ConsoleColor.Green;
                 else if (isBool)
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
+                else if (isIdentifier)
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+
                 else
                     Console.ForegroundColor = ConsoleColor.Gray;
 
