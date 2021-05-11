@@ -1,10 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Xunit;
 using System.Linq;
 
 using Alto.CodeAnalysis.Syntax;
-using System;
+using Alto.CodeAnalysis.Text;
 
 namespace Alto.Tests.CodeAnalysis.Syntax
 {
@@ -15,7 +16,15 @@ namespace Alto.Tests.CodeAnalysis.Syntax
         public void Lexer_Lexes_UnterminatedString()
         {
             var text = "\" unterminated string test";
-            var tokens = SyntaxTree.ParseTokens(text);
+            var tokens = SyntaxTree.ParseTokens(text, out var diagnostics);
+
+            var token = Assert.Single(tokens);
+            Assert.Equal(SyntaxKind.StringToken, token.Kind);
+            Assert.Equal(text, token.Text);
+
+            var diagnostic = Assert.Single(diagnostics);
+            Assert.Equal(new TextSpan(0, 1), diagnostic.Span);
+            Assert.Equal("Unterminated string literal.", diagnostic.Message);
         }
 
         [Theory]

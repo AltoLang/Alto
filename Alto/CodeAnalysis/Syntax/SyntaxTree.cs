@@ -34,25 +34,25 @@ namespace Alto.CodeAnalysis.Syntax
             return new SyntaxTree(text);
         }
 
-        public static IEnumerable<SyntaxToken> ParseTokens(string text)
+        public static ImmutableArray<SyntaxToken> ParseTokens(string text)
         {
             var sourceText =  SourceText.From(text);
             return ParseTokens(sourceText);
         }
     
-        public static IEnumerable<SyntaxToken> ParseTokens(string text, out ImmutableArray<Diagnostic> diagnostics)
+        public static ImmutableArray<SyntaxToken> ParseTokens(string text, out ImmutableArray<Diagnostic> diagnostics)
         {
             var sourceText =  SourceText.From(text);
             return ParseTokens(sourceText, out diagnostics);
         }
 
 
-        public static IEnumerable<SyntaxToken> ParseTokens(SourceText text)
+        public static ImmutableArray<SyntaxToken> ParseTokens(SourceText text)
         {
             return ParseTokens(text, out _);
         }
 
-        public static IEnumerable<SyntaxToken> ParseTokens(SourceText text, out ImmutableArray<Diagnostic> diagnostics)
+        public static ImmutableArray<SyntaxToken> ParseTokens(SourceText text, out ImmutableArray<Diagnostic> diagnostics)
         {
             IEnumerable<SyntaxToken> LexTokens(Lexer lexer)
             {
@@ -67,7 +67,7 @@ namespace Alto.CodeAnalysis.Syntax
             }
 
             var lexer = new Lexer(text);
-            var result = LexTokens(lexer);
+            var result = LexTokens(lexer).ToImmutableArray();
             diagnostics = lexer.Diagnostics.ToImmutableArray();
             return result;
         }
