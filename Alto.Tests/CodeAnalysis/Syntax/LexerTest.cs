@@ -11,6 +11,13 @@ namespace Alto.Tests.CodeAnalysis.Syntax
 
     public class LexerTest
     {
+        [Fact]
+        public void Lexer_Lexes_UnterminatedString()
+        {
+            var text = "\" unterminated string test";
+            var tokens = SyntaxTree.ParseTokens(text);
+        }
+
         [Theory]
         [MemberData(nameof(GetTokensData))]
         public void Lexer_Lex_Token(SyntaxKind kind, string text)
@@ -97,6 +104,10 @@ namespace Alto.Tests.CodeAnalysis.Syntax
                 (SyntaxKind.NumberToken, "4516541"),
                 (SyntaxKind.NumberToken, "4"),
                 (SyntaxKind.NumberToken, "782"),
+
+                (SyntaxKind.StringToken, "\"idk\""),
+                (SyntaxKind.StringToken, "\"idk asdasdwdasdw test\""),
+                (SyntaxKind.StringToken, "\" test " + @"\" + "\"" + " test \""),
             };
 
             return fixedTokens.Concat(dynamicTokens);

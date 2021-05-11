@@ -39,18 +39,37 @@ namespace Alto.CodeAnalysis.Syntax
             var sourceText =  SourceText.From(text);
             return ParseTokens(sourceText);
         }
+    
+        public static IEnumerable<SyntaxToken> ParseTokens(string text, out ImmutableArray<Diagnostic> diagnostics)
+        {
+            var sourceText =  SourceText.From(text);
+            return ParseTokens(sourceText, out diagnostics);
+        }
+
 
         public static IEnumerable<SyntaxToken> ParseTokens(SourceText text)
         {
-            var lexer = new Lexer(text);
-            while (true)
+            return ParseTokens(text, out _);
+        }
+
+        public static IEnumerable<SyntaxToken> ParseTokens(SourceText text, out ImmutableArray<Diagnostic> diagnostics)
+        {
+            IEnumerable<SyntaxToken> LexTokens(Lexer lexer)
             {
-                var token = lexer.Lex();
-                if (token.Kind == SyntaxKind.EndOfFileToken)
-                    break;
-                
-                yield return token;
+                while (true)
+                {
+                    var token = lexer.Lex();
+                    if (token.Kind == SyntaxKind.EndOfFileToken)
+                        break;
+                    
+                    yield return token;
+                }
             }
+
+            var lexer = new Lexer(text);
+            var result = LexTokens(lexer);
+            diagnostics = lexer.Diagnostics.ToImmutableArray();
+            return result;
         }
     }
 }
