@@ -69,22 +69,8 @@ namespace Alto.CodeAnalysis
         private void EvaluatePrintStatement(BoundPrintStatement node)
         {
             //TEMP
-            try
-            {
-                var print = (int)EvaluateExpression(node.Print);
-                Console.WriteLine(print.ToString());
-            } 
-            catch
-            {
-                try
-                {
-                    var print = (bool)EvaluateExpression(node.Print);
-                    Console.WriteLine(print.ToString());
-                }
-                catch
-                {
-                }
-            }
+            var e = EvaluateExpression(node.Print);
+            Console.WriteLine(e.ToString());
         }
         
         private void EvaluateVariableDeclaration(BoundVariableDeclaration node)
