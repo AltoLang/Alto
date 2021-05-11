@@ -157,6 +157,16 @@ namespace REPL
             if (string.IsNullOrEmpty(text))
                 return true;
 
+            // checks if the 2 last lines are blank
+            var forceComplete = text.Split(Environment.NewLine)
+                                        .Reverse()
+                                        .TakeWhile(s => string.IsNullOrEmpty(s))
+                                        .Take(2)
+                                        .Count() == 2;
+
+            if (forceComplete)
+                return true;
+
             var syntaxTree = SyntaxTree.Parse(text);
 
             if (syntaxTree.Root.Statement.GetLastToken().IsMissing)
