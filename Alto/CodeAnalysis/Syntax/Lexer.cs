@@ -1,7 +1,13 @@
+using System.Text;
 using Alto.CodeAnalysis.Text;
 
 namespace Alto.CodeAnalysis.Syntax
 {
+
+    /// <summary>
+    /// Here, we lex the input text into their respective SyntaxTokens.
+    /// </summary>
+
     internal class Lexer
     {
         private readonly SourceText _text;
@@ -156,6 +162,9 @@ namespace Alto.CodeAnalysis.Syntax
                         _kind = SyntaxKind.GreaterOrEqualsToken;
                     }
                     break;
+                case '"':
+                    ReadString();
+                    break;
                 default:
 
                     if (char.IsDigit(Current))
@@ -184,6 +193,50 @@ namespace Alto.CodeAnalysis.Syntax
                 text = _text.ToString(_start, length);
             
             return new SyntaxToken(_kind, _start, text, _value);
+        }
+
+        private void ReadString()
+        {
+            // don't care about the first quote
+            _position++;
+
+            var sb = new StringBuilder();
+            var done = false;
+            while (!done)
+            {
+                switch (Current)
+                {
+                    case '\0':
+                    case '\r':
+                    case '\n':
+                        var span = new TextSpan(_start, 1);
+                        _diagnostics.ReportUnterminatedString(span);
+                        done = true;
+                        break;
+                    case '\\':
+                        if (Lookahead == '"')
+                        {
+                            sb.Append(Lookahead);
+                            _position += 2;
+                        }
+                        else
+                        {
+                            _position++;
+                        }
+                        break;
+                    case '"':
+                        _position++;
+                        done = true;
+                        break;
+                    default:
+                        sb.Append(Current);
+                        _position++;
+                        break;
+                }
+            }
+
+            _kind = SyntaxKind.StringToken;
+            _value = sb.ToString();
         }
 
         private void ReadWhiteSpaceToken()

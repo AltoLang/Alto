@@ -10,6 +10,7 @@ namespace Alto.CodeAnalysis.Syntax
 
         //Data-Type Tokens
         NumberToken,
+        StringToken,
 
         //Operator Tokens
         PlusToken,

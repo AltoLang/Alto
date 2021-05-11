@@ -276,10 +276,6 @@ namespace REPL
                 view.CurrentCharacter = previousLine.Length;
 
                 view.CurrentLineIndex = document.Count  - previousLine.Length;
-                bool marked = view.CurrentLineIndex == document.Count;
-                if (marked)
-                    return;
-                
             }
             else
             {

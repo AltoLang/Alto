@@ -104,6 +104,7 @@ namespace REPL
             {
                 var isKeyword = token.Kind.ToString().EndsWith("Keyword");
                 var isNumber = token.Kind == SyntaxKind.NumberToken;
+                var isIdentifier = token.Kind == SyntaxKind.IdentifierToken;
                 var isBool = token.Text.ToLower() == "true" || token.Text.ToLower() == "false";
 
                 if (isKeyword && !isBool)
@@ -112,6 +113,9 @@ namespace REPL
                     Console.ForegroundColor = ConsoleColor.Green;
                 else if (isBool)
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
+                else if (isIdentifier)
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+
                 else
                     Console.ForegroundColor = ConsoleColor.Gray;
 
@@ -153,20 +157,22 @@ namespace REPL
             if (string.IsNullOrEmpty(text))
                 return true;
 
+            // checks if the 2 last lines are blank
+            var forceComplete = text.Split(Environment.NewLine)
+                                        .Reverse()
+                                        .TakeWhile(s => string.IsNullOrEmpty(s))
+                                        .Take(2)
+                                        .Count() == 2;
+
+            if (forceComplete)
+                return true;
+
             var syntaxTree = SyntaxTree.Parse(text);
 
-            if (GetLastToken(syntaxTree.Root.Statement).IsMissing)
+            if (syntaxTree.Root.Statement.GetLastToken().IsMissing)
                 return false;
 
             return true;
-        }
-
-        private static SyntaxToken GetLastToken(SyntaxNode node)
-        {
-            if (node is SyntaxToken token)
-                return token;
-
-            return GetLastToken(node.GetChildren().Last());
         }
     }
 }

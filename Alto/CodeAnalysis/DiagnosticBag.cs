@@ -89,5 +89,11 @@ namespace Alto.CodeAnalysis
             var message = $"Cannot convert type '{type}' to type '{targetType}'.";
             Report(span, message);
         }
+
+        internal void ReportUnterminatedString(TextSpan span)
+        {
+            var message = $"Unterminated string literal.";
+            Report(span, message);
+        }
     }
 }

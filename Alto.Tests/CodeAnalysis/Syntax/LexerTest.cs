@@ -1,16 +1,32 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Xunit;
 using System.Linq;
 
 using Alto.CodeAnalysis.Syntax;
-using System;
+using Alto.CodeAnalysis.Text;
 
 namespace Alto.Tests.CodeAnalysis.Syntax
 {
 
     public class LexerTest
     {
+        [Fact]
+        public void Lexer_Lexes_UnterminatedString()
+        {
+            var text = "\" unterminated string test";
+            var tokens = SyntaxTree.ParseTokens(text, out var diagnostics);
+
+            var token = Assert.Single(tokens);
+            Assert.Equal(SyntaxKind.StringToken, token.Kind);
+            Assert.Equal(text, token.Text);
+
+            var diagnostic = Assert.Single(diagnostics);
+            Assert.Equal(new TextSpan(0, 1), diagnostic.Span);
+            Assert.Equal("Unterminated string literal.", diagnostic.Message);
+        }
+
         [Theory]
         [MemberData(nameof(GetTokensData))]
         public void Lexer_Lex_Token(SyntaxKind kind, string text)
@@ -97,6 +113,10 @@ namespace Alto.Tests.CodeAnalysis.Syntax
                 (SyntaxKind.NumberToken, "4516541"),
                 (SyntaxKind.NumberToken, "4"),
                 (SyntaxKind.NumberToken, "782"),
+
+                (SyntaxKind.StringToken, "\"idk\""),
+                (SyntaxKind.StringToken, "\"idk asdasdwdasdw test\""),
+                (SyntaxKind.StringToken, "\" test " + @"\" + "\"" + " test \""),
             };
 
             return fixedTokens.Concat(dynamicTokens);

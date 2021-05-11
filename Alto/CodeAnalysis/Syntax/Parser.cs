@@ -241,6 +241,9 @@ namespace Alto.CodeAnalysis.Syntax
                 case SyntaxKind.NumberToken:
                     return ParseNumberLiteral();
 
+                case SyntaxKind.StringToken:
+                    return ParseStringLiteral();
+
                 case SyntaxKind.IdentifierToken:
                 default:
                     return ParseNameExpression();
@@ -249,7 +252,13 @@ namespace Alto.CodeAnalysis.Syntax
 
         private ExpressionSyntax ParseNumberLiteral()
         {
-            var numberToken = MatchToken(SyntaxKind.NumberToken);
+            var stringToken = MatchToken(SyntaxKind.NumberToken);
+            return new LiteralExpressionSyntax(stringToken);
+        }
+
+        private ExpressionSyntax ParseStringLiteral()
+        {
+            var numberToken = MatchToken(SyntaxKind.StringToken);
             return new LiteralExpressionSyntax(numberToken);
         }
 
