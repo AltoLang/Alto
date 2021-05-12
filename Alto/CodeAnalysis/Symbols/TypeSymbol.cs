@@ -11,8 +11,6 @@ namespace Alto.CodeAnalysis.Symbols
         {}
 
         public override SymbolKind Kind => SymbolKind.Type;
-        public string Name { get; }
-
         public override string ToString() => Name;
     }
 }

@@ -160,11 +160,11 @@ namespace Alto.CodeAnalysis.Lowering
             
             var variableDeclaration = new BoundVariableDeclaration(node.Variable, node.LowerBound);
             var variableExpression = new BoundVariableExpression(node.Variable);
-            var upperBoundSymbol = new VariableSymbol("upperBound", true, typeof(int));
+            var upperBoundSymbol = new VariableSymbol("upperBound", true, TypeSymbol.Int);
             var upperBoundDeclaration = new BoundVariableDeclaration(upperBoundSymbol, node.UpperBound);
             var condition = new BoundBinaryExpression(
                 variableExpression,
-                BoundBinaryOperator.Bind(SyntaxKind.LesserOrEqualsToken, typeof(int), typeof(int)), 
+                BoundBinaryOperator.Bind(SyntaxKind.LesserOrEqualsToken, TypeSymbol.Int, TypeSymbol.Int), 
                 new BoundVariableExpression(upperBoundSymbol)
             );
             
@@ -172,7 +172,7 @@ namespace Alto.CodeAnalysis.Lowering
                 new BoundAssignmentExpression(node.Variable, 
                     new BoundBinaryExpression(
                         variableExpression, 
-                        BoundBinaryOperator.Bind(SyntaxKind.PlusToken, typeof(int), typeof(int)),
+                        BoundBinaryOperator.Bind(SyntaxKind.PlusToken, TypeSymbol.Int, TypeSymbol.Int),
                         new BoundLiteralExpression(1)
                     )
                 )

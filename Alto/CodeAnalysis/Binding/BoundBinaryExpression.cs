@@ -1,4 +1,5 @@
 using System;
+using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.CodeAnalysis.Binding
 {
@@ -11,7 +12,7 @@ namespace Alto.CodeAnalysis.Binding
             Right = right;
         }
 
-        public override Type Type => Op.Type;
+        public override TypeSymbol Type => Op.Type;
         public override BoundNodeKind Kind => BoundNodeKind.BinaryExpression;
 
         public BoundExpression Left { get; }

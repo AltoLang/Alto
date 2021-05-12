@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Syntax;
 using Alto.CodeAnalysis.Text;
 
@@ -29,9 +30,9 @@ namespace Alto.CodeAnalysis
             _diagnostics.Add(diagnostic);
         }
 
-        public void ReportInvalidNumber(TextSpan textSpan, string text, Type type)
+        public void ReportInvalidNumber(TextSpan textSpan, string text, TypeSymbol type)
         {
-            var message = $"The number '{text}' isn't a valid '{type}'";
+            var message = $"The number '{text}' isn't a valid '{type.ToString()}'";
             Report(textSpan, message);
         }
 
@@ -48,9 +49,9 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
-        public void ReportUndefinedUnaryOperator(TextSpan span, string operatorText, Type operandType)
+        public void ReportUndefinedUnaryOperator(TextSpan span, string operatorText, TypeSymbol operandType)
         {
-            var message = $"Unary operator '{operatorText}' is not defined for type '{operandType}'.";
+            var message = $"Unary operator '{operatorText}' is not defined for type '{operandType.ToString()}'.";
             Report(span, message);
         }
 
@@ -60,9 +61,9 @@ namespace Alto.CodeAnalysis
            Report(span, message);
         }
 
-        public void ReportUndefinedBinaryOperator(TextSpan span, string text, Type leftType, Type rightType)
+        public void ReportUndefinedBinaryOperator(TextSpan span, string text, TypeSymbol leftType, TypeSymbol rightType)
         {
-            var message = $"Binary operator '{text}' is not defined for type '{leftType}' and '{rightType}'.";
+            var message = $"Binary operator '{text}' is not defined for type '{leftType.ToString()}' and '{rightType.ToString()}'.";
             Report(span, message);
         }
 
@@ -72,9 +73,9 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
-        internal void VariableCannotConvert(TextSpan span, Type fromType, Type toType)
+        internal void VariableCannotConvert(TextSpan span, TypeSymbol fromType, TypeSymbol toType)
         {
-            var message = $"Cannot convert type '{fromType}' to type '{toType}'.";
+            var message = $"Cannot convert type '{fromType.ToString()}' to type '{toType.ToString()}'.";
             Report(span, message);
         }
 
@@ -84,9 +85,9 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
-        internal void ReportCannotConvert(TextSpan span, Type type, Type targetType)
+        internal void ReportCannotConvert(TextSpan span, TypeSymbol type, TypeSymbol targetType)
         {
-            var message = $"Cannot convert type '{type}' to type '{targetType}'.";
+            var message = $"Cannot convert type '{type.ToString()}' to type '{targetType.ToString()}'.";
             Report(span, message);
         }
 

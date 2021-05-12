@@ -4,7 +4,7 @@ namespace Alto.CodeAnalysis.Symbols
 {
     public sealed class VariableSymbol : Symbol
     {
-        internal VariableSymbol(string name, bool isReadOnly, Type type)
+        internal VariableSymbol(string name, bool isReadOnly, TypeSymbol type)
             : base(name)
         {
             IsReadOnly = isReadOnly;
@@ -12,7 +12,7 @@ namespace Alto.CodeAnalysis.Symbols
         }
 
         public bool IsReadOnly { get; }
-        public Type Type { get; }
+        public TypeSymbol Type { get; }
 
         public override SymbolKind Kind => SymbolKind.Variable;
         public override string ToString() => Name;
