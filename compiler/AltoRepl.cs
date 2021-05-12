@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Alto.CodeAnalysis;
+using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Syntax;
 using Alto.CodeAnalysis.Text;
 

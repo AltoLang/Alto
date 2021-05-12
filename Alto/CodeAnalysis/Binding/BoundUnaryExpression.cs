@@ -1,4 +1,5 @@
 using System;
+using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.CodeAnalysis.Binding
 {
@@ -10,7 +11,7 @@ namespace Alto.CodeAnalysis.Binding
             Operand = operand;
         }
 
-        public override Type Type => Op.Type;
+        public override TypeSymbol Type => Op.Type;
         public override BoundNodeKind Kind => BoundNodeKind.UnaryExpression;
         public BoundUnaryOperator Op { get; }
         public BoundExpression Operand { get; }

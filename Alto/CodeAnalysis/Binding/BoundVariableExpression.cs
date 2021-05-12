@@ -1,4 +1,5 @@
 using System;
+using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.CodeAnalysis.Binding
 {
@@ -10,7 +11,7 @@ namespace Alto.CodeAnalysis.Binding
         }
 
         public VariableSymbol Variable { get; }
-        public override Type Type => Variable.Type;
+        public override TypeSymbol Type => Variable.Type;
         public override BoundNodeKind Kind => BoundNodeKind.VariableExpression;
     }
 }

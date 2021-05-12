@@ -1,4 +1,5 @@
 using System.Text;
+using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Text;
 
 namespace Alto.CodeAnalysis.Syntax
@@ -265,7 +266,7 @@ namespace Alto.CodeAnalysis.Syntax
             var length = _position - _start;
             var text = _text.ToString(_start, length);
             if (!int.TryParse(text, out var value))
-                _diagnostics.ReportInvalidNumber(new TextSpan(_start, length), text, typeof(int));
+                _diagnostics.ReportInvalidNumber(new TextSpan(_start, length), text, TypeSymbol.Int);
 
             _kind = SyntaxKind.NumberToken;
             _value = value;

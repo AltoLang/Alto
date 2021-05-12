@@ -4,6 +4,7 @@ using Xunit;
 
 using Alto.CodeAnalysis;
 using Alto.CodeAnalysis.Syntax;
+using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.Tests.CodeAnalysis
 {
@@ -160,7 +161,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Cannot convert type 'System.Int32' to type 'System.Boolean'.
+                Cannot convert type 'int' to type 'bool'.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -180,7 +181,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Cannot convert type 'System.Int32' to type 'System.Boolean'.
+                Cannot convert type 'int' to type 'bool'.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -200,7 +201,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Cannot convert type 'System.Int32' to type 'System.Boolean'.
+                Cannot convert type 'int' to type 'bool'.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -220,7 +221,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Cannot convert type 'System.Boolean' to type 'System.Int32'.
+                Cannot convert type 'bool' to type 'int'.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -234,7 +235,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Cannot convert type 'System.Boolean' to type 'System.Int32'.
+                Cannot convert type 'bool' to type 'int'.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -246,7 +247,7 @@ namespace Alto.Tests.CodeAnalysis
             var text = @"[+]true";
 
             var diagnostics = @"
-                Unary operator '+' is not defined for type 'System.Boolean'.
+                Unary operator '+' is not defined for type 'bool'.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -258,7 +259,7 @@ namespace Alto.Tests.CodeAnalysis
             var text = @"10 [%] false";
 
             var diagnostics = @"
-                Binary operator '%' is not defined for type 'System.Int32' and 'System.Boolean'.
+                Binary operator '%' is not defined for type 'int' and 'bool'.
             ";
 
             AssertDiagnostics(text, diagnostics);

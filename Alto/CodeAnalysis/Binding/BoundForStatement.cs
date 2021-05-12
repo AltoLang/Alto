@@ -1,3 +1,5 @@
+using Alto.CodeAnalysis.Symbols;
+
 namespace Alto.CodeAnalysis.Binding
 {
     internal sealed class BoundForStatement : BoundStatement

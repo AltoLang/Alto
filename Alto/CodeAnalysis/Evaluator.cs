@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Alto.CodeAnalysis.Binding;
+using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.CodeAnalysis
 {
@@ -18,7 +19,7 @@ namespace Alto.CodeAnalysis
         }
         public object Evaluate()
         {
-            var labelToIndex = new Dictionary<LabelSymbol, int>();
+            var labelToIndex = new Dictionary<BoundLabel, int>();
 
             for (var i = 0; i < _root.Statements.Length; i++)
                 if (_root.Statements[i] is BoundLabelStatement l)
@@ -142,17 +143,17 @@ namespace Alto.CodeAnalysis
                 case BoundBinaryOperatorKind.Modulus:
                     return (int)left % (int)right;
                 case BoundBinaryOperatorKind.BitwiseAND:
-                    if (b.Type == typeof(int))
+                    if (b.Type == TypeSymbol.Int)
                         return (int)left & (int)right;
                     else
                         return (bool)left & (bool)right;
                 case BoundBinaryOperatorKind.BitwiseOR:
-                    if (b.Type == typeof(int))
+                    if (b.Type == TypeSymbol.Int)
                         return (int)left | (int)right;
                     else
                         return (bool)left | (bool)right;
                 case BoundBinaryOperatorKind.BitwiseXOR:
-                    if (b.Type == typeof(int))
+                    if (b.Type == TypeSymbol.Int)
                         return (int)left ^ (int)right;
                     else
                         return (bool)left ^ (bool)right; 
