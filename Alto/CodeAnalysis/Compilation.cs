@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Threading;
 using System.IO;
 using Alto.CodeAnalysis.Lowering;
+using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.CodeAnalysis
 {

@@ -1,4 +1,5 @@
 using System;
+using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.CodeAnalysis.Binding
 {

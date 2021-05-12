@@ -4,6 +4,7 @@ using System.Linq;
 using Alto.CodeAnalysis.Syntax;
 using System.Reflection.Emit;
 using System.Collections.Immutable;
+using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.CodeAnalysis.Binding
 {

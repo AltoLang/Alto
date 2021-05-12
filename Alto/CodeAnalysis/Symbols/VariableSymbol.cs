@@ -1,6 +1,6 @@
 using System;
 
-namespace Alto.CodeAnalysis
+namespace Alto.CodeAnalysis.Symbols
 {
     public sealed class VariableSymbol
     {

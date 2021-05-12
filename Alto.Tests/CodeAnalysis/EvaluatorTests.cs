@@ -4,6 +4,7 @@ using Xunit;
 
 using Alto.CodeAnalysis;
 using Alto.CodeAnalysis.Syntax;
+using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.Tests.CodeAnalysis
 {

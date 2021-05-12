@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Alto.CodeAnalysis.Binding;
+using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Syntax;
 
 namespace Alto.CodeAnalysis.Lowering

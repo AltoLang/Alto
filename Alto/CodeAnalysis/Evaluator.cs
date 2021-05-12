@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Alto.CodeAnalysis.Binding;
+using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.CodeAnalysis
 {
