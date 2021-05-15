@@ -91,12 +91,13 @@ namespace Alto.CodeAnalysis.Binding
 
         private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax syntax)
         {
-            var name = syntax.Identifier.Text;
+            var name = syntax.Identifier.Text ?? "?";
+            var declare = syntax.Identifier.IsMissing;
             var isReadOnly = syntax.Keyword.Kind == SyntaxKind.LetKeyword;
             var initializer = BindExpression(syntax.Initializer);
             var variable = new VariableSymbol(name, isReadOnly, initializer.Type);
 
-            if (!_scope.TryDeclare(variable))
+            if (declare && !_scope.TryDeclare(variable))
                 _diagnostics.ReportVariableAlreadyDeclared(syntax.Identifier.Span, name);
 
             return new BoundVariableDeclaration(variable, initializer);

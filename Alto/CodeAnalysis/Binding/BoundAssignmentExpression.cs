@@ -3,6 +3,7 @@ using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.CodeAnalysis.Binding
 {
+
     internal sealed class BoundAssignmentExpression : BoundExpression
     {
         public BoundAssignmentExpression(VariableSymbol variable, BoundExpression expression)
