@@ -8,6 +8,7 @@ namespace Alto.CodeAnalysis.Binding
     internal enum BoundNodeKind
     {
         // Expressions
+        ErrorExpression,
         UnaryExpression,
         LiteralExpression,
         VariableExpression,
