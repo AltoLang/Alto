@@ -269,7 +269,7 @@ namespace Alto.CodeAnalysis.Binding
         private VariableSymbol BindVariable(SyntaxToken identifier, bool isReadOnly, TypeSymbol type)
         {
             var name = identifier.Text ?? "?";
-            var declare = identifier.IsMissing;
+            var declare = !identifier.IsMissing;
             var variable = new VariableSymbol(name, isReadOnly, type);
 
             if (declare && !_scope.TryDeclare(variable))
