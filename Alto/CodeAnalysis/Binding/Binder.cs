@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Alto.CodeAnalysis.Syntax;
-using System.Reflection.Emit;
+
 using System.Collections.Immutable;
 using Alto.CodeAnalysis.Symbols;
 
@@ -91,14 +91,9 @@ namespace Alto.CodeAnalysis.Binding
 
         private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax syntax)
         {
-            var name = syntax.Identifier.Text ?? "?";
-            var declare = syntax.Identifier.IsMissing;
             var isReadOnly = syntax.Keyword.Kind == SyntaxKind.LetKeyword;
             var initializer = BindExpression(syntax.Initializer);
-            var variable = new VariableSymbol(name, isReadOnly, initializer.Type);
-
-            if (declare && !_scope.TryDeclare(variable))
-                _diagnostics.ReportVariableAlreadyDeclared(syntax.Identifier.Span, name);
+            var variable = BindVariable(syntax.Identifier, isReadOnly, initializer.Type);
 
             return new BoundVariableDeclaration(variable, initializer);
         }
@@ -122,22 +117,18 @@ namespace Alto.CodeAnalysis.Binding
         {
             var lowerBound = BindExpression(syntax.LowerBound, TypeSymbol.Int);
             var upperBound = BindExpression(syntax.UpperBound, TypeSymbol.Int);
-            
+
             _scope = new BoundScope(_scope);
 
-            var name = syntax.Identifier.Text;
-            var variable = new VariableSymbol(name, true, TypeSymbol.Int);
-            
-            if (!_scope.TryDeclare(variable))
-                _diagnostics.ReportVariableAlreadyDeclared(syntax.Identifier.Span, name);
-            
+            var variable = BindVariable(syntax.Identifier, true, TypeSymbol.Int);
+
             var body = BindStatement(syntax.Body);
 
             _scope = _scope.Parent;
 
             return new BoundForStatement(variable, lowerBound, upperBound, body);
         }
-        
+
         private BoundStatement BindBlockStatement(BlockStatementSyntax syntax)
         {
             var statements = ImmutableArray.CreateBuilder<BoundStatement>();
@@ -184,7 +175,7 @@ namespace Alto.CodeAnalysis.Binding
         private BoundExpression BindExpression(ExpressionSyntax syntax, TypeSymbol targetType)
         {
             var result = BindExpression(syntax);
-            if (result.Type != targetType)
+            if (result.Type != targetType && result.Type != TypeSymbol.Error && targetType != TypeSymbol.Error)
                 Diagnostics.ReportCannotConvert(syntax.Span, result.Type, targetType);
 
             return result;
@@ -194,7 +185,7 @@ namespace Alto.CodeAnalysis.Binding
         {
             var name = syntax.IdentifierToken.Text;
 
-            if (string.IsNullOrEmpty(name))
+            if (syntax.IdentifierToken.IsMissing)
                 return new BoundErrorExpression();
                 
             if (_scope.TryLookup(name, out var variable) == false)
@@ -218,9 +209,7 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             if (variable.IsReadOnly)
-            {
                 _diagnostics.ReportCannotAssign(syntax.AssignmentToken.Span, name);
-            }
 
             if (boundExpression.Type != variable.Type)
             {
@@ -275,6 +264,18 @@ namespace Alto.CodeAnalysis.Binding
         private BoundExpression BindParenthesizedExpression(ParenthesizedExpressionSyntax syntax)
         {
             return BindExpression(syntax.Expression);
+        }
+
+        private VariableSymbol BindVariable(SyntaxToken identifier, bool isReadOnly, TypeSymbol type)
+        {
+            var name = identifier.Text ?? "?";
+            var declare = !identifier.IsMissing;
+            var variable = new VariableSymbol(name, isReadOnly, type);
+
+            if (declare && !_scope.TryDeclare(variable))
+                _diagnostics.ReportVariableAlreadyDeclared(identifier.Span, name);
+            
+            return variable;
         }
     }
 }
