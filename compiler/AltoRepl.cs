@@ -54,7 +54,7 @@ namespace REPL
 
             if (!result.Diagnostics.Any())
             {
-                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine(result.Value);
                 Console.ResetColor();
 
@@ -107,6 +107,7 @@ namespace REPL
                 var isNumber = token.Kind == SyntaxKind.NumberToken;
                 var isIdentifier = token.Kind == SyntaxKind.IdentifierToken;
                 var isBool = token.Text.ToLower() == "true" || token.Text.ToLower() == "false";
+                var isString = token.Kind == SyntaxKind.StringToken;
 
                 if (isKeyword && !isBool)
                     Console.ForegroundColor = ConsoleColor.DarkCyan;
@@ -116,7 +117,8 @@ namespace REPL
                     Console.ForegroundColor = ConsoleColor.DarkGreen;
                 else if (isIdentifier)
                     Console.ForegroundColor = ConsoleColor.Cyan;
-
+                else if (isString)
+                    Console.ForegroundColor = ConsoleColor.Magenta;
                 else
                     Console.ForegroundColor = ConsoleColor.Gray;
 
