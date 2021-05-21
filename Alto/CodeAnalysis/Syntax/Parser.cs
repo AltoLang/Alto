@@ -83,21 +83,9 @@ namespace Alto.CodeAnalysis.Syntax
                     return ParseWhileStatement();
                 case SyntaxKind.ForKeyword:
                     return ParseForStatement();
-                case SyntaxKind.PrintKeyword:
-                    //Temp
-                    return ParsePrintStatement();
                 default:
                     return ParseExpressionStatement();
             }
-        }
-
-
-        private StatementSyntax ParsePrintStatement()
-        {
-            // TEMP
-            var keyword = MatchToken(SyntaxKind.PrintKeyword);
-            var print = ParseExpression();
-            return new PrintStatementSyntax(keyword, print);
         }
 
         private StatementSyntax ParseVariableDeclaration()

@@ -26,8 +26,5 @@ namespace Alto.CodeAnalysis.Binding
         GotoStatement,
         ConditionalGotoStatement,
         LabelStatement,
-
-        //TEMP
-        PrintStatement,
     }
 }

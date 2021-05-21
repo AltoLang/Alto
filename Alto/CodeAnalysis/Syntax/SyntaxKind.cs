@@ -69,9 +69,5 @@ namespace Alto.CodeAnalysis.Syntax
         IfStatement,
         WhileStatement,
         ForStatement,
-
-        //Temp
-        PrintKeyword,
-        PrintStatement,
     }
 }

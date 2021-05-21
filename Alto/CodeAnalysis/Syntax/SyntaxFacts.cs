@@ -77,9 +77,6 @@ namespace Alto.CodeAnalysis.Syntax
                     return SyntaxKind.ForKeyword;
                 case "to":
                     return SyntaxKind.ToKeyword;
-                case "print":
-                    //Temp
-                    return SyntaxKind.PrintKeyword;
                 default:
                     return SyntaxKind.IdentifierToken;
             }
@@ -155,9 +152,6 @@ namespace Alto.CodeAnalysis.Syntax
                     return "to";
                 case SyntaxKind.CommaToken:
                     return ",";
-                case SyntaxKind.PrintKeyword:
-                    //Temp
-                    return "print";
                 default:
                     return null;
             }

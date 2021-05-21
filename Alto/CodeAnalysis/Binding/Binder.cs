@@ -74,19 +74,9 @@ namespace Alto.CodeAnalysis.Binding
                     return BindWhileStatement((WhileStatementSyntax)syntax);
                 case SyntaxKind.ForStatement:
                     return BindForStatement((ForStatementSyntax) syntax);
-                case SyntaxKind.PrintStatement:
-                    //Temp
-                    return BindPrintStatement((PrintStatementSyntax)syntax);
                 default:
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
-        }
-
-        private BoundStatement BindPrintStatement(PrintStatementSyntax syntax)
-        {
-            //TEMP
-            var print = BindExpression(syntax.Print);
-            return new BoundPrintStatement((BoundExpression)print);
         }
 
         private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax syntax)
@@ -281,7 +271,7 @@ namespace Alto.CodeAnalysis.Binding
                 return new BoundErrorExpression();
             }
 
-            if (function.Parameters.Length == syntax.Arguments.Count)
+            if (function.Parameters.Length != syntax.Arguments.Count)
             {
                 _diagnostics.ReportWrongArgumentCount(syntax.Span, function.Name, function.Parameters.Length, syntax.Arguments.Count);
                 return new BoundErrorExpression();

@@ -55,23 +55,11 @@ namespace Alto.CodeAnalysis
                     case BoundNodeKind.LabelStatement:
                         index++;
                         break;
-                    case BoundNodeKind.PrintStatement:
-                        //TEMP
-                        EvaluatePrintStatement((BoundPrintStatement)s);
-                        index++;
-                        break;
                     default:
                         throw new Exception($"Unexpected node {s.Kind}");
                 }
             }   
             return _lastValue;
-        }
-
-        private void EvaluatePrintStatement(BoundPrintStatement node)
-        {
-            //TEMP
-            var e = EvaluateExpression(node.Print);
-            Console.WriteLine(e.ToString());
         }
         
         private void EvaluateVariableDeclaration(BoundVariableDeclaration node)

@@ -105,7 +105,7 @@ namespace Alto.CodeAnalysis
 
         public void ReportWrongArgumentCount(TextSpan span, string name, int expectedCount, int count)
         {
-            var message = $"Function '{name} expects {expectedCount} arguments, got {count}'.";
+            var message = $"Function '{name}' expects '{expectedCount}' argument/s, got '{count}'.";
             Report(span, message);
         }
 

@@ -27,9 +27,6 @@ namespace Alto.CodeAnalysis.Binding
                     return RewriteConditionalGotoStatement((BoundConditionalGotoStatement)node);
                 case BoundNodeKind.LabelStatement:
                     return RewriteLabelStatement((BoundLabelStatement)node);
-                //temp
-                case BoundNodeKind.PrintStatement:
-                    return RewritePrintStatement((BoundPrintStatement)node);
                 default:
                     throw new Exception($"Unexpected node: {node.Kind}.");
             }
@@ -146,11 +143,6 @@ namespace Alto.CodeAnalysis.Binding
         }
 
         protected virtual BoundStatement RewriteLabelStatement(BoundLabelStatement node)
-        {
-            return node;
-        }
-
-         private BoundStatement RewritePrintStatement(BoundPrintStatement node)
         {
             return node;
         }
