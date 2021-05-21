@@ -102,6 +102,8 @@ namespace Alto.CodeAnalysis
                     return EvaluateUnaryExpression((BoundUnaryExpression)node);
                 case BoundNodeKind.BinaryExpression:
                     return EvaluateBinaryExpression((BoundBinaryExpression)node);
+                case BoundNodeKind.CallExpression:
+                    return EvaluateCallExpression((BoundCallExpression)node);
             }
 
             throw new Exception($"Unexpected node {node.Kind}");
@@ -197,6 +199,24 @@ namespace Alto.CodeAnalysis
         {
             var value = _variables[v.Variable];
             return value;
+        }
+
+        private object EvaluateCallExpression(BoundCallExpression node)
+        {
+            if (node.Function == BuiltInFunctions.ReadLine)
+            {
+                return Console.ReadLine();
+            }
+            else if (node.Function == BuiltInFunctions.Print)
+            {
+                var expression = (string)EvaluateExpression(node.Arguments[0]);
+                Console.WriteLine(expression);
+                return null;
+            }
+            else
+            {
+                throw new Exception($"Unexpected function {node.Function.Name}");
+            }
         }
     }
 }

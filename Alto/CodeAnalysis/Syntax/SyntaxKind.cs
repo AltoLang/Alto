@@ -36,6 +36,7 @@ namespace Alto.CodeAnalysis.Syntax
         AmpersandToken,
         PipeToken,
         HatToken,
+        CommaToken,
 
         //Keywords
         FalseKeyword,
@@ -59,6 +60,7 @@ namespace Alto.CodeAnalysis.Syntax
         UnaryExpression,
         NameExpression,
         AssignmentExpression,
+        CallExpression,
 
         //Statements
         BlockStatement,

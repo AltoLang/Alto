@@ -153,6 +153,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return "for";
                 case SyntaxKind.ToKeyword:
                     return "to";
+                case SyntaxKind.CommaToken:
+                    return ",";
                 case SyntaxKind.PrintKeyword:
                     //Temp
                     return "print";
