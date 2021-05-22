@@ -55,23 +55,11 @@ namespace Alto.CodeAnalysis
                     case BoundNodeKind.LabelStatement:
                         index++;
                         break;
-                    case BoundNodeKind.PrintStatement:
-                        //TEMP
-                        EvaluatePrintStatement((BoundPrintStatement)s);
-                        index++;
-                        break;
                     default:
                         throw new Exception($"Unexpected node {s.Kind}");
                 }
             }   
             return _lastValue;
-        }
-
-        private void EvaluatePrintStatement(BoundPrintStatement node)
-        {
-            //TEMP
-            var e = EvaluateExpression(node.Print);
-            Console.WriteLine(e.ToString());
         }
         
         private void EvaluateVariableDeclaration(BoundVariableDeclaration node)
@@ -102,6 +90,8 @@ namespace Alto.CodeAnalysis
                     return EvaluateUnaryExpression((BoundUnaryExpression)node);
                 case BoundNodeKind.BinaryExpression:
                     return EvaluateBinaryExpression((BoundBinaryExpression)node);
+                case BoundNodeKind.CallExpression:
+                    return EvaluateCallExpression((BoundCallExpression)node);
             }
 
             throw new Exception($"Unexpected node {node.Kind}");
@@ -133,7 +123,10 @@ namespace Alto.CodeAnalysis
             switch (b.Op.Kind)
             {
                 case BoundBinaryOperatorKind.Addition:
-                    return (int)left + (int)right;
+                    if (b.Type == TypeSymbol.Int)
+                        return (int)left + (int)right;
+                    else
+                        return (string)left + (string)right;
                 case BoundBinaryOperatorKind.Subtraction:
                     return (int)left - (int)right;
                 case BoundBinaryOperatorKind.Multiplication:
@@ -194,6 +187,24 @@ namespace Alto.CodeAnalysis
         {
             var value = _variables[v.Variable];
             return value;
+        }
+
+        private object EvaluateCallExpression(BoundCallExpression node)
+        {
+            if (node.Function == BuiltInFunctions.ReadLine)
+            {
+                return Console.ReadLine();
+            }
+            else if (node.Function == BuiltInFunctions.Print)
+            {
+                var expression = (string)EvaluateExpression(node.Arguments[0]);
+                Console.WriteLine(expression);
+                return null;
+            }
+            else
+            {
+                throw new Exception($"Unexpected function {node.Function.Name}");
+            }
         }
     }
 }

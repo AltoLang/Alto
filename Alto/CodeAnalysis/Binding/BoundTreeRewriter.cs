@@ -27,9 +27,6 @@ namespace Alto.CodeAnalysis.Binding
                     return RewriteConditionalGotoStatement((BoundConditionalGotoStatement)node);
                 case BoundNodeKind.LabelStatement:
                     return RewriteLabelStatement((BoundLabelStatement)node);
-                //temp
-                case BoundNodeKind.PrintStatement:
-                    return RewritePrintStatement((BoundPrintStatement)node);
                 default:
                     throw new Exception($"Unexpected node: {node.Kind}.");
             }
@@ -51,6 +48,8 @@ namespace Alto.CodeAnalysis.Binding
                     return RewriteAssignmentExpression((BoundAssignmentExpression)node);
                 case BoundNodeKind.BinaryExpression:
                     return RewriteBinaryExpression((BoundBinaryExpression)node);
+                case BoundNodeKind.CallExpression:
+                    return RewriteCallExpression((BoundCallExpression)node);
                 default:
                     throw new Exception($"Unexpected node: {node.Kind}.");
             }
@@ -89,6 +88,7 @@ namespace Alto.CodeAnalysis.Binding
             
             return new BoundBlockStatement(builder.MoveToImmutable());
         }
+
         protected virtual BoundStatement RewriteExpressionStatement(BoundExpressionStatement node)
         {
             var expression = RewriteExpression(node.Expression);
@@ -143,11 +143,6 @@ namespace Alto.CodeAnalysis.Binding
         }
 
         protected virtual BoundStatement RewriteLabelStatement(BoundLabelStatement node)
-        {
-            return node;
-        }
-
-         private BoundStatement RewritePrintStatement(BoundPrintStatement node)
         {
             return node;
         }
@@ -207,5 +202,35 @@ namespace Alto.CodeAnalysis.Binding
 
             return new BoundBinaryExpression(left, node.Op, right);
         }
+    
+        protected virtual BoundExpression RewriteCallExpression(BoundCallExpression node)
+        {
+            ImmutableArray<BoundExpression>.Builder builder = null;
+
+            for (var i = 0; i< node.Arguments.Length; i++)
+            {
+                var oldArg = node.Arguments[i];
+                var newArg = RewriteExpression(oldArg);
+                if (newArg != oldArg)
+                {
+                    if (builder == null)
+                    {
+                        builder = ImmutableArray.CreateBuilder<BoundExpression>(node.Arguments.Length);
+
+                        for (var j = 0; j < i; j++)
+                            builder.Add(node.Arguments[j]);
+                    }                    
+                }
+
+                if (builder != null)
+                    builder.Add(newArg);
+            }
+
+            if (builder == null)
+                return node;
+            
+            return new BoundCallExpression(node.Function, builder.MoveToImmutable());
+        }
+    
     }
 }

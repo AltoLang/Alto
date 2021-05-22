@@ -1,5 +1,6 @@
 namespace Alto.CodeAnalysis.Syntax
 {
+
     public sealed class AssignmentExpressionSyntax : ExpressionSyntax
     {
         public AssignmentExpressionSyntax(SyntaxToken identifierToken, SyntaxToken assignmentToken, ExpressionSyntax expression)

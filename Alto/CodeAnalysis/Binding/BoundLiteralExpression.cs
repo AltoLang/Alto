@@ -14,7 +14,7 @@ namespace Alto.CodeAnalysis.Binding
             else if (value is bool)
                 Type = TypeSymbol.Bool;
             else if (value is string)
-                Type = TypeSymbol.Int;
+                Type = TypeSymbol.String;
             else
                 throw new Exception($"Unexpected literal '{value} of type '{value.GetType()}'.");
         }

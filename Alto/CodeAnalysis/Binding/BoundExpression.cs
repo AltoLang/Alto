@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Syntax;

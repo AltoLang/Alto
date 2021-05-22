@@ -14,6 +14,7 @@ namespace Alto.CodeAnalysis.Binding
         VariableExpression,
         AssignmentExpression,
         BinaryExpression,
+        CallExpression,
 
         // Statements
         BlockStatement,
@@ -25,8 +26,5 @@ namespace Alto.CodeAnalysis.Binding
         GotoStatement,
         ConditionalGotoStatement,
         LabelStatement,
-
-        //TEMP
-        PrintStatement,
     }
 }

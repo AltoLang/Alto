@@ -73,27 +73,45 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
-        internal void VariableCannotConvert(TextSpan span, TypeSymbol fromType, TypeSymbol toType)
+        public void VariableCannotConvert(TextSpan span, TypeSymbol fromType, TypeSymbol toType)
         {
             var message = $"Cannot convert type '{fromType.ToString()}' to type '{toType.ToString()}'.";
             Report(span, message);
         }
 
-        internal void ReportCannotAssign(TextSpan span, string name)
+        public void ReportCannotAssign(TextSpan span, string name)
         {
             var message = $"Cannot assign to variable '{name}'.";
             Report(span, message);
         }
 
-        internal void ReportCannotConvert(TextSpan span, TypeSymbol type, TypeSymbol targetType)
+        public void ReportCannotConvert(TextSpan span, TypeSymbol type, TypeSymbol targetType)
         {
             var message = $"Cannot convert type '{type.ToString()}' to type '{targetType.ToString()}'.";
             Report(span, message);
         }
 
-        internal void ReportUnterminatedString(TextSpan span)
+        public void ReportUnterminatedString(TextSpan span)
         {
             var message = $"Unterminated string literal.";
+            Report(span, message);
+        }
+
+        public void ReportUndefinedFunction(TextSpan span, string name)
+        {
+            var message = $"Function '{name}' is not defined.";
+            Report(span, message);
+        }
+
+        public void ReportWrongArgumentCount(TextSpan span, string name, int expectedCount, int count)
+        {
+            var message = $"Function '{name}' expects '{expectedCount}' argument/s, got '{count}'.";
+            Report(span, message);
+        }
+
+        public void ReportWrongArgumentType(TextSpan span, string funcName, string paramName, TypeSymbol paramType, TypeSymbol argumentType)
+        {
+            var message = $"Parameter '{paramName}' in '{funcName}' has to be of type '{paramType.ToString()} is of type '{argumentType.ToString()}'.";
             Report(span, message);
         }
     }
