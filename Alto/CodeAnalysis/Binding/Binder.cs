@@ -40,8 +40,7 @@ namespace Alto.CodeAnalysis.Binding
                 stack.Push(previous);
                 previous = previous.Previous;
             }
-
-            BoundScope parent = null;
+            BoundScope parent = CreateRootScope();
 
             while (stack.Count > 0)
             {
@@ -54,6 +53,16 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             return parent;
+        }
+
+        private static BoundScope CreateRootScope()
+        {
+            var result = new BoundScope(null);
+
+            foreach (var function in BuiltInFunctions.GetAll())
+                result.TryDeclareFunction(function);
+            
+            return result;
         }
 
         public DiagnosticBag Diagnostics => _diagnostics;
@@ -276,9 +285,7 @@ namespace Alto.CodeAnalysis.Binding
                 boundArguments.Add(boundArgument);
             }
 
-            var functions = BuiltInFunctions.GetAll();
-            var function = functions.SingleOrDefault(f => f.Name == syntax.Identifier.Text);
-            if (function == null)
+            if (!_scope.TryLookupFunction(syntax.Identifier.Text, out var function))
             {
                 _diagnostics.ReportUndefinedFunction(syntax.Identifier.Span, syntax.Identifier.Text);
                 return new BoundErrorExpression();
