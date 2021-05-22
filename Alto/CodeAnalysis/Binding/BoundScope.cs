@@ -69,11 +69,17 @@ namespace Alto.CodeAnalysis.Binding
 
         public ImmutableArray<VariableSymbol> GetDeclaredVariables()
         {
+            if (_variables == null)
+                return ImmutableArray<VariableSymbol>.Empty;
+            
             return _variables.Values.ToImmutableArray ();
         }
 
         public ImmutableArray<FunctionSymbol> GetDeclaredFunctions()
         {
+            if (_functions == null)
+                return ImmutableArray<FunctionSymbol>.Empty;
+            
             return _functions.Values.ToImmutableArray();
         }
     }
