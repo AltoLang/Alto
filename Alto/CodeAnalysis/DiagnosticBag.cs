@@ -114,5 +114,11 @@ namespace Alto.CodeAnalysis
             var message = $"Parameter '{paramName}' in '{funcName}' has to be of type '{paramType.ToString()} is of type '{argumentType.ToString()}'.";
             Report(span, message);
         }
+
+        internal void ReportExpressionHaveHaveAValue(TextSpan span)
+        {
+            var message = $"Expression must have a different value than void.";
+            Report(span, message);
+        }
     }
 }

@@ -137,11 +137,24 @@ namespace Alto.CodeAnalysis.Binding
         
         private BoundStatement BindExpressionStatement(ExpressionStatementSyntax syntax)
         {
-            var expression = BindExpression(syntax.Expression);
+            var expression = BindExpression(syntax.Expression, canBeVoid: true);
             return new BoundExpressionStatement(expression);
         }
 
-        private BoundExpression BindExpression(ExpressionSyntax syntax)
+        private BoundExpression BindExpression(ExpressionSyntax syntax, bool canBeVoid = false)
+        {
+            var result = BindExpressionInternal(syntax);
+
+            if (!canBeVoid && result.Type == TypeSymbol.Void)
+            {
+                _diagnostics.ReportExpressionHaveHaveAValue(syntax.Span);
+                return new BoundErrorExpression();
+            }
+
+            return result;
+        }
+
+        private BoundExpression BindExpressionInternal(ExpressionSyntax syntax)
         {
             switch (syntax.Kind)
             {
