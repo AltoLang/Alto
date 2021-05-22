@@ -14,5 +14,7 @@ namespace Alto.CodeAnalysis.Symbols
         public override SymbolKind Kind => SymbolKind.Function;
         public ImmutableArray<ParameterSymbol> Parameters { get; }
         public TypeSymbol Type { get; }
+
+        public override string ToString() => Name;
     }
 }

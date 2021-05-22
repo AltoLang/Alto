@@ -290,7 +290,7 @@ namespace Alto.CodeAnalysis.Binding
                 }
             }
 
-            return new BoundCallExpression(function, boundArguments.MoveToImmutable());
+            return new BoundCallExpression(function, boundArguments.ToImmutable());
         }
 
         private BoundExpression BindParenthesizedExpression(ParenthesizedExpressionSyntax syntax)
