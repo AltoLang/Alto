@@ -21,7 +21,13 @@ namespace Alto.CodeAnalysis.Syntax
         public int Count => (_nodesAndSeparators.Length + 1) / 2;
         public T this[int index] => (T)_nodesAndSeparators[index * 2];
 
-        public SyntaxToken GetSeparator(int index) => (SyntaxToken)_nodesAndSeparators[index * 2 + 1];
+        public SyntaxToken GetSeparator(int index)
+        {
+            if (index == Count - 1)
+                return null;
+            
+            return (SyntaxToken)_nodesAndSeparators[index * 2 + 1];
+        }
         public override ImmutableArray<SyntaxNode> GetWithSeparators() => _nodesAndSeparators;
 
         public IEnumerator<T> GetEnumerator()
