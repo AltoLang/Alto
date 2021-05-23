@@ -15,6 +15,7 @@ namespace Alto.CodeAnalysis.Binding
         AssignmentExpression,
         BinaryExpression,
         CallExpression,
+        ConversionExpression,
 
         // Statements
         BlockStatement,

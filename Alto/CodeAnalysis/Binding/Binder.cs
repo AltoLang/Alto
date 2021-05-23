@@ -277,6 +277,9 @@ namespace Alto.CodeAnalysis.Binding
 
         private BoundExpression BindCallExpression(CallExpressionSyntax syntax)
         {
+            if (syntax.Arguments.Count == 1 && LookupTypeConversion(syntax.Identifier.Text) is TypeSymbol type)
+                return BindConversion(type, syntax.Arguments[0]);
+
             var boundArguments = ImmutableArray.CreateBuilder<BoundExpression>();
 
             foreach (var argument in syntax.Arguments)
@@ -328,6 +331,50 @@ namespace Alto.CodeAnalysis.Binding
                 _diagnostics.ReportVariableAlreadyDeclared(identifier.Span, name);
             
             return variable;
+        }
+
+        private BoundExpression BindConversion(TypeSymbol type, ExpressionSyntax syntax)
+        {
+            var expression = BindExpression(syntax);
+            var conversion = Conversion.Classify(expression.Type, type);
+
+            if (!conversion.Exists)
+            {
+                _diagnostics.ReportCannotConvert(syntax.Span, expression.Type, type);
+                return new BoundErrorExpression();
+            }
+
+            return new BoundConversionExpression(type, expression);
+        }
+
+        private TypeSymbol LookupType(string name)
+        {
+            switch (name)
+            {
+                case "bool":
+                    return TypeSymbol.Bool;
+                case "string":
+                    return TypeSymbol.String;
+                case "int":
+                    return TypeSymbol.Int;
+            }
+
+            return null;
+        }
+
+        private TypeSymbol LookupTypeConversion(string name)
+        {
+            switch (name)
+            {
+                case "toBool":
+                    return TypeSymbol.Bool;
+                case "toString":
+                    return TypeSymbol.String;
+                case "toInt":
+                    return TypeSymbol.Int;
+            }
+
+            return null;
         }
     }
 }
