@@ -9,6 +9,7 @@ namespace Alto.CodeAnalysis
     {
         private readonly Dictionary<VariableSymbol, object> _variables;
         public BoundBlockStatement _root { get; }
+        private Random _random;
 
         private object _lastValue;
 
@@ -92,6 +93,8 @@ namespace Alto.CodeAnalysis
                     return EvaluateBinaryExpression((BoundBinaryExpression)node);
                 case BoundNodeKind.CallExpression:
                     return EvaluateCallExpression((BoundCallExpression)node);
+                case BoundNodeKind.ConversionExpression:
+                    return EvaluateConversionExpression((BoundConversionExpression)node);
             }
 
             throw new Exception($"Unexpected node {node.Kind}");
@@ -201,10 +204,34 @@ namespace Alto.CodeAnalysis
                 Console.WriteLine(expression);
                 return null;
             }
+            else if (node.Function == BuiltInFunctions.Random)
+            {
+                if (_random == null)
+                    _random = new Random();
+                
+                var min = (int)EvaluateExpression(node.Arguments[0]);
+                var max = (int)EvaluateExpression(node.Arguments[1]);
+
+                return _random.Next(min, max);
+            }
             else
             {
                 throw new Exception($"Unexpected function {node.Function.Name}");
             }
+        }
+
+        private object EvaluateConversionExpression(BoundConversionExpression node)
+        {
+            var value = EvaluateExpression(node.Expression);
+
+            if (node.Type == TypeSymbol.Bool)
+                return Convert.ToBoolean(value);
+            else if (node.Type == TypeSymbol.Int)
+                return Convert.ToInt32(value);
+            else if (node.Type == TypeSymbol.String)
+                return Convert.ToString(value);
+            else
+                throw new Exception($"Unexpected type {node.Type}");
         }
     }
 }
