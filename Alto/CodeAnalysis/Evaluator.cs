@@ -9,6 +9,7 @@ namespace Alto.CodeAnalysis
     {
         private readonly Dictionary<VariableSymbol, object> _variables;
         public BoundBlockStatement _root { get; }
+        private Random _random;
 
         private object _lastValue;
 
@@ -200,6 +201,16 @@ namespace Alto.CodeAnalysis
                 var expression = (string)EvaluateExpression(node.Arguments[0]);
                 Console.WriteLine(expression);
                 return null;
+            }
+            else if (node.Function == BuiltInFunctions.Random)
+            {
+                if (_random == null)
+                    _random = new Random();
+                
+                var min = (int)EvaluateExpression(node.Arguments[0]);
+                var max = (int)EvaluateExpression(node.Arguments[1]);
+
+                return _random.Next(min, max);
             }
             else
             {

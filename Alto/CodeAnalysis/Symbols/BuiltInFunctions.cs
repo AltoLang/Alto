@@ -10,7 +10,8 @@ namespace Alto.CodeAnalysis.Symbols
     {
         public static readonly FunctionSymbol Print = new FunctionSymbol("print", ImmutableArray.Create(new ParameterSymbol("text", TypeSymbol.String)), TypeSymbol.Void);
         public static readonly FunctionSymbol ReadLine = new FunctionSymbol("readLine", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.String);
-
+        public static readonly FunctionSymbol Random = new FunctionSymbol("random", ImmutableArray.Create(new ParameterSymbol("min", TypeSymbol.Int), new ParameterSymbol("max", TypeSymbol.Int)), TypeSymbol.Int);
+        
         internal static IEnumerable<FunctionSymbol> GetAll()
         {
             var functions = typeof(BuiltInFunctions)
