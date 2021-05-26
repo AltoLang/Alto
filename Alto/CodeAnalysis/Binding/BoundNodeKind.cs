@@ -23,6 +23,7 @@ namespace Alto.CodeAnalysis.Binding
         VariableDeclaration,
         IfStatement,
         WhileStatement,
+        DoWhileStatement,
         ForStatement,
         GotoStatement,
         ConditionalGotoStatement,

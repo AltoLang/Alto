@@ -73,6 +73,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return SyntaxKind.ElseKeyword;
                 case "while":
                     return SyntaxKind.WhileKeyword;
+                case "do":
+                    return SyntaxKind.DoKeyword;
                 case "for":
                     return SyntaxKind.ForKeyword;
                 case "to":
