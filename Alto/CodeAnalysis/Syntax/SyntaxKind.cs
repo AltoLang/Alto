@@ -48,6 +48,7 @@ namespace Alto.CodeAnalysis.Syntax
         WhileKeyword,
         ForKeyword,
         ToKeyword,
+        DoKeyword,
         
         //Nodes
         CompilationUnit,
@@ -69,5 +70,6 @@ namespace Alto.CodeAnalysis.Syntax
         IfStatement,
         WhileStatement,
         ForStatement,
+        DoWhileStatement,
     }
 }

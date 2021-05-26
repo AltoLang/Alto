@@ -75,6 +75,7 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("{var foo = false if foo {25 * 4} else {foo = !foo} foo }", true)]
         [InlineData("{ var n = 0 var m = 10 while m ~= 0 { n = n + m m = m - 1 } n}", 55)]
         [InlineData("{var result = 0 for i = 0 to 10 {result = result + i} result}", 55)]
+        [InlineData("{var result = 0 do {result = result + 1} while(result < 10) result }", 10)]
         public void Evaluator_Computes_CorrectValues(string text, object expectedValue)
         {
             AssertValue(text, expectedValue);
