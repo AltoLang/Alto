@@ -103,6 +103,23 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
+        public void Evaluator_Reports_All_Symbols_Declared_In_Single_Namespace()
+        {
+            var text = @"
+                {
+                    let print = 42
+                    [print](""test"")
+                }
+            ";
+
+            var diagnostics = @"
+                Function 'print' is not defined.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
         public void Evaluator_NameExpression_Reports_Undefined()
         {
             var text = @"
