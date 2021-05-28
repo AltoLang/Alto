@@ -67,9 +67,9 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
-        public void ReportVariableAlreadyDeclared(TextSpan span, string name)
+        public void ReportSymbolAlreadyDeclared(TextSpan span, string name)
         {
-            var message = $"Variable '{name}' is already declared in the current scope.";
+            var message = $"'{name}' is already declared in the current scope.";
             Report(span, message);
         }
 
