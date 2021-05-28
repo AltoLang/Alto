@@ -96,7 +96,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Variable 'x' is already declared in the current scope.
+                'x' is already declared in the current scope.
             ";
 
             AssertDiagnostics(text, diagnostics);
