@@ -18,8 +18,8 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ./Alto.Tests/Alto.Tests.csproj
     - name: Build
-      run: dotnet build ..\Alto.Tests\Alto.Tests.csproj
+      run: dotnet build ./Alto.Tests/Alto.Tests.csproj
     - name: Test
-      run: dotnet test ..\Alto.Tests\Alto.Tests.csproj
+      run: dotnet test ./Alto.Tests/Alto.Tests.csproj
