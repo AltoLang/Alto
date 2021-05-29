@@ -37,6 +37,7 @@ namespace Alto.CodeAnalysis.Syntax
         PipeToken,
         HatToken,
         CommaToken,
+        ColonToken,
 
         //Keywords
         FalseKeyword,
