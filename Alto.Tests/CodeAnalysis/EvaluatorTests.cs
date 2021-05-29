@@ -179,7 +179,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Cannot convert type 'int' to type 'bool'.
+                Cannot convert type 'bool' to type 'int'.
             ";
 
             AssertDiagnostics(text, diagnostics);
