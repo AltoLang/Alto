@@ -96,7 +96,24 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Variable 'x' is already declared in the current scope.
+                'x' is already declared in the current scope.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_Reports_All_Symbols_Declared_In_Single_Namespace()
+        {
+            var text = @"
+                {
+                    let print = 42
+                    [print](""test"")
+                }
+            ";
+
+            var diagnostics = @"
+                Function 'print' is not defined.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -162,7 +179,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Cannot convert type 'int' to type 'bool'.
+                Cannot convert type 'bool' to type 'int'.
             ";
 
             AssertDiagnostics(text, diagnostics);

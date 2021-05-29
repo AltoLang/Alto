@@ -115,7 +115,7 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
-        internal void ReportExpressionHaveHaveAValue(TextSpan span)
+        internal void ReportExpressionMustHaveAValue(TextSpan span)
         {
             var message = $"Expression must have a different value than void.";
             Report(span, message);

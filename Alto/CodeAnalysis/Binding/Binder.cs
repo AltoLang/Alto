@@ -5,6 +5,7 @@ using Alto.CodeAnalysis.Syntax;
 
 using System.Collections.Immutable;
 using Alto.CodeAnalysis.Symbols;
+using Alto.CodeAnalysis.Text;
 
 namespace Alto.CodeAnalysis.Binding
 {
@@ -166,11 +167,16 @@ namespace Alto.CodeAnalysis.Binding
 
             if (!canBeVoid && result.Type == TypeSymbol.Void)
             {
-                _diagnostics.ReportExpressionHaveHaveAValue(syntax.Span);
+                _diagnostics.ReportExpressionMustHaveAValue(syntax.Span);
                 return new BoundErrorExpression();
             }
 
             return result;
+        }
+
+        private BoundExpression BindExpression(ExpressionSyntax syntax, TypeSymbol targetType)
+        {
+            return BindConversion(syntax, targetType);
         }
 
         private BoundExpression BindExpressionInternal(ExpressionSyntax syntax)
@@ -196,13 +202,32 @@ namespace Alto.CodeAnalysis.Binding
             }
         }
 
-        private BoundExpression BindExpression(ExpressionSyntax syntax, TypeSymbol targetType)
+        private BoundExpression BindConversion(ExpressionSyntax syntax, TypeSymbol type)
         {
-            var result = BindExpression(syntax);
-            if (result.Type != targetType && result.Type != TypeSymbol.Error && targetType != TypeSymbol.Error)
-                Diagnostics.ReportCannotConvert(syntax.Span, result.Type, targetType);
+            var expression = BindExpression(syntax);
+            var span = syntax.Span;
 
-            return result;
+            return BindConversion(expression, type, span);
+        }
+
+        private BoundExpression BindConversion(BoundExpression expression, TypeSymbol type, TextSpan span)
+        {
+            var conversion = Conversion.Classify(expression.Type, type);
+
+            if (!conversion.Exists)
+            {
+                if (expression.Type != TypeSymbol.Error && type != TypeSymbol.Error)
+                {
+                    _diagnostics.ReportCannotConvert(span, expression.Type, type);
+                }
+
+                return new BoundErrorExpression();
+            }
+
+            if (conversion.IsIdentity)
+                return expression;
+
+            return new BoundConversionExpression(type, expression);
         }
 
         private BoundExpression BindNameExpression(NameExpressionSyntax syntax)
@@ -235,13 +260,9 @@ namespace Alto.CodeAnalysis.Binding
             if (variable.IsReadOnly)
                 _diagnostics.ReportCannotAssign(syntax.AssignmentToken.Span, name);
 
-            if (boundExpression.Type != variable.Type)
-            {
-                Diagnostics.VariableCannotConvert(syntax.Expression.Span, variable.Type, boundExpression.Type);
-                return boundExpression;
-            }
+            var convertedExpression = BindConversion(boundExpression, variable.Type, syntax.Expression.Span);
 
-            return new BoundAssignmentExpression(variable, boundExpression);
+            return new BoundAssignmentExpression(variable, convertedExpression);
         }
 
         private BoundExpression BindLiteralExpression(LiteralExpressionSyntax syntax)
@@ -288,7 +309,7 @@ namespace Alto.CodeAnalysis.Binding
         private BoundExpression BindCallExpression(CallExpressionSyntax syntax)
         {
             if (syntax.Arguments.Count == 1 && LookupTypeConversion(syntax.Identifier.Text) is TypeSymbol type)
-                return BindConversion(type, syntax.Arguments[0]);
+                return BindConversion(syntax.Arguments[0], type);
 
             var boundArguments = ImmutableArray.CreateBuilder<BoundExpression>();
 
@@ -341,20 +362,6 @@ namespace Alto.CodeAnalysis.Binding
                 _diagnostics.ReportSymbolAlreadyDeclared(identifier.Span, name);
             
             return variable;
-        }
-
-        private BoundExpression BindConversion(TypeSymbol type, ExpressionSyntax syntax)
-        {
-            var expression = BindExpression(syntax);
-            var conversion = Conversion.Classify(expression.Type, type);
-
-            if (!conversion.Exists)
-            {
-                _diagnostics.ReportCannotConvert(syntax.Span, expression.Type, type);
-                return new BoundErrorExpression();
-            }
-
-            return new BoundConversionExpression(type, expression);
         }
 
         private TypeSymbol LookupType(string name)
