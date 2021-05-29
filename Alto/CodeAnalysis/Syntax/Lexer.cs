@@ -164,6 +164,7 @@ namespace Alto.CodeAnalysis.Syntax
                     }
                     break;
                 case ':':
+                    _position++;
                     _kind = SyntaxKind.ColonToken;
                     break;
                 case ',':
