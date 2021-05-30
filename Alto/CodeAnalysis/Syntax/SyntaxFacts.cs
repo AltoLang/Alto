@@ -156,6 +156,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return "to";
                 case SyntaxKind.CommaToken:
                     return ",";
+                case SyntaxKind.ColonToken:
+                    return ":";
                 default:
                     return null;
             }

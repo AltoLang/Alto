@@ -37,6 +37,7 @@ namespace Alto.CodeAnalysis.Syntax
         PipeToken,
         HatToken,
         CommaToken,
+        ColonToken,
 
         //Keywords
         FalseKeyword,
@@ -53,6 +54,7 @@ namespace Alto.CodeAnalysis.Syntax
         //Nodes
         CompilationUnit,
         ElseClause,
+        TypeClause,
 
         //Expression Tokens     
         LiteralExpression,
@@ -70,6 +72,6 @@ namespace Alto.CodeAnalysis.Syntax
         IfStatement,
         WhileStatement,
         ForStatement,
-        DoWhileStatement,
+        DoWhileStatement
     }
 }

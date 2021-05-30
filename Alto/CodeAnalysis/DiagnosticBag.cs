@@ -79,15 +79,21 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
-        public void ReportCannotAssign(TextSpan span, string name)
+        public void ReportCannotConvert(TextSpan span, TypeSymbol fromType, TypeSymbol targetType)
         {
-            var message = $"Cannot assign to variable '{name}'.";
+            var message = $"Cannot convert type '{fromType.ToString()}' to type '{targetType.ToString()}'.";
             Report(span, message);
         }
 
-        public void ReportCannotConvert(TextSpan span, TypeSymbol type, TypeSymbol targetType)
+        internal void ReportCannotImplicitlyConvert(TextSpan span, TypeSymbol fromType, TypeSymbol targetType)
         {
-            var message = $"Cannot convert type '{type.ToString()}' to type '{targetType.ToString()}'.";
+            var message = $"Cannot implicitly convert type '{fromType.ToString()}' to type '{targetType.ToString()}'. An explicit conversion exists, are you missing a cast?";
+            Report(span, message);
+        }
+
+        public void ReportCannotAssign(TextSpan span, string name)
+        {
+            var message = $"Cannot assign to variable '{name}'.";
             Report(span, message);
         }
 
@@ -115,10 +121,17 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
-        internal void ReportExpressionMustHaveAValue(TextSpan span)
+        public void ReportUndefinedType(TextSpan span, string type)
+        {
+            var message = $"Type '{type} is not defined in the current scope.'";
+            Report(span, message);
+        }
+
+        public void ReportExpressionMustHaveAValue(TextSpan span)
         {
             var message = $"Expression must have a different value than void.";
             Report(span, message);
         }
+
     }
 }

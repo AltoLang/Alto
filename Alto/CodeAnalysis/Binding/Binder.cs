@@ -94,10 +94,26 @@ namespace Alto.CodeAnalysis.Binding
         private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax syntax)
         {
             var isReadOnly = syntax.Keyword.Kind == SyntaxKind.LetKeyword;
+            var type = BindTypeClause(syntax.TypeClause);
             var initializer = BindExpression(syntax.Initializer);
-            var variable = BindVariable(syntax.Identifier, isReadOnly, initializer.Type);
+            var variableType = type ?? initializer.Type;
+            var castedInitializer = BindConversion(initializer, variableType, syntax.Initializer.Span);
+            var variable = BindVariable(syntax.Identifier, isReadOnly, variableType);
 
-            return new BoundVariableDeclaration(variable, initializer);
+            return new BoundVariableDeclaration(variable, castedInitializer);
+        }
+
+        private TypeSymbol BindTypeClause(TypeClauseSyntax syntax)
+        {
+            if (syntax == null)
+                return null;
+            
+            var type = LookupType(syntax.Identifier.Text);
+            
+            if (type == null)
+                _diagnostics.ReportUndefinedType(syntax.Identifier.Span, syntax.Identifier.Text);
+
+            return type;
         }
 
         private BoundStatement BindIfStatement(IfStatementSyntax syntax)
@@ -202,15 +218,15 @@ namespace Alto.CodeAnalysis.Binding
             }
         }
 
-        private BoundExpression BindConversion(ExpressionSyntax syntax, TypeSymbol type)
+        private BoundExpression BindConversion(ExpressionSyntax syntax, TypeSymbol type, bool allowExplicit = false)
         {
             var expression = BindExpression(syntax);
             var span = syntax.Span;
 
-            return BindConversion(expression, type, span);
+            return BindConversion(expression, type, span, allowExplicit);
         }
 
-        private BoundExpression BindConversion(BoundExpression expression, TypeSymbol type, TextSpan span)
+        private BoundExpression BindConversion(BoundExpression expression, TypeSymbol type, TextSpan span, bool allowExplicit = false)
         {
             var conversion = Conversion.Classify(expression.Type, type);
 
@@ -221,6 +237,12 @@ namespace Alto.CodeAnalysis.Binding
                     _diagnostics.ReportCannotConvert(span, expression.Type, type);
                 }
 
+                return new BoundErrorExpression();
+            }
+
+            if (conversion.IsExplicit && !allowExplicit)
+            {
+                _diagnostics.ReportCannotImplicitlyConvert(span, expression.Type, type);
                 return new BoundErrorExpression();
             }
 
@@ -309,7 +331,7 @@ namespace Alto.CodeAnalysis.Binding
         private BoundExpression BindCallExpression(CallExpressionSyntax syntax)
         {
             if (syntax.Arguments.Count == 1 && LookupTypeConversion(syntax.Identifier.Text) is TypeSymbol type)
-                return BindConversion(syntax.Arguments[0], type);
+                return BindConversion(syntax.Arguments[0], type, allowExplicit: true);
 
             var boundArguments = ImmutableArray.CreateBuilder<BoundExpression>();
 

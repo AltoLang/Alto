@@ -163,6 +163,10 @@ namespace Alto.CodeAnalysis.Syntax
                         _kind = SyntaxKind.GreaterOrEqualsToken;
                     }
                     break;
+                case ':':
+                    _position++;
+                    _kind = SyntaxKind.ColonToken;
+                    break;
                 case ',':
                     _position++;
                     _kind = SyntaxKind.CommaToken;
