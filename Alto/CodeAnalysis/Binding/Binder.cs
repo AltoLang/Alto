@@ -242,7 +242,7 @@ namespace Alto.CodeAnalysis.Binding
 
             if (conversion.IsExplicit && !allowExplicit)
             {
-                _diagnostics.ReportCannotConvertImplicitly(span, expression.Type, type);
+                _diagnostics.ReportCannotImplicitlyConvert(span, expression.Type, type);
                 return new BoundErrorExpression();
             }
 
