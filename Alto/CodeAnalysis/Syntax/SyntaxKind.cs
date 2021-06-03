@@ -43,6 +43,7 @@ namespace Alto.CodeAnalysis.Syntax
         FalseKeyword,
         TrueKeyword,
         VarKeyword,
+        FunctionKeyword,
         LetKeyword,
         IfKeyword,
         ElseKeyword,
@@ -53,8 +54,11 @@ namespace Alto.CodeAnalysis.Syntax
         
         //Nodes
         CompilationUnit,
+        GlobalStatement,
+        FunctionDeclaration,
         ElseClause,
         TypeClause,
+        Parameter,
 
         //Expression Tokens     
         LiteralExpression,
