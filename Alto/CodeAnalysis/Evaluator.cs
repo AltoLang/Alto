@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using Alto.CodeAnalysis.Binding;
 using Alto.CodeAnalysis.Symbols;
 
@@ -7,30 +8,42 @@ namespace Alto.CodeAnalysis
 {
     internal sealed class Evaluator
     {
-        private readonly Dictionary<VariableSymbol, object> _variables;
+        private readonly ImmutableDictionary<FunctionSymbol, BoundBlockStatement> _functionBodies;
+        private readonly Dictionary<VariableSymbol, object> _globals;
+        private readonly Stack<Dictionary<VariableSymbol, object>> _locals = new Stack<Dictionary<VariableSymbol, object>>();
         public BoundBlockStatement _root { get; }
         private Random _random;
 
         private object _lastValue;
 
-        public Evaluator(BoundBlockStatement root, Dictionary<VariableSymbol, object> variables)
+        public Evaluator(ImmutableDictionary<FunctionSymbol, BoundBlockStatement> functionBodies, BoundBlockStatement root, Dictionary<VariableSymbol, object> variables)
         {
+            _functionBodies = functionBodies;
             _root = root;
-            _variables = variables;
+            _globals = variables;
+            
+            _locals.Push(new Dictionary<VariableSymbol, object>());
         }
         public object Evaluate()
         {
+            var body = _root;
+
+            return EvaluateStatement(body);
+        }
+
+        private object EvaluateStatement(BoundBlockStatement body)
+        {
             var labelToIndex = new Dictionary<BoundLabel, int>();
 
-            for (var i = 0; i < _root.Statements.Length; i++)
-                if (_root.Statements[i] is BoundLabelStatement l)
-                    labelToIndex.Add(l.Label, i + 1);    
+            for (var i = 0; i < body.Statements.Length; i++)
+                if (body.Statements[i] is BoundLabelStatement l)
+                    labelToIndex.Add(l.Label, i + 1);
 
             var index = 0;
-            while (index < _root.Statements.Length)
+            while (index < body.Statements.Length)
             {
-                var s = _root.Statements[index];
-
+                var s = body.Statements[index];
+                
                 switch (s.Kind)
                 {
                     case BoundNodeKind.VariableDeclaration:
@@ -59,16 +72,16 @@ namespace Alto.CodeAnalysis
                     default:
                         throw new Exception($"Unexpected node {s.Kind}");
                 }
-            }   
+            }
             return _lastValue;
         }
-        
+
         private void EvaluateVariableDeclaration(BoundVariableDeclaration node)
         {
             var value = EvaluateExpression(node.Initializer);
-            _variables[node.Variable] = value;
             _lastValue = value;
-        }   
+            Assign(node.Variable, value);
+        }
 
         private void EvaluateExpressionStatement(BoundExpressionStatement node)
         {
@@ -177,7 +190,8 @@ namespace Alto.CodeAnalysis
         private object EvaluateAssignmentExpression(BoundAssignmentExpression a)
         {
             var value = EvaluateExpression(a.Expression);
-            _variables[a.Variable] = value;
+            Assign(a.Variable, value);
+
             return value;
         }
 
@@ -185,11 +199,19 @@ namespace Alto.CodeAnalysis
         {
             return n.Value;
         }
-
+        
         private object EvaluateVariableExpression(BoundVariableExpression v)
         {
-            var value = _variables[v.Variable];
-            return value;
+            if (v.Variable.Kind == SymbolKind.GlobalVariable)
+            {
+                var global = _globals[v.Variable];
+                return global;
+            }
+            else
+            {
+                var locals = _locals.Peek();
+                return locals[v.Variable];
+            }
         }
 
         private object EvaluateCallExpression(BoundCallExpression node)
@@ -216,7 +238,22 @@ namespace Alto.CodeAnalysis
             }
             else
             {
-                throw new Exception($"Unexpected function {node.Function.Name}");
+                var locals = new Dictionary<VariableSymbol, object>();
+
+                for (var i = 0; i < node.Arguments.Length; i++)
+                {
+                    var parameter = node.Function.Parameters[i];
+                    var value = EvaluateExpression(node.Arguments[i]);
+                    locals.Add(parameter, value);
+                }
+
+                _locals.Push(locals); 
+
+                var statement = _functionBodies[node.Function];
+                var result = EvaluateStatement(statement);
+                
+                _locals.Pop();
+                return result;         
             }
         }
 
@@ -232,6 +269,19 @@ namespace Alto.CodeAnalysis
                 return Convert.ToString(value);
             else
                 throw new Exception($"Unexpected type {node.Type}");
+        }
+
+        private void Assign(VariableSymbol variable, object value)
+        {
+            if (variable.Kind == SymbolKind.GlobalVariable)
+            {
+                _globals[variable] = value;
+            }
+            else
+            {
+                var locals = _locals.Peek();
+                locals[variable] = value;
+            }
         }
     }
 }

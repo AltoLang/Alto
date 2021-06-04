@@ -67,6 +67,12 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
+        internal void ReportParameterAlreadyDeclared(string name, TextSpan span)
+        {
+            var message = $"A parameter with name '{name}' is already defined.";
+            Report(span, message);
+        }
+
         public void ReportSymbolAlreadyDeclared(TextSpan span, string name)
         {
             var message = $"'{name}' is already declared in the current scope.";
@@ -117,7 +123,7 @@ namespace Alto.CodeAnalysis
 
         public void ReportWrongArgumentType(TextSpan span, string funcName, string paramName, TypeSymbol paramType, TypeSymbol argumentType)
         {
-            var message = $"Parameter '{paramName}' in '{funcName}' has to be of type '{paramType.ToString()} is of type '{argumentType.ToString()}'.";
+            var message = $"Parameter '{paramName}' in '{funcName}' has to be of type '{paramType}' is of type '{argumentType}'.";
             Report(span, message);
         }
 
@@ -133,5 +139,10 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
+        internal void TEMPORARY_ReportFunctionsAreUnsupported(TextSpan span)
+        {
+            var message = "Functions with returns are not supported yet.";
+            Report(span, message);
+        }
     }
 }

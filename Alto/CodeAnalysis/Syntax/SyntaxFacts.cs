@@ -67,6 +67,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return SyntaxKind.VarKeyword;
                 case "let":
                     return SyntaxKind.LetKeyword;
+                case "function":
+                    return SyntaxKind.FunctionKeyword;
                 case "if":
                     return SyntaxKind.IfKeyword;
                 case "else":
@@ -140,6 +142,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return "true";
                 case SyntaxKind.VarKeyword:
                     return "var";
+                case SyntaxKind.FunctionKeyword:
+                    return "function";
                 case SyntaxKind.LetKeyword:
                     return "let";
                 case SyntaxKind.IfKeyword:

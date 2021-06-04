@@ -6,31 +6,114 @@ using Alto.CodeAnalysis.Syntax;
 using System.Collections.Immutable;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Text;
+using Alto.CodeAnalysis.Lowering;
 
 namespace Alto.CodeAnalysis.Binding
 {
     internal sealed class Binder
     {
         private readonly DiagnosticBag _diagnostics = new DiagnosticBag();
+        private readonly FunctionSymbol _function;
         private BoundScope _scope;
 
-        public Binder(BoundScope parent)
+        public Binder(BoundScope parent, FunctionSymbol function)
         {
             _scope = new BoundScope(parent);
+            _function = function;
+
+            if (function != null)
+            {
+                foreach (var p in function.Parameters)
+                    _scope.TryDeclareVariable(p);
+            }
+                
         }
 
         public static BoundGlobalScope BindGlobalScope(BoundGlobalScope previous, CompilationUnitSyntax syntax)
         {
             var parentScope = CreateParentScope(previous);
-            var binder = new Binder(parentScope);
-            var expression = binder.BindStatement(syntax.Statement);
+            var binder = new Binder(parentScope, null);
+
+            foreach (var function in syntax.Members.OfType<FunctionDeclarationSyntax>())
+                binder.BindFunctionDeclaration(function);
+
+            var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
+
+            foreach (var globalStatement in syntax.Members.OfType<GlobalStatementSyntax>())
+            {
+                var st = binder.BindStatement(globalStatement.Statement);
+                statementBuilder.Add(st);
+            }
+
+            var statement = new BoundBlockStatement(statementBuilder.ToImmutable());
+
+            var functions = binder._scope.GetDeclaredFunctions();
             var variables = binder._scope.GetDeclaredVariables();
+
             var diagnostics = binder.Diagnostics.ToImmutableArray();
             
             if (previous != null)
                 diagnostics = diagnostics.InsertRange(0, previous.Diagnostics);
 
-            return new BoundGlobalScope(previous, diagnostics, variables, expression);
+            return new BoundGlobalScope(previous, diagnostics, functions, variables, statement);
+        }
+
+        public static BoundProgram BindProgram(BoundGlobalScope globalScope)
+        {
+            var parentScope = CreateParentScope(globalScope);
+            var functionBodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>();
+            var diagnostics = new DiagnosticBag();
+
+            var scope = globalScope;
+            while (scope != null)
+            {
+                foreach (var function in scope.Functions)
+                {
+                    var binder = new Binder(parentScope, function);
+                    var body = binder.BindStatement(function.Declaration.Body);
+                    var loweredBody = Lowerer.Lower(body);
+                    
+                    functionBodies.Add(function, loweredBody);
+                    diagnostics.AddRange(binder.Diagnostics);
+                }
+
+                scope = scope.Previous;
+            }
+            
+            var program = new BoundProgram(globalScope, diagnostics, functionBodies.ToImmutable());
+            return program;
+        }
+
+        private void BindFunctionDeclaration(FunctionDeclarationSyntax syntax)
+        {
+            var parameters = ImmutableArray.CreateBuilder<ParameterSymbol>();
+            var seenParameterNames = new HashSet<string>();
+
+            foreach (var parameterSyntax in syntax.Parameters)
+            {
+                var paramName = parameterSyntax.Identifier.Text;
+                var paramType = BindTypeClause(parameterSyntax.Type);
+
+                if (!seenParameterNames.Add(paramName))
+                {
+                    _diagnostics.ReportParameterAlreadyDeclared(paramName, parameterSyntax.Span);
+                }
+                else
+                {
+                    var parameter = new ParameterSymbol(paramName, paramType);
+                    parameters.Add(parameter);
+                }
+            }
+
+            var type = BindTypeClause(syntax.Type) ?? TypeSymbol.Void;
+
+            if (type != TypeSymbol.Void)
+                _diagnostics.TEMPORARY_ReportFunctionsAreUnsupported(syntax.Type.Span);
+
+            var function = new FunctionSymbol(syntax.Identifier.Text, parameters.ToImmutable(), type, syntax);
+
+            if (!_scope.TryDeclareFunction(function))
+                _diagnostics.ReportSymbolAlreadyDeclared(syntax.Identifier.Span, function.Name);
         }
 
         private static BoundScope CreateParentScope(BoundGlobalScope previous)
@@ -47,6 +130,10 @@ namespace Alto.CodeAnalysis.Binding
             {
                 previous = stack.Pop();
                 var scope = new BoundScope(parent);
+
+                foreach (var f in previous.Functions)
+                    scope.TryDeclareFunction(f);
+                
                 foreach (var v in previous.Variables)
                     scope.TryDeclareVariable(v);
 
@@ -69,7 +156,7 @@ namespace Alto.CodeAnalysis.Binding
         public DiagnosticBag Diagnostics => _diagnostics;
 
         private BoundStatement BindStatement(StatementSyntax syntax)
-        {
+        {            
             switch (syntax.Kind)
             {
                 case SyntaxKind.BlockStatement:
@@ -311,7 +398,7 @@ namespace Alto.CodeAnalysis.Binding
         }
         
         private BoundExpression BindBinaryExpression(BinaryExpressionSyntax syntax)
-        {
+        {       
             var boundLeft = BindExpression(syntax.Left);
             var boundRight = BindExpression(syntax.Right);
 
@@ -361,7 +448,7 @@ namespace Alto.CodeAnalysis.Binding
 
                 if (argument.Type != parameter.Type)
                 {
-                    _diagnostics.ReportWrongArgumentType(syntax.Span, function.Name, parameter.Name, parameter.Type, argument.Type);
+                    _diagnostics.ReportWrongArgumentType(syntax.Arguments[i].Span, function.Name, parameter.Name, parameter.Type, argument.Type);
                     return new BoundErrorExpression();
                 }
             }
@@ -378,7 +465,7 @@ namespace Alto.CodeAnalysis.Binding
         {
             var name = identifier.Text ?? "?";
             var declare = !identifier.IsMissing;
-            var variable = new VariableSymbol(name, isReadOnly, type);
+            var variable = _function == null ? (VariableSymbol) new GlobalVariableSymbol(name, isReadOnly, type) : (VariableSymbol) new LocalVariableSymbol(name, isReadOnly, type);
 
             if (declare && !_scope.TryDeclareVariable(variable))
                 _diagnostics.ReportSymbolAlreadyDeclared(identifier.Span, name);

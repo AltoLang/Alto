@@ -125,16 +125,17 @@ namespace REPL
                 }
             }
             
-            public int CurrentCharacter { 
-                get => _currentCharacter; 
-                set 
+            public int CurrentCharacter
+            {
+                get => _currentCharacter;
+                set
                 {
                     if (_currentCharacter != value)
                     {
-                        _currentCharacter = value; 
+                        _currentCharacter = value;
                         UpdateCursorPosition();
                     }
-                } 
+                }
             }
         }
 
