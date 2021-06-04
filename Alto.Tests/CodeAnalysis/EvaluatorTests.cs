@@ -140,18 +140,6 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluator_NameExpression_Reports_NoErrorForInsertedToken()
-        {
-            var text = @"[]";
-
-            var diagnostics = @"
-                Unexpeced token <EndOfFileToken>, expected <IdentifierToken>.
-            ";
-
-            AssertDiagnostics(text, diagnostics);
-        }
-
-        [Fact]
         public void Evaluator_AssignedExpression_Reports_CannotAssign()
         {
             var text = @"

@@ -21,6 +21,8 @@ namespace Alto.CodeAnalysis
             _functionBodies = functionBodies;
             _root = root;
             _globals = variables;
+            
+            _locals.Push(new Dictionary<VariableSymbol, object>());
         }
         public object Evaluate()
         {
@@ -41,7 +43,7 @@ namespace Alto.CodeAnalysis
             while (index < body.Statements.Length)
             {
                 var s = body.Statements[index];
-
+                
                 switch (s.Kind)
                 {
                     case BoundNodeKind.VariableDeclaration:
