@@ -65,7 +65,7 @@ namespace REPL
             }
             else
             {
-                foreach (var diagnostic in diagnostics)
+                foreach (var diagnostic in result.Diagnostics.OrderBy(diag => diag.Span, new TextSpanComparer()))
                 {
                     var lineIndex = syntaxTree.Text.GetLineIndex(diagnostic.Span.Start);
                     var lineNumber = lineIndex + 1;

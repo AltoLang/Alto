@@ -120,15 +120,22 @@ namespace Alto.CodeAnalysis.Syntax
         {
             var nodesAndSeparators = ImmutableArray.CreateBuilder<SyntaxNode>();
 
-            while (Current.Kind != SyntaxKind.CloseParenthesesToken && Current.Kind != SyntaxKind.EndOfFileToken)
+            var parseNextParameter = true;
+            while (parseNextParameter &&
+                   Current.Kind != SyntaxKind.CloseParenthesesToken &&
+                   Current.Kind != SyntaxKind.EndOfFileToken)
             {
                 var parameter = ParseParameter();
                 nodesAndSeparators.Add(parameter);
 
-                if (Current.Kind != SyntaxKind.CloseParenthesesToken)
+                if (Current.Kind == SyntaxKind.CommaToken)
                 {
                     var comma =  MatchToken(SyntaxKind.CommaToken);
                     nodesAndSeparators.Add(comma);
+                }
+                else
+                {
+                    parseNextParameter = false;
                 }
             }
             return new SeparatedSyntaxList<ParameterSyntax>(nodesAndSeparators.ToImmutable());
@@ -389,15 +396,22 @@ namespace Alto.CodeAnalysis.Syntax
         {   
             var nodesAndSeparators = ImmutableArray.CreateBuilder<SyntaxNode>();
 
-            while (Current.Kind != SyntaxKind.CloseParenthesesToken && Current.Kind != SyntaxKind.EndOfFileToken)
+            var parseNextArgument = true;
+            while (parseNextArgument && 
+                   Current.Kind != SyntaxKind.CloseParenthesesToken &&
+                   Current.Kind != SyntaxKind.EndOfFileToken)
             {
                 var expression = ParseExpression();
                 nodesAndSeparators.Add(expression);
 
-                if (Current.Kind != SyntaxKind.CloseParenthesesToken)
+                if (Current.Kind == SyntaxKind.CommaToken)
                 {
                     var comma =  MatchToken(SyntaxKind.CommaToken);
                     nodesAndSeparators.Add(comma);
+                }
+                else
+                {
+                    parseNextArgument = false;
                 }
             }
             return new SeparatedSyntaxList<ExpressionSyntax>(nodesAndSeparators.ToImmutable());
