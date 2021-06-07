@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Alto.Tests", "Tests\Alto.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Alto.Tests", "Alto.Tests\Alto.Tests.csproj", "{6D9D9B3B-0511-4181-81C0-C855C9B1C5D3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "compiler", "compiler\compiler.csproj", "{692E7ED0-7813-429E-B58F-920A1F7A2F61}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ai", "ai\ai.csproj", "{692E7ED0-7813-429E-B58F-920A1F7A2F61}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -4,7 +4,7 @@ C:\Users\Filip\source\Accell\Accel.Tests\obj\Debug\net5.0\Accel.Tests.AssemblyIn
 C:\Users\Filip\source\Accell\Accel.Tests\obj\Debug\net5.0\Accel.Tests.AssemblyInfo.cs
 C:\Users\Filip\source\Accell\Accel.Tests\obj\Debug\net5.0\Accel.Tests.csproj.CoreCompileInputs.cache
 C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\testhost.dll
-C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\compiler.exe
+C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\ai.exe
 C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\testhost.exe
 C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\xunit.runner.visualstudio.dotnetcore.testadapter.dll
 C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\xunit.runner.reporters.netcoreapp10.dll
@@ -95,9 +95,9 @@ C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\zh-Hant\Microsoft.Test
 C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\zh-Hant\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
 C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\zh-Hant\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
 C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\Accel.dll
-C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\compiler.dll
+C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\ai.dll
 C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\Accel.pdb
-C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\compiler.pdb
+C:\Users\Filip\source\Accell\Accel.Tests\bin\Debug\net5.0\ai.pdb
 C:\Users\Filip\source\Accell\Accel.Tests\obj\Debug\net5.0\Accel.Tests.csproj.CopyComplete
 C:\Users\Filip\source\Accell\Accel.Tests\obj\Debug\net5.0\Accel.Tests.dll
 C:\Users\Filip\source\Accell\Accel.Tests\obj\Debug\net5.0\ref\Accel.Tests.dll
@@ -108,7 +108,7 @@ C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\testhost.dll
 C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\xunit.runner.visualstudio.dotnetcore.testadapter.dll
 C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\xunit.runner.reporters.netcoreapp10.dll
 C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\xunit.runner.utility.netcoreapp10.dll
-C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\compiler.exe
+C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\ai.exe
 C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\Accel.Tests.deps.json
 C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\Accel.Tests.runtimeconfig.json
 C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\Accel.Tests.runtimeconfig.dev.json
@@ -195,9 +195,9 @@ C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\zh-Hant\Microsoft.TestP
 C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\zh-Hant\Microsoft.TestPlatform.CrossPlatEngine.resources.dll
 C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\zh-Hant\Microsoft.VisualStudio.TestPlatform.Common.resources.dll
 C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\Accel.dll
-C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\compiler.dll
+C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\ai.dll
 C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\Accel.pdb
-C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\compiler.pdb
+C:\Users\Filip\source\Accel\Accel.Tests\bin\Debug\net5.0\ai.pdb
 C:\Users\Filip\source\Accel\Accel.Tests\obj\Debug\net5.0\Accel.Tests.csprojAssemblyReference.cache
 C:\Users\Filip\source\Accel\Accel.Tests\obj\Debug\net5.0\Accel.Tests.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\Filip\source\Accel\Accel.Tests\obj\Debug\net5.0\Accel.Tests.AssemblyInfoInputs.cache

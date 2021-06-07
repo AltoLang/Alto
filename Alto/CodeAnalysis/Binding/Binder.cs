@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Alto.CodeAnalysis.Syntax;
-
 using System.Collections.Immutable;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Text;
@@ -339,7 +338,7 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundConversionExpression(type, expression);
         }
 
-        private BoundExpression BindNameExpression(NameExpressionSyntax syntax)
+        private BoundExpression BindNameExpression(NameExpressionSyntax syntax) 
         {
             var name = syntax.IdentifierToken.Text;
 
@@ -460,7 +459,7 @@ namespace Alto.CodeAnalysis.Binding
         {
             return BindExpression(syntax.Expression);
         }
-
+        
         private VariableSymbol BindVariable(SyntaxToken identifier, bool isReadOnly, TypeSymbol type)
         {
             var name = identifier.Text ?? "?";
