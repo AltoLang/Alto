@@ -1671,17 +1671,17 @@
           "bin/placeholder/Alto.dll": {}
         }
       },
-      "compiler/1.0.0": {
+      "ai/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v5.0",
         "dependencies": {
           "Alto": "1.0.0"
         },
         "compile": {
-          "bin/placeholder/compiler.dll": {}
+          "bin/placeholder/ai.dll": {}
         },
         "runtime": {
-          "bin/placeholder/compiler.dll": {}
+          "bin/placeholder/ai.dll": {}
         }
       }
     }
@@ -5605,17 +5605,17 @@
       "path": "../Alto/Alto.csproj",
       "msbuildProject": "../Alto/Alto.csproj"
     },
-    "compiler/1.0.0": {
+    "ai/1.0.0": {
       "type": "project",
-      "path": "../compiler/compiler.csproj",
-      "msbuildProject": "../compiler/compiler.csproj"
+      "path": "../ai/ai.csproj",
+      "msbuildProject": "../ai/ai.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net5.0": [
       "Alto >= 1.0.0",
       "Microsoft.NET.Test.Sdk >= 16.7.1",
-      "compiler >= 1.0.0",
+      "ai >= 1.0.0",
       "coverlet.collector >= 1.3.0",
       "xunit >= 2.4.1",
       "xunit.runner.visualstudio >= 2.4.3"
@@ -5655,8 +5655,8 @@
             "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj": {
               "projectPath": "C:\\Users\\Filip\\source\\Alto\\Alto\\Alto.csproj"
             },
-            "C:\\Users\\Filip\\source\\Alto\\compiler\\compiler.csproj": {
-              "projectPath": "C:\\Users\\Filip\\source\\Alto\\compiler\\compiler.csproj"
+            "C:\\Users\\Filip\\source\\Alto\\ai\\ai.csproj": {
+              "projectPath": "C:\\Users\\Filip\\source\\Alto\\ai\\ai.csproj"
             }
           }
         }

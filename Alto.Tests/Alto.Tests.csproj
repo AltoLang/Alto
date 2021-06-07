@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Alto\Alto.csproj" />
-    <ProjectReference Include="..\compiler\compiler.csproj" />
+    <ProjectReference Include="..\ai\ai.csproj" />
   </ItemGroup>
 
 </Project>

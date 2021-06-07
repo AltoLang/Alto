@@ -34,8 +34,8 @@
               "C:\\Users\\Filip\\source\\Accel\\Accel\\Alto.csproj": {
                 "projectPath": "C:\\Users\\Filip\\source\\Accel\\Accel\\Alto.csproj"
               },
-              "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj": {
-                "projectPath": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj"
+              "C:\\Users\\Filip\\source\\Accel\\ai\\ai.csproj": {
+                "projectPath": "C:\\Users\\Filip\\source\\Accel\\ai\\ai.csproj"
               }
             }
           }
@@ -153,14 +153,14 @@
         }
       }
     },
-    "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj": {
+    "C:\\Users\\Filip\\source\\Accel\\ai\\ai.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj",
-        "projectName": "compiler",
-        "projectPath": "C:\\Users\\Filip\\source\\Accel\\compiler\\compiler.csproj",
+        "projectUniqueName": "C:\\Users\\Filip\\source\\Accel\\ai\\ai.csproj",
+        "projectName": "ai",
+        "projectPath": "C:\\Users\\Filip\\source\\Accel\\ai\\ai.csproj",
         "packagesPath": "C:\\Users\\Filip\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Filip\\source\\Accel\\compiler\\obj\\",
+        "outputPath": "C:\\Users\\Filip\\source\\Accel\\ai\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
