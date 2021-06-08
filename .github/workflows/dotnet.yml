@@ -22,4 +22,4 @@ jobs:
     - name: Build
       run: dotnet build ./src/Alto.Tests/Alto.Tests.csproj
     - name: Test
-      run: dotnet test ./scr/Alto.Tests/Alto.Tests.csproj
+      run: dotnet test ./src/Alto.Tests/Alto.Tests.csproj
