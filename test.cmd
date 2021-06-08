@@ -1,5 +1,7 @@
 @echo off
 
+cd src
+
 cd Alto.Tests
 dotnet build 
 cd ..
