@@ -108,6 +108,8 @@ namespace Alto.CodeAnalysis.Binding
                 case BoundNodeKind.LabelStatement:
                     WriteLabelStatement((BoundLabelStatement)node, writer);
                     break;
+                default:
+                    throw new Exception($"Unexprected BoundNodeKind {node.Kind}");
             }
         }
 
@@ -298,9 +300,9 @@ namespace Alto.CodeAnalysis.Binding
             var originalIndent = writer.Indent;
             writer.Indent = 0;
 
-            writer.WriteIdentifier(node.Label.Name);
+            writer.WritePunctuation(node.Label.Name);
             writer.WritePunctuation(":");
-            
+
             writer.Indent = originalIndent;
             writer.WriteLine();
         }
