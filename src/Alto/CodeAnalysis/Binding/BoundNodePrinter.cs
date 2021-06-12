@@ -28,6 +28,28 @@ namespace Alto.CodeAnalysis.Binding
                 writer.Indent--;
         }
 
+        private static void WriteNestedExpression(this IndentedTextWriter writer, int parentPrecedence, BoundExpression expression)
+        {
+            if (expression is BoundUnaryExpression u)
+                writer.WriteNestedExpression(parentPrecedence, SyntaxFacts.GetUnaryOperatorPrecedence(u.Op.SyntaxKind), u);
+            if (expression is BoundBinaryExpression b)
+                writer.WriteNestedExpression(parentPrecedence, SyntaxFacts.GetBinaryOperatorPrecedence(b.Op.SyntaxKind), b);
+            else
+                expression.WriteTo(writer);
+        }
+
+        private static void WriteNestedExpression(this IndentedTextWriter writer, int parentPrecedence, int currentPrecedence, BoundExpression expression)
+        {
+            var needsParenthesis = parentPrecedence >= currentPrecedence;
+            if (needsParenthesis)
+                writer.WritePunctuation("(");
+
+            expression.WriteTo(writer);
+
+            if (needsParenthesis)
+                writer.WritePunctuation(")");
+        }
+
         public static void WriteTo(this BoundNode node, IndentedTextWriter writer)
         {
             switch (node.Kind)
@@ -97,7 +119,11 @@ namespace Alto.CodeAnalysis.Binding
         private static void WriteUnaryExpression(BoundUnaryExpression node, IndentedTextWriter writer)
         {
             var op = SyntaxFacts.GetText(node.Op.SyntaxKind);
+            var precedence = SyntaxFacts.GetUnaryOperatorPrecedence(node.Op.SyntaxKind);
+
             writer.WritePunctuation(op);
+
+            writer.WriteNestedExpression(precedence, node.Operand);
             node.Operand.WriteTo(writer);
         }
 
@@ -139,9 +165,11 @@ namespace Alto.CodeAnalysis.Binding
         private static void WriteBinaryExpression(BoundBinaryExpression node, IndentedTextWriter writer)
         {
             var op = SyntaxFacts.GetText(node.Op.SyntaxKind);
-            node.Left.WriteTo(writer);
+            var precedence = SyntaxFacts.GetBinaryOperatorPrecedence(node.Op.SyntaxKind);
+
+            writer.WriteNestedExpression(precedence, node.Left);
             writer.WritePunctuation(op);
-            node.Right.WriteTo(writer);
+            writer.WriteNestedExpression(precedence, node.Right);
         }
 
         private static void WriteCallExpression(BoundCallExpression node, IndentedTextWriter writer)
