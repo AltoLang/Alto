@@ -120,7 +120,7 @@ namespace Alto.CodeAnalysis.Binding
         {
             var op = SyntaxFacts.GetText(node.Op.SyntaxKind);
             var precedence = SyntaxFacts.GetUnaryOperatorPrecedence(node.Op.SyntaxKind);
-            
+
             writer.WritePunctuation(op);
 
             writer.WriteNestedExpression(precedence, node.Operand);
@@ -225,7 +225,7 @@ namespace Alto.CodeAnalysis.Binding
 
         private static void WriteVariableDeclaration(BoundVariableDeclaration node, IndentedTextWriter writer)
         {
-            writer.WriteKeyword(node.Variable.IsReadOnly ? "let" : "var");
+            writer.WriteKeyword(node.Variable.IsReadOnly ? "let " : "var ");
             writer.WriteIdentifier(node.Variable.Name);
             writer.WritePunctuation(" = ");
             node.Initializer.WriteTo(writer);
@@ -295,8 +295,13 @@ namespace Alto.CodeAnalysis.Binding
 
         private static void WriteLabelStatement(BoundLabelStatement node, IndentedTextWriter writer)
         {
+            var originalIndent = writer.Indent;
+            writer.Indent = 0;
+
             writer.WriteIdentifier(node.Label.Name);
             writer.WritePunctuation(":");
+            
+            writer.Indent = originalIndent;
             writer.WriteLine();
         }
     }
