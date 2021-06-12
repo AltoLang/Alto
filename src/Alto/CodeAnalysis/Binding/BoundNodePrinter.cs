@@ -120,7 +120,7 @@ namespace Alto.CodeAnalysis.Binding
         {
             var op = SyntaxFacts.GetText(node.Op.SyntaxKind);
             var precedence = SyntaxFacts.GetUnaryOperatorPrecedence(node.Op.SyntaxKind);
-
+            
             writer.WritePunctuation(op);
 
             writer.WriteNestedExpression(precedence, node.Operand);
@@ -168,7 +168,9 @@ namespace Alto.CodeAnalysis.Binding
             var precedence = SyntaxFacts.GetBinaryOperatorPrecedence(node.Op.SyntaxKind);
 
             writer.WriteNestedExpression(precedence, node.Left);
+            writer.Write(" ");
             writer.WritePunctuation(op);
+            writer.Write(" ");
             writer.WriteNestedExpression(precedence, node.Right);
         }
 
