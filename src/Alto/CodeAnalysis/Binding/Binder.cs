@@ -13,6 +13,7 @@ namespace Alto.CodeAnalysis.Binding
     {
         private readonly DiagnosticBag _diagnostics = new DiagnosticBag();
         private readonly FunctionSymbol _function;
+        private Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)> _loopStack = new Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)>();
         private BoundScope _scope;
 
         public Binder(BoundScope parent, FunctionSymbol function)
@@ -172,6 +173,10 @@ namespace Alto.CodeAnalysis.Binding
                     return BindDoWhileStatement((DoWhileStatementSyntax)syntax);
                 case SyntaxKind.ForStatement:
                     return BindForStatement((ForStatementSyntax) syntax);
+                case SyntaxKind.BreakStatement:
+                    return BindBreakStatement((BreakStatementSyntax) syntax);
+                case SyntaxKind.ContinueStatement:
+                    return BindContinueStatement((ContinueStatementSyntax) syntax);
                 default:
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
@@ -213,16 +218,16 @@ namespace Alto.CodeAnalysis.Binding
         private BoundStatement BindWhileStatement(WhileStatementSyntax syntax)
         {
             var condition = BindExpression(syntax.Condition, TypeSymbol.Bool);
-            var body = BindStatement(syntax.Body);
-            return new BoundWhileStatement(condition, body);
+            BoundStatement body = BindLoopBody(syntax.Body, out var breakLabel, out var continueLabel);
+            return new BoundWhileStatement(condition, body, breakLabel, continueLabel);
         }
 
         private BoundStatement BindDoWhileStatement(DoWhileStatementSyntax syntax)
         {
-            var body = BindStatement(syntax.Body);
+            var body = BindLoopBody(syntax.Body, out var breakLabel, out var continueLabel);
             var condition = BindExpression(syntax.Condition);
 
-            return new BoundDoWhileStatement(body, condition);
+            return new BoundDoWhileStatement(body, condition, breakLabel, continueLabel);
         }
 
         private BoundStatement BindForStatement(ForStatementSyntax syntax)
@@ -234,11 +239,48 @@ namespace Alto.CodeAnalysis.Binding
 
             var variable = BindVariable(syntax.Identifier, true, TypeSymbol.Int);
 
-            var body = BindStatement(syntax.Body);
+            var body = BindLoopBody(syntax.Body, out var breakLabel, out var continueLabel);
 
             _scope = _scope.Parent;
 
-            return new BoundForStatement(variable, lowerBound, upperBound, body);
+            return new BoundForStatement(variable, lowerBound, upperBound, body, breakLabel, continueLabel);
+        }
+
+        
+        private BoundStatement BindLoopBody(StatementSyntax syntax, out BoundLabel breakLabel, out BoundLabel continueLabel)
+        {
+            breakLabel = new BoundLabel("break");
+            continueLabel = new BoundLabel("continue");
+
+            _loopStack.Push((breakLabel, continueLabel));
+            var boundBody = BindStatement(syntax);
+            _loopStack.Pop();
+
+            return boundBody;
+        }
+
+        private BoundStatement BindBreakStatement(BreakStatementSyntax syntax)
+        {
+            if (_loopStack.Count == 0)
+            {
+                _diagnostics.ReportInvalidBreakOrContinue(syntax.Keyword.Span, syntax.Keyword.Text);
+                return BindErrorStatement();
+            }
+
+            var breakLabel = _loopStack.Peek().breakLabel;
+            return new BoundGotoStatement(breakLabel);
+        }
+
+        private BoundStatement BindContinueStatement(ContinueStatementSyntax syntax)
+        {
+            if (_loopStack.Count == 0)
+            {
+                _diagnostics.ReportInvalidBreakOrContinue(syntax.Keyword.Span, syntax.Keyword.Text);
+                return BindErrorStatement();
+            }
+
+            var continueLabel = _loopStack.Peek().ContinueLabel;
+            return new BoundGotoStatement(continueLabel);
         }
 
         private BoundStatement BindBlockStatement(BlockStatementSyntax syntax)
@@ -441,7 +483,6 @@ namespace Alto.CodeAnalysis.Binding
             
             for (var i = 0; i < syntax.Arguments.Count; i++)
             {
-                
                 var parameter = function.Parameters[i];
                 var argument = boundArguments[i];
 
@@ -472,7 +513,13 @@ namespace Alto.CodeAnalysis.Binding
             return variable;
         }
 
-        private TypeSymbol LookupType(string name)
+        private BoundStatement BindErrorStatement()
+        {
+            var statement = new BoundExpressionStatement(new BoundErrorExpression());
+            return statement;
+        }
+
+        private TypeSymbol LookupType(string name) 
         {
             switch (name)
             {
