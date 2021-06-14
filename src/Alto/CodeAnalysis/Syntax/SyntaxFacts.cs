@@ -81,6 +81,10 @@ namespace Alto.CodeAnalysis.Syntax
                     return SyntaxKind.ForKeyword;
                 case "to":
                     return SyntaxKind.ToKeyword;
+                case "break":
+                    return SyntaxKind.BreakKeyword;
+                case "continue":
+                    return SyntaxKind.ContinueKeyword;
                 default:
                     return SyntaxKind.IdentifierToken;
             }
@@ -158,6 +162,10 @@ namespace Alto.CodeAnalysis.Syntax
                     return "for";
                 case SyntaxKind.ToKeyword:
                     return "to";
+                case SyntaxKind.BreakKeyword:
+                    return "break";
+                case SyntaxKind.ContinueKeyword:
+                    return "continue";
                 case SyntaxKind.CommaToken:
                     return ",";
                 case SyntaxKind.ColonToken:

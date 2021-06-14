@@ -139,6 +139,12 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
+        internal void ReportInvalidBreakOrContinue(TextSpan span, string text)
+        {
+            var message = $"Statement '{text}' is not valid outside of loops.";
+            Report(span, message);
+        }
+
         internal void TEMPORARY_ReportFunctionsAreUnsupported(TextSpan span)
         {
             var message = "Functions with returns are not supported yet.";
