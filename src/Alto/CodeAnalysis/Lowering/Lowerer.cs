@@ -23,6 +23,12 @@ namespace Alto.CodeAnalysis.Lowering
             return new BoundLabel(name);
         }
 
+        private BoundLabel GenerateLabel(string prefix)
+        {
+            var name = prefix + (++_labelCount).ToString();
+            return new BoundLabel(name);
+        }
+
         public static BoundBlockStatement Lower(BoundStatement statement)
         {
             var lowerer = new Lowerer();
@@ -212,7 +218,7 @@ namespace Alto.CodeAnalysis.Lowering
             );
             
             var whileBody = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(node.Body, continueLabelStatement, increment));
-            var whileStatement = new BoundWhileStatement(condition, whileBody, node.BreakLabel, new BoundLabel("continue"));
+            var whileStatement = new BoundWhileStatement(condition, whileBody, node.BreakLabel, GenerateLabel());
             var result = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(variableDeclaration, upperBoundDeclaration, whileStatement));
 
             return RewriteStatement(result);

@@ -143,7 +143,7 @@ namespace Alto.CodeAnalysis.Binding
             }
             else if (node.Type == TypeSymbol.String)
             {
-                v = "\"" + v.Replace("\"", "\u0022") + "\"";
+                v = "\"" + v.Replace("\"", "\u0022")  + "\"";
                 writer.WriteString(v);
             }
             else

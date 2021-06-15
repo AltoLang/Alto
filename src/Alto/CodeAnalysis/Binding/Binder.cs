@@ -14,6 +14,7 @@ namespace Alto.CodeAnalysis.Binding
         private readonly DiagnosticBag _diagnostics = new DiagnosticBag();
         private readonly FunctionSymbol _function;
         private Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)> _loopStack = new Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)>();
+        private int _labelCount;
         private BoundScope _scope;
 
         public Binder(BoundScope parent, FunctionSymbol function)
@@ -249,8 +250,10 @@ namespace Alto.CodeAnalysis.Binding
         
         private BoundStatement BindLoopBody(StatementSyntax syntax, out BoundLabel breakLabel, out BoundLabel continueLabel)
         {
-            breakLabel = new BoundLabel("break");
-            continueLabel = new BoundLabel("continue");
+            _labelCount++;
+            breakLabel = GenerateLabel("break", _labelCount, false);
+            continueLabel = GenerateLabel("continue", _labelCount, false);
+            _labelCount++;
 
             _loopStack.Push((breakLabel, continueLabel));
             var boundBody = BindStatement(syntax);
@@ -547,6 +550,17 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             return null;
+        }
+
+        private BoundLabel GenerateLabel(string prefix = "Label", int? count = null, bool incrementCount = true)
+        {
+            if (incrementCount)
+                _labelCount++;
+            
+            var nameCount = count == null ? _labelCount : count; 
+            var name = prefix + nameCount.ToString();
+            
+            return new BoundLabel(name);
         }
     }
 }
