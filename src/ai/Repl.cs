@@ -38,7 +38,6 @@ namespace REPL
             private int _renderedLineCount;
             private int _currentLineIndex;
             private int _currentCharacter;
-            private int _currentLine;
 
             public SubmissionView(Action<string> lineRenderer, ObservableCollection<string> submissionDocument)
             {
@@ -97,20 +96,6 @@ namespace REPL
                 Console.CursorLeft = 2 + _currentCharacter;
             }
 
-            public int CurrentLine
-            {
-                get => _currentLine;
-                set
-                {
-                    if (_currentLine != value)
-                    {
-                        _currentLine = value;
-                        _currentCharacter = Math.Min(_submissionDocument[_currentLine].Length, _currentCharacter);
-                        UpdateCursorPosition();
-                    }
-                }
-            }
-
             public int CurrentLineIndex 
             { 
                 get => _currentLineIndex; 
@@ -152,7 +137,7 @@ namespace REPL
             }
 
             view.CurrentLineIndex = document.Count - 1;
-            view.CurrentCharacter = document[view.CurrentLine].Length;
+            view.CurrentCharacter = document[view.CurrentLineIndex].Length;
 
             Console.WriteLine();
 
@@ -386,7 +371,7 @@ namespace REPL
             foreach (var line in lines)
                 document.Add(line);
 
-            view.CurrentLine = document.Count - 1;
+            view.CurrentLineIndex = document.Count - 1;
             view.CurrentCharacter = document[view.CurrentLineIndex].Length;
         }
 
