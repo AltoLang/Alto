@@ -9,5 +9,6 @@ namespace Alto.CodeAnalysis.Symbols
 
         public string Name { get; }
         public abstract SymbolKind Kind { get; }
+        public override string ToString() => Name;
     }
 }
