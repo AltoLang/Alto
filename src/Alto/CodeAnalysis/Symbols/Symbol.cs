@@ -1,3 +1,5 @@
+using System.IO;
+
 namespace Alto.CodeAnalysis.Symbols
 {
     public abstract class Symbol
@@ -9,6 +11,13 @@ namespace Alto.CodeAnalysis.Symbols
 
         public string Name { get; }
         public abstract SymbolKind Kind { get; }
-        public override string ToString() => Name;
+        public void WriteTo(TextWriter writer) => SymbolWriter.WriteTo(this, writer);
+
+        public override string ToString()
+        {
+            using var writer = new StringWriter();
+            WriteTo(writer);
+            return writer.ToString();
+        }
     }
 }
