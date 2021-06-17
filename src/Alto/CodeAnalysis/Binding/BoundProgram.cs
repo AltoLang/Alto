@@ -3,16 +3,16 @@ using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.CodeAnalysis.Binding
 {
-    internal class BoundProgram
+    internal sealed class BoundProgram
     {
-        public BoundProgram(BoundGlobalScope globalScope, DiagnosticBag diagnostics, ImmutableDictionary<FunctionSymbol, BoundBlockStatement> functionBodies)
+        public BoundProgram(DiagnosticBag diagnostics, ImmutableDictionary<FunctionSymbol, BoundBlockStatement> functionBodies, BoundBlockStatement statement)
         {
-            GlobalScope = globalScope;
+            Statement = statement;
             Diagnostics = diagnostics;
             FunctionBodies = functionBodies;
         }
 
-        public BoundGlobalScope GlobalScope { get; }
+        public BoundBlockStatement Statement { get; }
         public DiagnosticBag Diagnostics { get; }
         public ImmutableDictionary<FunctionSymbol, BoundBlockStatement> FunctionBodies { get; }
     }

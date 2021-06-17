@@ -70,14 +70,41 @@ namespace Alto.CodeAnalysis
         
         public void EmitTree(TextWriter writer)
         {
-            var statement = GetStatement();
-            statement.WriteTo(writer);
+            var program = Binder.BindProgram(GlobalScope);
+
+            if (program.Statement.Statements.Any())
+            {
+                program.Statement.WriteTo(writer);
+            }
+            else
+            {
+                foreach (var functionBody in program.FunctionBodies)
+                {
+                    if (!GlobalScope.Functions.Contains(functionBody.Key))
+                        continue;
+
+                    functionBody.Key.WriteTo(writer);
+                    functionBody.Value.WriteTo(writer);
+                }
+            }
         }
 
         private BoundBlockStatement GetStatement()
         {
-            var result = GlobalScope.Statement;
-            return Lowerer.Lower(result);
+            var statements = GlobalScope.Statements;
+
+            if (statements.Any())
+            {
+                var result = GlobalScope.Statements[0];
+                return Lowerer.Lower(result);
+            }
+            else
+            {
+                var childStatements = ImmutableArray<BoundStatement>.Empty;
+                var statement = new BoundBlockStatement(childStatements);
+
+                return statement;
+            }   
         }
     }
 }
