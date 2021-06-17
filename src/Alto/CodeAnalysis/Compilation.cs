@@ -73,13 +73,20 @@ namespace Alto.CodeAnalysis
             var program = Binder.BindProgram(GlobalScope);
 
             if (program.Statement.Statements.Any())
+            {
                 program.Statement.WriteTo(writer);
+            }
             else
+            {
                 foreach (var functionBody in program.FunctionBodies)
+                {
                     if (!GlobalScope.Functions.Contains(functionBody.Key))
                         continue;
-                    else
-                        functionBody.Value.WriteTo(writer);
+
+                    functionBody.Key.WriteTo(writer);
+                    functionBody.Value.WriteTo(writer);
+                }
+            }
         }
 
         private BoundBlockStatement GetStatement()
