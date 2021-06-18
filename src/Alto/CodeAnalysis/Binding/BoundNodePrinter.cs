@@ -42,12 +42,12 @@ namespace Alto.CodeAnalysis.Binding
         {
             var needsParenthesis = parentPrecedence >= currentPrecedence;
             if (needsParenthesis)
-                writer.WritePunctuation("(");
+                writer.WritePunctuation(SyntaxKind.OpenParenthesesToken);
 
             expression.WriteTo(writer);
 
             if (needsParenthesis)
-                writer.WritePunctuation(")");
+                writer.WritePunctuation(SyntaxKind.CloseParenthesesToken);
         }
 
         public static void WriteTo(this BoundNode node, IndentedTextWriter writer)
@@ -115,15 +115,14 @@ namespace Alto.CodeAnalysis.Binding
 
         private static void WriteErrorExpression(BoundErrorExpression node, IndentedTextWriter writer)
         {
-            writer.WriteKeyword("?");
+            writer.WriteKeyword(SyntaxKind.QuestionMarkToken);
         }
 
         private static void WriteUnaryExpression(BoundUnaryExpression node, IndentedTextWriter writer)
         {
-            var op = SyntaxFacts.GetText(node.Op.SyntaxKind);
             var precedence = SyntaxFacts.GetUnaryOperatorPrecedence(node.Op.SyntaxKind);
 
-            writer.WritePunctuation(op);
+            writer.WritePunctuation(node.Op.SyntaxKind);
 
             writer.WriteNestedExpression(precedence, node.Operand);
             node.Operand.WriteTo(writer);
@@ -159,55 +158,61 @@ namespace Alto.CodeAnalysis.Binding
 
         private static void WriteAssignmentExpression(BoundAssignmentExpression node, IndentedTextWriter writer)
         {
-           writer.WriteIdentifier(node.Variable.Name);
-            writer.WritePunctuation(" = ");
+            writer.WriteIdentifier(node.Variable.Name);
+            writer.WriteWhitespace();
+            writer.WritePunctuation(SyntaxKind.EqualsToken);
+            writer.WriteWhitespace();
             node.Expression.WriteTo(writer);
         }
 
         private static void WriteBinaryExpression(BoundBinaryExpression node, IndentedTextWriter writer)
         {
-            var op = SyntaxFacts.GetText(node.Op.SyntaxKind);
             var precedence = SyntaxFacts.GetBinaryOperatorPrecedence(node.Op.SyntaxKind);
 
             writer.WriteNestedExpression(precedence, node.Left);
-            writer.Write(" ");
-            writer.WritePunctuation(op);
-            writer.Write(" ");
+            writer.WriteWhitespace();
+            writer.WritePunctuation(node.Op.SyntaxKind);
+            writer.WriteWhitespace();
             writer.WriteNestedExpression(precedence, node.Right);
         }
 
         private static void WriteCallExpression(BoundCallExpression node, IndentedTextWriter writer)
         {
             writer.WriteIdentifier(node.Function.Name);
-            writer.WritePunctuation("(");  
+            writer.WritePunctuation(SyntaxKind.OpenParenthesesToken);  
 
             var isFirst = true;
             foreach (var arg in node.Arguments)
             {
                 if (isFirst)
+                {
                     isFirst = false;
+                }
                 else
-                    writer.WritePunctuation(", ");
+                {
+                    writer.WritePunctuation(SyntaxKind.CommaToken);
+                    writer.WriteWhitespace();
+                }
 
                 arg.WriteTo(writer);
             }
 
-            writer.WritePunctuation(")");   
+            writer.WritePunctuation(SyntaxKind.CloseParenthesesToken);   
         }
 
         private static void WriteConversionExpression(BoundConversionExpression node, IndentedTextWriter writer)
         {
             var identifier = "to" +  char.ToUpper(node.Type.Name[0]) + node.Type.Name.Remove(0, 1);
             writer.WriteIdentifier(identifier);
-            writer.WritePunctuation("(");
+            writer.WritePunctuation(SyntaxKind.OpenParenthesesToken);
             node.Expression.WriteTo(writer);
-            writer.WritePunctuation(")");
+            writer.WritePunctuation(SyntaxKind.CloseParenthesesToken);
 
         }
 
         private static void WriteBlockStatement(BoundBlockStatement node, IndentedTextWriter writer)
         {
-                writer.WritePunctuation("{");
+                writer.WritePunctuation(SyntaxKind.OpenBraceToken);
                 writer.WriteLine();
                 writer.Indent++;
 
@@ -215,7 +220,7 @@ namespace Alto.CodeAnalysis.Binding
                     s.WriteTo(writer);
 
                 writer.Indent--;
-                writer.WritePunctuation("}");
+                writer.WritePunctuation(SyntaxKind.CloseBraceToken);
                 writer.WriteLine();
         }
 
@@ -227,22 +232,26 @@ namespace Alto.CodeAnalysis.Binding
 
         private static void WriteVariableDeclaration(BoundVariableDeclaration node, IndentedTextWriter writer)
         {
-            writer.WriteKeyword(node.Variable.IsReadOnly ? "let " : "var ");
+            writer.WriteKeyword(node.Variable.Type.ToString());
+            writer.WriteWhitespace();
             writer.WriteIdentifier(node.Variable.Name);
-            writer.WritePunctuation(" = ");
+            writer.WriteWhitespace();
+            writer.WritePunctuation(SyntaxKind.EqualsToken);
+            writer.WriteWhitespace();
             node.Initializer.WriteTo(writer);
             writer.WriteLine();
         }
 
         private static void WriteIfStatement(BoundIfStatement node, IndentedTextWriter writer)
         {
-            writer.WriteKeyword("if ");
+            writer.WriteKeyword(SyntaxKind.IfKeyword);
+            writer.WriteWhitespace();
             node.Condition.WriteTo(writer);
             writer.WriteLine();
             writer.WriteNestedStatement(node.ThenStatement);
             if (node.ElseStatement != null)
             {
-                writer.WriteKeyword("else");
+                writer.WriteKeyword(SyntaxKind.ElseKeyword);
                 writer.WriteLine();
                 writer.WriteNestedStatement(node.ElseStatement);
             }
@@ -250,7 +259,8 @@ namespace Alto.CodeAnalysis.Binding
 
         private static void WriteWhileStatement(BoundWhileStatement node, IndentedTextWriter writer)
         {
-            writer.WriteKeyword("while ");
+            writer.WriteKeyword(SyntaxKind.WhileKeyword);
+            writer.WriteWhitespace();
             node.Condition.WriteTo(writer);
             writer.WriteLine();
             writer.WriteNestedStatement(node.Body);
@@ -258,22 +268,32 @@ namespace Alto.CodeAnalysis.Binding
 
         private static void WriteDoWhileStatement(BoundDoWhileStatement node, IndentedTextWriter writer)
         {
-            writer.WriteKeyword("do");
+            writer.WriteKeyword(SyntaxKind.DoKeyword);
             writer.WriteLine();
             writer.WriteNestedStatement(node.Body);
 
-            writer.WriteKeyword("while ");
+            writer.WriteKeyword(SyntaxKind.WhileKeyword);
+            writer.WriteWhitespace();
             node.Condition.WriteTo(writer);
             writer.WriteLine();
         }
 
         private static void WriteForStatement(BoundForStatement node, IndentedTextWriter writer)
         {
-            writer.WriteKeyword("for ");
+            writer.WriteKeyword(SyntaxKind.ForKeyword);
+            writer.WriteWhitespace();
             writer.WriteIdentifier(node.Variable.Name);
-            writer.WritePunctuation(" = ");
+
+            writer.WriteWhitespace();
+            writer.WritePunctuation(SyntaxKind.EqualsToken);
+            writer.WriteWhitespace();
+
             node.LowerBound.WriteTo(writer);
-            writer.WriteKeyword(" to ");
+
+            writer.WriteWhitespace();
+            writer.WriteKeyword(SyntaxKind.ToKeyword);
+            writer.WriteWhitespace();
+
             node.UpperBound.WriteTo(writer);
             writer.WriteLine();
             writer.WriteNestedStatement(node.Body);
@@ -281,16 +301,23 @@ namespace Alto.CodeAnalysis.Binding
 
         private static void WriteGotoStatement(BoundGotoStatement node, IndentedTextWriter writer)
         {
-            writer.WriteKeyword("goto ");
+            writer.WriteKeyword("goto");
+            writer.WriteWhitespace();
             writer.WriteIdentifier(node.Label.Name);
             writer.WriteLine();
         }
 
         private static void WriteConditionalGotoStatement(BoundConditionalGotoStatement node, IndentedTextWriter writer)
         {
-            writer.WriteKeyword("goto ");
+            writer.WriteKeyword("goto");
+            writer.WriteWhitespace();
+            
             writer.WriteIdentifier(node.Label.Name);
-            writer.WriteKeyword(node.JumpIfTrue ? " if " : " unless " );
+
+            writer.WriteIdentifier(node.Label.Name);
+            writer.WriteKeyword(node.JumpIfTrue ? " if " : " unless ");
+            writer.WriteIdentifier(node.Label.Name);
+
             node.Condition.WriteTo(writer);
             writer.WriteLine();
         }
@@ -301,7 +328,7 @@ namespace Alto.CodeAnalysis.Binding
             writer.Indent = 0;
 
             writer.WritePunctuation(node.Label.Name);
-            writer.WritePunctuation(":");
+            writer.WritePunctuation(SyntaxKind.ColonToken);
 
             writer.Indent = originalIndent;
             writer.WriteLine();

@@ -1,6 +1,7 @@
 using System;
-using System.CodeDom.Compiler;
 using System.IO;
+using System.CodeDom.Compiler;
+using Alto.CodeAnalysis.Syntax;
 
 namespace Alto.IO
 {
@@ -27,6 +28,14 @@ namespace Alto.IO
         {
             if (writer.IsConsoleOut())
                 Console.ResetColor();
+        }
+
+        public static void WriteKeyword(this TextWriter writer, SyntaxKind tokenKind)
+        {
+            writer.SetForeground(ConsoleColor.DarkCyan);
+            var text = SyntaxFacts.GetText(tokenKind);
+            writer.Write(text);
+            writer.ResetColor();
         }
 
         public static void WriteKeyword(this TextWriter writer, string text)
@@ -64,11 +73,25 @@ namespace Alto.IO
             writer.ResetColor();
         }
 
+        public static void WritePunctuation(this TextWriter writer, SyntaxKind tokenKind)
+        {
+            writer.SetForeground(ConsoleColor.Gray);
+            var text = SyntaxFacts.GetText(tokenKind);
+            writer.Write(text);
+            writer.ResetColor();
+        }
+
         public static void WritePunctuation(this TextWriter writer, string text)
         {
             writer.SetForeground(ConsoleColor.Gray);
             writer.Write(text);
             writer.ResetColor();
+        }
+
+        public static void WriteWhitespace(this TextWriter writer, int count = 1)
+        {
+            var whitespace = new string(' ', count);
+            writer.Write(whitespace);
         }
     }
 }
