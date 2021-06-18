@@ -170,6 +170,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return ",";
                 case SyntaxKind.ColonToken:
                     return ":";
+                case SyntaxKind.QuestionMarkToken:
+                    return "?";
                 default:
                     return null;
             }

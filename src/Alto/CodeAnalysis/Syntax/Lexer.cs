@@ -167,6 +167,10 @@ namespace Alto.CodeAnalysis.Syntax
                     _position++;
                     _kind = SyntaxKind.ColonToken;
                     break;
+                case '?':
+                    _position++;
+                    _kind = SyntaxKind.QuestionMarkToken;
+                    break;
                 case ',':
                     _position++;
                     _kind = SyntaxKind.CommaToken;
