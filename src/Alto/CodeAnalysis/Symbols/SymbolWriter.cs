@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Alto.CodeAnalysis.Syntax;
 using Alto.IO;
 
 namespace Alto.CodeAnalysis.Symbols
@@ -32,17 +33,21 @@ namespace Alto.CodeAnalysis.Symbols
 
         private static void WriteGlobalVariableTo(GlobalVariableSymbol symbol, TextWriter writer)
         {
-            writer.WriteKeyword(symbol.IsReadOnly ? "let " : "var ");
+            writer.WriteKeyword(symbol.IsReadOnly ? SyntaxKind.LetKeyword : SyntaxKind.VarKeyword);
+            writer.WriteWhitespace();
             writer.WriteIdentifier(symbol.Name);
-            writer.WritePunctuation(": ");
+            writer.WritePunctuation(SyntaxKind.ColonToken);
+            writer.WriteWhitespace();
             symbol.Type.WriteTo(writer);
         }
 
         private static void WriteLocalVariableTo(LocalVariableSymbol symbol, TextWriter writer)
         {
-            writer.WriteKeyword(symbol.IsReadOnly ? "let " : "var ");
+            writer.WriteKeyword(symbol.IsReadOnly ? SyntaxKind.LetKeyword : SyntaxKind.VarKeyword);
+            writer.WriteWhitespace();
             writer.WriteIdentifier(symbol.Name);
-            writer.WritePunctuation(": ");
+            writer.WritePunctuation(SyntaxKind.ColonToken);
+            writer.WriteWhitespace();
             symbol.Type.WriteTo(writer);
         }
 
@@ -53,26 +58,31 @@ namespace Alto.CodeAnalysis.Symbols
 
         private static void WriteFunctionTo(FunctionSymbol symbol, TextWriter writer)
         {
-            writer.WriteKeyword("function ");
+            writer.WriteKeyword(SyntaxKind.FunctionKeyword);
+            writer.WriteWhitespace();
             writer.WriteIdentifier(symbol.Name);
-            writer.WritePunctuation("(");
+            writer.WritePunctuation(SyntaxKind.OpenParenthesesToken);
 
             for (int i = 0; i < symbol.Parameters.Length; i++)
             {
                 var p = symbol.Parameters[i];
 
                 if (i > 0)
-                    writer.WritePunctuation(", ");
+                {
+                    writer.WritePunctuation(SyntaxKind.ColonToken);
+                    writer.WriteWhitespace();
+                }
 
                 p.WriteTo(writer);
             }
-            writer.WritePunctuation(")");
+            writer.WritePunctuation(SyntaxKind.CloseBraceToken);
         }
 
         private static void WriteParameterTo(ParameterSymbol symbol, TextWriter writer)
         {
             writer.WriteIdentifier(symbol.Name);
-            writer.WritePunctuation(": ");
+            writer.WritePunctuation(SyntaxKind.ColonToken);
+            writer.WriteWhitespace();
             symbol.Type.WriteTo(writer); 
         }
     }
