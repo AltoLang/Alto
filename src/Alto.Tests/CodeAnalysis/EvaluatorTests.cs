@@ -352,11 +352,11 @@ namespace Alto.Tests.CodeAnalysis
         public void Evaluator_InvokeFunctionArguments_Exceeding()
         {
             var text = @"
-                var num = random(0, 256, 3000, 3000)
+                var num = random(0, 256[, 3000, 3000])
             ";
 
             var diagnostics = @"
-                Function 'print' expects 2 arguments, got 4.
+                Function 'random' expects 2 arguments, got 4.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -366,11 +366,11 @@ namespace Alto.Tests.CodeAnalysis
         public void Evaluator_InvokeFunctionArguments_Missing()
         {
             var text = @"
-                var num = random(0)
+                var num = random(0[)]
             ";
 
             var diagnostics = @"
-                Function 'print' expects 2 arguments, got 1.
+                Function 'random' expects 2 arguments, got 1.
             ";
 
             AssertDiagnostics(text, diagnostics);
