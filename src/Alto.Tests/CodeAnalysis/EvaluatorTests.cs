@@ -319,6 +319,34 @@ namespace Alto.Tests.CodeAnalysis
 
             AssertDiagnostics(text, diagnostics);
         }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArguments_Missing()
+        {
+            var text = @"
+                print([)]
+            ";
+
+            var diagnostics = @"
+                Function 'print' expects 1 argument, got 0.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArguments_Exceeding()
+        {
+            var text = @"
+                print(""hello!""[, ""test"", ""foo""])
+            ";
+
+            var diagnostics = @"
+                Function 'print' expects 1 argument, got 3.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
         
         private void AssertDiagnostics(string text, string diagnosticText)
         {
