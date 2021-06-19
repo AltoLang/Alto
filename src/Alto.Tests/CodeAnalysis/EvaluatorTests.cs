@@ -321,7 +321,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluator_InvokeFunctionArguments_Missing()
+        public void Evaluator_InvokeFunctionArgument_Missing()
         {
             var text = @"
                 print([)]
@@ -335,7 +335,7 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluator_InvokeFunctionArguments_Exceeding()
+        public void Evaluator_InvokeFunctionArgument_Exceeding()
         {
             var text = @"
                 print(""hello!""[, ""test"", ""foo""])
@@ -343,6 +343,34 @@ namespace Alto.Tests.CodeAnalysis
 
             var diagnostics = @"
                 Function 'print' expects 1 argument, got 3.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArguments_Exceeding()
+        {
+            var text = @"
+                var num = random(0, 256, 3000, 3000)
+            ";
+
+            var diagnostics = @"
+                Function 'print' expects 2 arguments, got 4.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArguments_Missing()
+        {
+            var text = @"
+                var num = random(0)
+            ";
+
+            var diagnostics = @"
+                Function 'print' expects 2 arguments, got 1.
             ";
 
             AssertDiagnostics(text, diagnostics);
