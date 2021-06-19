@@ -86,6 +86,8 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("\"idk\" == \"test\"", false)]
         [InlineData("\"test\" ~= \"test\"", false)]
         [InlineData("\"test\" ~= \"idk\"", true)]
+        [InlineData("{ var i = 0 while i < 5 { i = i + 1 if i == 5 continue } i }", 5)]
+        [InlineData("{ var i = 0 do { i = i + 1 if i == 5 continue } while i < 5 i }", 5)]
         public void Evaluator_Computes_CorrectValues(string text, object expectedValue)
         {
             AssertValue(text, expectedValue);
@@ -313,6 +315,62 @@ namespace Alto.Tests.CodeAnalysis
                 Unexpected token <EqualsToken>, expected <IdentifierToken>.
                 Unexpected token <CloseParenthesesToken>, expected <IdentifierToken>.
                 Unexpected token <EndOfFileToken>, expected <CloseBraceToken>.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArgument_Missing()
+        {
+            var text = @"
+                print([)]
+            ";
+
+            var diagnostics = @"
+                Function 'print' expects 1 argument, got 0.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArgument_Exceeding()
+        {
+            var text = @"
+                print(""hello!""[, ""test"", ""foo""])
+            ";
+
+            var diagnostics = @"
+                Function 'print' expects 1 argument, got 3.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArguments_Exceeding()
+        {
+            var text = @"
+                var num = random(0, 256[, 3000, 3000])
+            ";
+
+            var diagnostics = @"
+                Function 'random' expects 2 arguments, got 4.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArguments_Missing()
+        {
+            var text = @"
+                var num = random(0[)]
+            ";
+
+            var diagnostics = @"
+                Function 'random' expects 2 arguments, got 1.
             ";
 
             AssertDiagnostics(text, diagnostics);

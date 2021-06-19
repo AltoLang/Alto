@@ -119,25 +119,25 @@ namespace Alto.CodeAnalysis.Lowering
             //
             // ------->
             //
-            // goto check
-            // continue:
+            // goto continue
+            // body:
             //     x = x + 1
-            // check:
-            //     gotoFalse true end
+            // continue:
+            //     gotoFalse true body
             // break:
 
-            var checkLabel = GenerateLabel();
+            var bodyLabel = GenerateLabel();
 
-            var gotoCheck = new BoundGotoStatement(checkLabel);
+            var gotoContinue = new BoundGotoStatement(node.ContinueLabel);
+            var bodyLabelStatement = new BoundLabelStatement(bodyLabel);
             var continueLabelStatement = new BoundLabelStatement(node.ContinueLabel);
-            var checkLabelStatement = new BoundLabelStatement(checkLabel);
-            var gotoTrue = new BoundConditionalGotoStatement(node.ContinueLabel, node.Condition, true);
+            var gotoTrue = new BoundConditionalGotoStatement(bodyLabel, node.Condition, true);
             var breakLabelStatement = new BoundLabelStatement(node.BreakLabel);
             var result = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(
-                    gotoCheck, 
-                    continueLabelStatement, 
+                    gotoContinue, 
+                    bodyLabelStatement, 
                     node.Body,
-                    checkLabelStatement, 
+                    continueLabelStatement,
                     gotoTrue, 
                     breakLabelStatement
                 )
@@ -156,20 +156,23 @@ namespace Alto.CodeAnalysis.Lowering
 
             // --------->
 
-            // goto check
+            // body:
+            //    print("do while statement test")
             // continue:
-            //      print("do while statement test")
-            // check:
-            //      gotoFalse <condition> end
+            //    gotoTrue <condition> body
             // break:
 
+            var bodyLabel = GenerateLabel();
+
+            var bodyLabelStatement = new BoundLabelStatement(bodyLabel);
             var continueLabelStatement = new BoundLabelStatement(node.ContinueLabel);
-            var gotoTrue = new BoundConditionalGotoStatement(node.ContinueLabel, node.Condition);
+            var gotoTrue = new BoundConditionalGotoStatement(bodyLabel, node.Condition);
             var breakLabelStatement = new BoundLabelStatement(node.BreakLabel);
 
             var result = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(
-                    continueLabelStatement, 
+                    bodyLabelStatement,
                     node.Body,
+                    continueLabelStatement,
                     gotoTrue, 
                     breakLabelStatement
                 )
