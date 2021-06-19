@@ -346,7 +346,7 @@ namespace Alto.CodeAnalysis.Binding
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
         }
-
+ 
         private BoundExpression BindConversion(ExpressionSyntax syntax, TypeSymbol type, bool allowExplicit = false)
         {
             var expression = BindExpression(syntax);
@@ -478,10 +478,28 @@ namespace Alto.CodeAnalysis.Binding
 
             if (function.Parameters.Length != syntax.Arguments.Count)
             {
-                _diagnostics.ReportWrongArgumentCount(syntax.Span, function.Name, function.Parameters.Length, syntax.Arguments.Count);
+                TextSpan span;
+                if (function.Parameters.Length < syntax.Arguments.Count)
+                {
+                    SyntaxNode firstExceedingNode;
+                    if (function.Parameters.Length > 0)
+                        firstExceedingNode = syntax.Arguments.GetSeparator(function.Parameters.Length - 1);
+                    else
+                        firstExceedingNode = syntax.Arguments[0];
+                    
+                    var lastExceedingNode = syntax.Arguments[syntax.Arguments.Count - 1];
+                    span = TextSpan.FromBounds(firstExceedingNode.Span.Start, lastExceedingNode.Span.End);
+                }
+                else
+                {
+                    span = syntax.ClosedParenthesisToken.Span;
+                }
+
+                _diagnostics.ReportWrongArgumentCount(span, function.Name, function.Parameters.Length, syntax.Arguments.Count);
                 return new BoundErrorExpression();
             }
             
+            bool hasErrors = false;
             for (var i = 0; i < syntax.Arguments.Count; i++)
             {
                 var parameter = function.Parameters[i];
@@ -489,10 +507,14 @@ namespace Alto.CodeAnalysis.Binding
 
                 if (argument.Type != parameter.Type)
                 {
-                    _diagnostics.ReportWrongArgumentType(syntax.Arguments[i].Span, function.Name, parameter.Name, parameter.Type, argument.Type);
-                    return new BoundErrorExpression();
+                    hasErrors = true;
+                    if (argument.Type != TypeSymbol.Error)
+                        _diagnostics.ReportWrongArgumentType(syntax.Arguments[i].Span, function.Name, parameter.Name, parameter.Type, argument.Type);
                 }
             }
+
+            if (hasErrors)
+                return new BoundErrorExpression();
 
             return new BoundCallExpression(function, boundArguments.ToImmutable());
         }
