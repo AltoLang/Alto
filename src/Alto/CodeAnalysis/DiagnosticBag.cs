@@ -120,9 +120,9 @@ namespace Alto.CodeAnalysis
             string message;
 
             if (expectedCount == 1)
-                message = $"Function '{name}' expects '{expectedCount}' argument, got '{count}'.";
+                message = $"Function '{name}' expects {expectedCount} argument, got {count}.";
             else
-                message = $"Function '{name}' expects '{expectedCount}' arguments, got '{count}'.";
+                message = $"Function '{name}' expects {expectedCount} arguments, got {count}.";
             
             Report(span, message);
         }
