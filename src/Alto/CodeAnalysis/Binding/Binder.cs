@@ -106,9 +106,6 @@ namespace Alto.CodeAnalysis.Binding
 
             var type = BindTypeClause(syntax.Type) ?? TypeSymbol.Void;
 
-            if (type != TypeSymbol.Void)
-                _diagnostics.TEMPORARY_ReportFunctionsAreUnsupported(syntax.Type.Span);
-
             var function = new FunctionSymbol(syntax.Identifier.Text, parameters.ToImmutable(), type, syntax);
 
             if (!_scope.TryDeclareFunction(function))
@@ -159,23 +156,25 @@ namespace Alto.CodeAnalysis.Binding
             switch (syntax.Kind)
             {
                 case SyntaxKind.BlockStatement:
-                    return BindBlockStatement((BlockStatementSyntax)syntax);
+                    return BindBlockStatement((BlockStatementSyntax) syntax);
                 case SyntaxKind.ExpressionStatement:
-                    return BindExpressionStatement((ExpressionStatementSyntax)syntax);
+                    return BindExpressionStatement((ExpressionStatementSyntax) syntax);
                 case SyntaxKind.VariableDeclaration:
-                    return BindVariableDeclaration((VariableDeclarationSyntax)syntax);
+                    return BindVariableDeclaration((VariableDeclarationSyntax) syntax);
                 case SyntaxKind.IfStatement:
-                    return BindIfStatement((IfStatementSyntax)syntax);
+                    return BindIfStatement((IfStatementSyntax) syntax);
                 case SyntaxKind.WhileStatement:
-                    return BindWhileStatement((WhileStatementSyntax)syntax);
+                    return BindWhileStatement((WhileStatementSyntax) syntax);
                 case SyntaxKind.DoWhileStatement:
-                    return BindDoWhileStatement((DoWhileStatementSyntax)syntax);
+                    return BindDoWhileStatement((DoWhileStatementSyntax) syntax);
                 case SyntaxKind.ForStatement:
                     return BindForStatement((ForStatementSyntax) syntax);
                 case SyntaxKind.BreakStatement:
                     return BindBreakStatement((BreakStatementSyntax) syntax);
                 case SyntaxKind.ContinueStatement:
                     return BindContinueStatement((ContinueStatementSyntax) syntax);
+                case SyntaxKind.ReturnStatement:
+                    return BindReturnStatement((ReturnStatementSyntax) syntax);
                 default:
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
@@ -282,6 +281,33 @@ namespace Alto.CodeAnalysis.Binding
 
             var continueLabel = _loopStack.Peek().ContinueLabel;
             return new BoundGotoStatement(continueLabel);
+        }
+
+        private BoundStatement BindReturnStatement(ReturnStatementSyntax syntax)
+        {
+            var expression = syntax.ReturnExpression == null ? null : BindExpression(syntax.ReturnExpression);
+
+            if (_function == null)
+            {
+                _diagnostics.ReportUnexpectedReturn(syntax.Keyword.Span);
+            }
+            else
+            {
+                if (_function.Type == TypeSymbol.Void)
+                {
+                    if (expression != null)
+                        _diagnostics.ReportUnexpectedReturnExpression(syntax.ReturnExpression.Span, expression.Type, _function.Name);
+                }
+                else
+                {
+                    if (expression == null)
+                        _diagnostics.ReportReturnExpectsAnExpression(syntax.Keyword.Span, _function.Name);
+                    else
+                        expression = BindConversion(expression, _function.Type, syntax.ReturnExpression.Span); 
+                }
+            }
+            
+            return new BoundReturnStatement(expression);
         }
 
         private BoundStatement BindBlockStatement(BlockStatementSyntax syntax)
@@ -518,7 +544,7 @@ namespace Alto.CodeAnalysis.Binding
 
             return new BoundCallExpression(function, boundArguments.ToImmutable());
         }
-
+    
         private BoundExpression BindParenthesizedExpression(ParenthesizedExpressionSyntax syntax)
         {
             return BindExpression(syntax.Expression);

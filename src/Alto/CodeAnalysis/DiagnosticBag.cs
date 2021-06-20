@@ -93,8 +93,9 @@ namespace Alto.CodeAnalysis
 
         internal void ReportCannotImplicitlyConvert(TextSpan span, TypeSymbol fromType, TypeSymbol targetType)
         {
-            var message = $"Cannot implicitly convert type '{fromType.ToString()}' to type '{targetType.ToString()}'. An explicit conversion exists, are you missing a cast?";
+            var message = $"Cannot implicitly convert type '{fromType.ToString()}' to type '{targetType.ToString()}'. It is an explicit exists, are you missing a cast?";
             Report(span, message);
+
         }
 
         public void ReportCannotAssign(TextSpan span, string name)
@@ -145,15 +146,27 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
-        internal void ReportInvalidBreakOrContinue(TextSpan span, string text)
+        public void ReportInvalidBreakOrContinue(TextSpan span, string text)
         {
             var message = $"Statement '{text}' is not valid outside of loops.";
             Report(span, message);
         }
 
-        internal void TEMPORARY_ReportFunctionsAreUnsupported(TextSpan span)
+        public void ReportUnexpectedReturn(TextSpan span)
         {
-            var message = "Functions with returns are not supported yet.";
+            var message = "Unexpected return statement. Return statements are only allowed insite functions.";
+            Report(span, message);
+        }
+
+        public void ReportUnexpectedReturnExpression(TextSpan span, TypeSymbol type, string functionName)
+        {
+            var message = $"The function '{functionName}' expects a return value of type 'void', got an expression of type '{type}'.";
+            Report(span, message);
+        }
+
+        public void ReportReturnExpectsAnExpression(TextSpan span, string functionName)
+        {
+            var message = $"The return statement for this function '{functionName}' expects a return expression.";
             Report(span, message);
         }
     }
