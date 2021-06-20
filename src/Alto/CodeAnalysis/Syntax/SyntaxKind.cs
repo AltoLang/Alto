@@ -54,6 +54,7 @@ namespace Alto.CodeAnalysis.Syntax
         DoKeyword,
         BreakKeyword,
         ContinueKeyword,
+        ReturnKeyword,
         
         //Nodes
         CompilationUnit,
@@ -82,5 +83,6 @@ namespace Alto.CodeAnalysis.Syntax
         DoWhileStatement,
         BreakStatement,
         ContinueStatement,
+        ReturnStatement,
     }
 }
