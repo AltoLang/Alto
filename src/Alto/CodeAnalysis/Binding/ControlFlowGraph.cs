@@ -150,6 +150,16 @@ namespace Alto.CodeAnalysis.Binding
                         Walk(statement, current, next, isLast);
                     }
                 }
+                
+            Scan:
+                foreach (var block in blocks)
+                {
+                    if (!block.Incoming.Any())
+                    {
+                        RemoveBlock(blocks, block);
+                        goto Scan;
+                    }
+                }
 
                 blocks.Insert(0, _start);
                 blocks.Add(_end);
@@ -205,6 +215,23 @@ namespace Alto.CodeAnalysis.Binding
                 from.Outgoing.Add(branch);
                 to.Incoming.Add(branch);
                 _branches.Add(branch);
+            }
+
+            private void RemoveBlock(List<BasicBlock> blocks, BasicBlock block)
+            {
+                foreach (var branch in block.Incoming)
+                {
+                    branch.From.Outgoing.Remove(branch);
+                    _branches.Remove(branch);
+                }
+
+                foreach (var branch in block.Outgoing)
+                {
+                    branch.To.Incoming.Remove(branch);
+                    _branches.Remove(branch);
+                }
+
+                blocks.Remove(block);
             }
 
             private BoundExpression Negate(BoundExpression expression)
