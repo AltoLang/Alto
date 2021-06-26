@@ -78,7 +78,6 @@ namespace Alto.CodeAnalysis.Binding
 
         public sealed class BasicBlockBuilder
         {
-            private BasicBlock _current;
             private List<BasicBlock> _blocks = new List<BasicBlock>();
             private List<BoundStatement> _statements = new List<BoundStatement>();
 
