@@ -380,7 +380,7 @@ namespace Alto.Tests.CodeAnalysis
         public void Evaluator_NotAllCodePathsReturn_1()
         {
             var text = @"
-                function foo(x : int) : int {
+                function [foo](x : int) : int {
                     var sum = 0
                     var i = x
                     while true {
@@ -390,7 +390,6 @@ namespace Alto.Tests.CodeAnalysis
                         sum = sum + i
                         i = i - 1
                     }
-                    return -1
                 }
             ";
 
@@ -405,7 +404,7 @@ namespace Alto.Tests.CodeAnalysis
         public void Evaluator_NotAllCodePathsReturn_2()
         {
             var text = @"
-                function foo(x : int) : int {
+                function [foo](x : int) : int {
                     var sum = 0
                     var i = x
                     while true {
