@@ -58,6 +58,19 @@ namespace Alto.CodeAnalysis
                 return new EvaluationResult(diagnostics, null);
 
             var program = Binder.BindProgram(GlobalScope);
+
+            var appPath = Environment.GetCommandLineArgs()[0];
+            var appDir = Path.GetDirectoryName(appPath);
+            var cfgPath = Path.Combine(appDir, "cfg.dot");
+
+            var cfgStatement = !program.Statement.Statements.Any() && program.FunctionBodies.Any() 
+                                ? program.FunctionBodies.Last().Value 
+                                : program.Statement;
+
+            var cfg = ControlFlowGraph.Create(cfgStatement);
+            using (var writer = new StreamWriter(cfgPath))
+                cfg.WriteTo(writer);
+
             if (program.Diagnostics.Any())
                 return new EvaluationResult(program.Diagnostics.ToImmutableArray(), null);
 

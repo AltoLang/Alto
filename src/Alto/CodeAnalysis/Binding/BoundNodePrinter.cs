@@ -108,6 +108,9 @@ namespace Alto.CodeAnalysis.Binding
                 case BoundNodeKind.LabelStatement:
                     WriteLabelStatement((BoundLabelStatement)node, writer);
                     break;
+                case BoundNodeKind.ReturnStatement:
+                    WriteReturnStatement((BoundReturnStatement)node, writer);
+                    break;
                 default:
                     throw new Exception($"Unexprected BoundNodeKind {node.Kind}");
             }
@@ -198,6 +201,14 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             writer.WritePunctuation(SyntaxKind.CloseParenthesesToken);   
+        }
+
+        private static void WriteReturnStatement(BoundReturnStatement node, IndentedTextWriter writer)
+        {
+            writer.WriteKeyword(SyntaxKind.ReturnKeyword);
+            writer.WriteWhitespace();
+            writer.Write(node.ReturnExpression);
+            writer.WriteLine();
         }
 
         private static void WriteConversionExpression(BoundConversionExpression node, IndentedTextWriter writer)

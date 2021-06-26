@@ -85,6 +85,12 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
+        internal void ReportNotAllCodePathsReturn(TextSpan span, string name)
+        {
+            var message = $"Function '{name}' doesn't return on all code paths.";
+            Report(span, message);
+        }
+
         public void ReportCannotConvert(TextSpan span, TypeSymbol fromType, TypeSymbol targetType)
         {
             var message = $"Cannot convert type '{fromType.ToString()}' to type '{targetType.ToString()}'.";
