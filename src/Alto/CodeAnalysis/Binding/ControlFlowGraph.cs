@@ -62,6 +62,20 @@ namespace Alto.CodeAnalysis.Binding
             return graphBuilder.Build(blocks);
         }
 
+        public static bool AllPathsReturn(BoundBlockStatement body)
+        {
+            var graph = Create(body);
+
+            foreach (var branch in graph.End.Incoming)
+            {
+                var stmt = branch.From.Statements.Last();
+                if (stmt.Kind != BoundNodeKind.ReturnStatement)
+                    return false;
+            }
+
+            return true;
+        }
+
         public sealed class BasicBlockBuilder
         {
             private BasicBlock _current;
