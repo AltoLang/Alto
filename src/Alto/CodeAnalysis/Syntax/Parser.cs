@@ -95,6 +95,12 @@ namespace Alto.CodeAnalysis.Syntax
             return ParseGlobalStatement();
         }
 
+        private MemberSyntax ParseGlobalStatement()
+        {
+            var statement = ParseStatement();
+            return new GlobalStatementSyntax(statement);
+        }
+
         private MemberSyntax ParseFunctionDeclaration()
         {
             var keyword = MatchToken(SyntaxKind.FunctionKeyword);
@@ -110,11 +116,7 @@ namespace Alto.CodeAnalysis.Syntax
             return new FunctionDeclarationSyntax(keyword, identifier, openParenthesis, parameters, closedParenthesis, type, body);
         }
 
-        private MemberSyntax ParseGlobalStatement()
-        {
-            var statement = ParseStatement();
-            return new GlobalStatementSyntax(statement);
-        }
+
 
         private SeparatedSyntaxList<ParameterSyntax> ParseParameterList()
         {
@@ -145,7 +147,23 @@ namespace Alto.CodeAnalysis.Syntax
         {
             var identifier = MatchToken(SyntaxKind.IdentifierToken);
             var type = ParseTypeClause();
-            return new ParameterSyntax(identifier, type);
+
+            // also have to parse optional default value
+            // have to make sure it's optional
+            SyntaxToken equalsToken = null;
+            bool isOptional = false;
+            var k = Peek(0).Kind; // NOTE: Equals token was already consumed, idk where...
+            if (k == SyntaxKind.EqualsToken)
+            {
+                equalsToken = MatchToken(SyntaxKind.EqualsToken);
+                isOptional = equalsToken.Text != null;
+            }
+
+            ExpressionSyntax optionalExpression = null;
+            if (isOptional)
+                optionalExpression = ParseExpression();
+
+            return new ParameterSyntax(identifier, type, isOptional, optionalExpression);
         }
 
         private StatementSyntax ParseStatement()
