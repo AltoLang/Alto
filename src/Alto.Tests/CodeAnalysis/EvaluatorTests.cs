@@ -375,6 +375,56 @@ namespace Alto.Tests.CodeAnalysis
 
             AssertDiagnostics(text, diagnostics);
         }
+
+        [Fact]
+        public void Evaluator_NotAllCodePathsReturn_1()
+        {
+            var text = @"
+                function [foo](x : int) : int {
+                    var sum = 0
+                    var i = x
+                    while true {
+                        if i == 0
+                            break
+        
+                        sum = sum + i
+                        i = i - 1
+                    }
+                }
+            ";
+
+            var diagnostics = @"
+                Function 'foo' doesn't return on all code paths.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_NotAllCodePathsReturn_2()
+        {
+            var text = @"
+                function [foo](x : int) : int {
+                    var sum = 0
+                    var i = x
+                    while true {
+                        if i == 0
+                            break
+        
+                        sum = sum + i
+                        i = i - 1
+                    }
+                    print(toString(x))
+                }
+            ";
+
+            var diagnostics = @"
+                Function 'foo' doesn't return on all code paths.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
         
         private void AssertDiagnostics(string text, string diagnosticText)
         {

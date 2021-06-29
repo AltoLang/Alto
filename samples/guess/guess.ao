@@ -1,0 +1,27 @@
+function validateGuess(guess : int, min  : int, max : int) : bool {
+    var generated = random(min, max)
+    
+    if (guess == generated)
+        return true
+    
+    return false
+}
+
+function run() {
+    print("Enter a number from 0 to 3")
+    var i = toInt(readLine())
+    
+    var match = validateGuess(i, 0, 3)
+    if (match)
+        print("You were right!")
+    else
+        print("You were wrong!")
+
+    print("Would you like to play again? Reply with a y/n")
+
+    var playAgain = readLine() == "y"
+    if (playAgain)
+        run()
+}
+
+run()

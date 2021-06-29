@@ -27,6 +27,8 @@ namespace Alto.CodeAnalysis.Binding
                     return RewriteGotoStatement((BoundGotoStatement)node);
                 case BoundNodeKind.ConditionalGotoStatement:
                     return RewriteConditionalGotoStatement((BoundConditionalGotoStatement)node);
+                case BoundNodeKind.ReturnStatement:
+                    return RewriteReturnStatement((BoundReturnStatement)node);
                 case BoundNodeKind.LabelStatement:
                     return RewriteLabelStatement((BoundLabelStatement)node);
                 default:
@@ -156,6 +158,16 @@ namespace Alto.CodeAnalysis.Binding
                 return node;
 
             return new BoundForStatement(node.Variable, lowerBound, upperBound, body, node.BreakLabel, node.ContinueLabel);
+        }
+
+        protected virtual BoundStatement RewriteReturnStatement(BoundReturnStatement node)
+        {
+            var returnExpression = node.ReturnExpression == null ? null : RewriteExpression(node.ReturnExpression);
+            
+            if (returnExpression == node.ReturnExpression)
+                return node;
+
+            return new BoundReturnStatement(returnExpression);
         }
 
         protected virtual BoundStatement RewriteLabelStatement(BoundLabelStatement node)
