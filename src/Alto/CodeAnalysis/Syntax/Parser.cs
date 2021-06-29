@@ -123,6 +123,7 @@ namespace Alto.CodeAnalysis.Syntax
             var nodesAndSeparators = ImmutableArray.CreateBuilder<SyntaxNode>();
 
             var parseNextParameter = true;
+            ParameterSyntax lastParamerer = null;
             while (parseNextParameter &&
                    Current.Kind != SyntaxKind.CloseParenthesesToken &&
                    Current.Kind != SyntaxKind.EndOfFileToken)
@@ -139,6 +140,12 @@ namespace Alto.CodeAnalysis.Syntax
                 {
                     parseNextParameter = false;
                 }
+
+                if (lastParamerer != null)
+                    if (lastParamerer.IsOptional && !parameter.IsOptional)
+                        _diagnostics.ReportOptionalParametersMustAppearLast(parameter.Span);
+
+                lastParamerer = parameter;
             }
             return new SeparatedSyntaxList<ParameterSyntax>(nodesAndSeparators.ToImmutable());
         }

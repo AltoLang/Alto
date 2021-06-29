@@ -73,6 +73,12 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
+        internal void ReportOptionalParametersMustAppearLast(TextSpan span)
+        {
+            var message = $"Optional parameters must appear after required parameters.";
+            Report(span, message);
+        }
+
         public void ReportSymbolAlreadyDeclared(TextSpan span, string name)
         {
             var message = $"'{name}' is already declared in the current scope.";
