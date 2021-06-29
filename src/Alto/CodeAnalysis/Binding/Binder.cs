@@ -92,6 +92,8 @@ namespace Alto.CodeAnalysis.Binding
             {
                 var paramName = parameterSyntax.Identifier.Text;
                 var paramType = BindTypeClause(parameterSyntax.Type);
+                var isOptional = parameterSyntax.IsOptional;
+                var optionalUnboundExpression = parameterSyntax.OptionalExpression;
 
                 if (!seenParameterNames.Add(paramName))
                 {
@@ -99,7 +101,14 @@ namespace Alto.CodeAnalysis.Binding
                 }
                 else
                 {
-                    var parameter = new ParameterSymbol(paramName, paramType);
+                    BoundExpression optionalExpression = null;
+                    if (optionalUnboundExpression != null)
+                    {
+                        var expression = BindExpression(optionalUnboundExpression);
+                        optionalExpression = BindConversion(expression, paramType, parameterSyntax.OptionalExpression.Span);
+                    }
+                    
+                    var parameter = new ParameterSymbol(paramName, paramType, isOptional, optionalExpression);
                     parameters.Add(parameter);
                 }
             }
@@ -476,14 +485,20 @@ namespace Alto.CodeAnalysis.Binding
                 return new BoundErrorExpression();
             }
 
-            if (function.Parameters.Length != syntax.Arguments.Count)
+            var parameterCount = function.Parameters.Length; 
+            var nonOptionalParametersCount = (from p in function.Parameters
+                                  where p.IsOptional == false
+                                  select p).Count();
+            
+            if ( (syntax.Arguments.Count >= nonOptionalParametersCount && 
+                syntax.Arguments.Count <= parameterCount) == false) // this only runs when we have a wrong arg count, that's why `== false`
             {
                 TextSpan span;
-                if (function.Parameters.Length < syntax.Arguments.Count)
+                if (parameterCount < syntax.Arguments.Count)
                 {
                     SyntaxNode firstExceedingNode;
-                    if (function.Parameters.Length > 0)
-                        firstExceedingNode = syntax.Arguments.GetSeparator(function.Parameters.Length - 1);
+                    if (parameterCount > 0)
+                        firstExceedingNode = syntax.Arguments.GetSeparator(parameterCount - 1);
                     else
                         firstExceedingNode = syntax.Arguments[0];
                     
@@ -495,7 +510,7 @@ namespace Alto.CodeAnalysis.Binding
                     span = syntax.ClosedParenthesisToken.Span;
                 }
 
-                _diagnostics.ReportWrongArgumentCount(span, function.Name, function.Parameters.Length, syntax.Arguments.Count);
+                _diagnostics.ReportWrongArgumentCount(span, function.Name, parameterCount, syntax.Arguments.Count);
                 return new BoundErrorExpression();
             }
             
@@ -511,6 +526,15 @@ namespace Alto.CodeAnalysis.Binding
                     if (argument.Type != TypeSymbol.Error)
                         _diagnostics.ReportWrongArgumentType(syntax.Arguments[i].Span, function.Name, parameter.Name, parameter.Type, argument.Type);
                 }
+            }
+
+            // add optional parameters
+            var optionalParameters = function.Parameters.Where(p => p.IsOptional == true); 
+            for (int i = 0; i < optionalParameters.Count() - syntax.Arguments.Count; i++)
+            {
+                var parameter = optionalParameters.ToArray()[i];
+                var v = parameter.OptionalValue;
+                boundArguments.Add(v);
             }
 
             if (hasErrors)
