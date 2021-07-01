@@ -558,12 +558,26 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             // add optional parameters
-            var optionalParameters = function.Parameters.Where(p => p.IsOptional == true); 
+            /*var optionalParameters = function.Parameters.Where(p => p.IsOptional == true); 
             for (int i = 0; i < optionalParameters.Count() - syntax.Arguments.Count; i++)
             {
                 var parameter = optionalParameters.ToArray()[i];
                 var v = parameter.OptionalValue;
                 boundArguments.Add(v);
+            }
+            */
+
+            for (int i = 0; i < function.Parameters.Length; i++)
+            {
+                var parameter = function.Parameters[i];
+                if (syntax.Arguments.Count < i)
+                {
+                    if (parameter.IsOptional == true)
+                    {
+                        // add the arg
+                        boundArguments.Add(parameter.OptionalValue);
+                    }
+                }
             }
 
             if (hasErrors)

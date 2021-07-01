@@ -88,6 +88,9 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("\"test\" ~= \"idk\"", true)]
         [InlineData("{ var i = 0 while i < 5 { i = i + 1 if i == 5 continue } i }", 5)]
         [InlineData("{ var i = 0 do { i = i + 1 if i == 5 continue } while i < 5 i }", 5)]
+        [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add()", 15)]
+        [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add(7)", 17)]
+        [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add(4, 2)", 6)]
         public void Evaluator_Computes_CorrectValues(string text, object expectedValue)
         {
             AssertValue(text, expectedValue);
@@ -316,6 +319,23 @@ namespace Alto.Tests.CodeAnalysis
                 Unexpected token <CloseParenthesesToken>, expected <IdentifierToken>.
                 Unexpected token <CloseParenthesesToken>, expected <IdentifierToken>.
                 Unexpected token <EndOfFileToken>, expected <CloseBraceToken>.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_FunctionOptionalParameters_MustAppearLast()
+        {
+            var text = @"
+                function test(x: int = 5, [y : int])
+                {
+                    print(toString(x + y))
+                }
+            ";
+
+            var diagnostics = @"
+                Optional parameters must appear after required parameters.
             ";
 
             AssertDiagnostics(text, diagnostics);

@@ -159,7 +159,7 @@ namespace Alto.CodeAnalysis.Syntax
             // have to make sure it's optional
             SyntaxToken equalsToken = null;
             bool isOptional = false;
-            var k = Peek(0).Kind; // NOTE: Equals token was already consumed, idk where...
+            var k = Peek(0).Kind;
             if (k == SyntaxKind.EqualsToken)
             {
                 equalsToken = MatchToken(SyntaxKind.EqualsToken);
