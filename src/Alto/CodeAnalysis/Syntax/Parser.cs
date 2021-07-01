@@ -95,6 +95,12 @@ namespace Alto.CodeAnalysis.Syntax
             return ParseGlobalStatement();
         }
 
+        private MemberSyntax ParseGlobalStatement()
+        {
+            var statement = ParseStatement();
+            return new GlobalStatementSyntax(statement);
+        }
+
         private MemberSyntax ParseFunctionDeclaration()
         {
             var keyword = MatchToken(SyntaxKind.FunctionKeyword);
@@ -110,17 +116,14 @@ namespace Alto.CodeAnalysis.Syntax
             return new FunctionDeclarationSyntax(keyword, identifier, openParenthesis, parameters, closedParenthesis, type, body);
         }
 
-        private MemberSyntax ParseGlobalStatement()
-        {
-            var statement = ParseStatement();
-            return new GlobalStatementSyntax(statement);
-        }
+
 
         private SeparatedSyntaxList<ParameterSyntax> ParseParameterList()
         {
             var nodesAndSeparators = ImmutableArray.CreateBuilder<SyntaxNode>();
 
             var parseNextParameter = true;
+            ParameterSyntax lastParamerer = null;
             while (parseNextParameter &&
                    Current.Kind != SyntaxKind.CloseParenthesesToken &&
                    Current.Kind != SyntaxKind.EndOfFileToken)
@@ -137,6 +140,12 @@ namespace Alto.CodeAnalysis.Syntax
                 {
                     parseNextParameter = false;
                 }
+
+                if (lastParamerer != null)
+                    if (lastParamerer.IsOptional && !parameter.IsOptional)
+                        _diagnostics.ReportOptionalParametersMustAppearLast(parameter.Span);
+
+                lastParamerer = parameter;
             }
             return new SeparatedSyntaxList<ParameterSyntax>(nodesAndSeparators.ToImmutable());
         }
@@ -145,7 +154,23 @@ namespace Alto.CodeAnalysis.Syntax
         {
             var identifier = MatchToken(SyntaxKind.IdentifierToken);
             var type = ParseTypeClause();
-            return new ParameterSyntax(identifier, type);
+
+            // also have to parse optional default value
+            // have to make sure it's optional
+            SyntaxToken equalsToken = null;
+            bool isOptional = false;
+            var k = Peek(0).Kind;
+            if (k == SyntaxKind.EqualsToken)
+            {
+                equalsToken = MatchToken(SyntaxKind.EqualsToken);
+                isOptional = equalsToken.Text != null;
+            }
+
+            ExpressionSyntax optionalExpression = null;
+            if (isOptional)
+                optionalExpression = ParseExpression();
+
+            return new ParameterSyntax(identifier, type, isOptional, optionalExpression);
         }
 
         private StatementSyntax ParseStatement()
