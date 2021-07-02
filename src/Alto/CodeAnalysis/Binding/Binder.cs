@@ -422,7 +422,7 @@ namespace Alto.CodeAnalysis.Binding
         private BoundExpression BindNameExpression(NameExpressionSyntax syntax) 
         {
             var name = syntax.IdentifierToken.Text;
-
+ 
             if (syntax.IdentifierToken.IsMissing)
                 return new BoundErrorExpression();
                 
@@ -616,11 +616,11 @@ namespace Alto.CodeAnalysis.Binding
         {
             switch (name)
             {
-                case "toBool":
+                case "tobool":
                     return TypeSymbol.Bool;
-                case "toString":
+                case "tostring":
                     return TypeSymbol.String;
-                case "toInt":
+                case "toint":
                     return TypeSymbol.Int;
             }
 
