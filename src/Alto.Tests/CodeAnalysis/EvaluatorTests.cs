@@ -435,7 +435,7 @@ namespace Alto.Tests.CodeAnalysis
                         sum = sum + i
                         i = i - 1
                     }
-                    print(toString(x))
+                    print(tostring(x))
                 }
             ";
 
