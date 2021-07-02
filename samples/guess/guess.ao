@@ -19,7 +19,7 @@ function run() {
 
     print("Would you like to play again? Reply with a y/n")
 
-    var playAgain = readLine() == "y"
+    var playAgain = readline() == "y"
     if (playAgain)
         run()
 }
