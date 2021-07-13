@@ -172,7 +172,7 @@ namespace Alto.CodeAnalysis.Binding
                 case SyntaxKind.ExpressionStatement:
                     return BindExpressionStatement((ExpressionStatementSyntax) syntax);
                 case SyntaxKind.VariableDeclaration:
-                    return BindVariableDeclaration((VariableDeclarationSyntax) syntax);
+                    return BindVariable((VariableDeclarationSyntax) syntax);
                 case SyntaxKind.IfStatement:
                     return BindIfStatement((IfStatementSyntax) syntax);
                 case SyntaxKind.WhileStatement:
@@ -190,18 +190,6 @@ namespace Alto.CodeAnalysis.Binding
                 default:
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
-        }
-
-        private BoundStatement BindVariableDeclaration(VariableDeclarationSyntax syntax)
-        {
-            var isReadOnly = syntax.Keyword.Kind == SyntaxKind.LetKeyword;
-            var type = BindTypeClause(syntax.TypeClause);
-            var initializer = BindExpression(syntax.Initializer);
-            var variableType = type ?? initializer.Type;
-            var castedInitializer = BindConversion(initializer, variableType, syntax.Initializer.Span);
-            var variable = BindVariable(syntax.Identifier, isReadOnly, variableType);
-
-            return new BoundVariableDeclaration(variable, castedInitializer);
         }
 
         private TypeSymbol BindTypeClause(TypeClauseSyntax syntax)
@@ -247,7 +235,7 @@ namespace Alto.CodeAnalysis.Binding
 
             _scope = new BoundScope(_scope);
 
-            var variable = BindVariable(syntax.Identifier, true, TypeSymbol.Int);
+            var variable = BindVariableDeclaration(syntax.Identifier, true, TypeSymbol.Int);
 
             var body = BindLoopBody(syntax.Body, out var breakLabel, out var continueLabel);
 
@@ -426,11 +414,9 @@ namespace Alto.CodeAnalysis.Binding
             if (syntax.IdentifierToken.IsMissing)
                 return new BoundErrorExpression();
                 
-            if (_scope.TryLookupVariable(name, out var variable) == false)
-            {
-                _diagnostics.ReportUndefinedName(syntax.IdentifierToken.Span, name);
+            var variable = BindVariableReference(name, syntax.IdentifierToken.Span);
+            if (variable == null)
                 return new BoundErrorExpression();
-            }
 
             return new BoundVariableExpression(variable);
         }
@@ -440,11 +426,9 @@ namespace Alto.CodeAnalysis.Binding
             var name = syntax.IdentifierToken.Text;
             var boundExpression = BindExpression(syntax.Expression);
 
-            if (!_scope.TryLookupVariable(name, out var variable))
-            {
-                _diagnostics.ReportUndefinedName(syntax.IdentifierToken.Span, name);
+            var variable = BindVariableReference(name, syntax.IdentifierToken.Span);
+            if (variable == null)
                 return boundExpression;
-            }
 
             if (variable.IsReadOnly)
                 _diagnostics.ReportCannotAssign(syntax.AssignmentToken.Span, name);
@@ -508,9 +492,17 @@ namespace Alto.CodeAnalysis.Binding
                 boundArguments.Add(boundArgument);
             }
 
-            if (!_scope.TryLookupFunction(syntax.Identifier.Text, out var function))
+            var symbol = _scope.TryLookupSymbol(syntax.Identifier.Text);
+            if (symbol == null)
             {
                 _diagnostics.ReportUndefinedFunction(syntax.Identifier.Span, syntax.Identifier.Text);
+                return new BoundErrorExpression();
+            }
+
+            var function = symbol as FunctionSymbol;
+            if (function == null)
+            {
+                _diagnostics.ReportNotAFunction(syntax.Identifier.Span, syntax.Identifier.Text);
                 return new BoundErrorExpression();
             }
 
@@ -579,7 +571,7 @@ namespace Alto.CodeAnalysis.Binding
             return BindExpression(syntax.Expression);
         }
         
-        private VariableSymbol BindVariable(SyntaxToken identifier, bool isReadOnly, TypeSymbol type)
+        private VariableSymbol BindVariableDeclaration(SyntaxToken identifier, bool isReadOnly, TypeSymbol type)
         {
             var name = identifier.Text ?? "?";
             var declare = !identifier.IsMissing;
@@ -589,6 +581,35 @@ namespace Alto.CodeAnalysis.Binding
                 _diagnostics.ReportSymbolAlreadyDeclared(identifier.Span, name);
             
             return variable;
+        }
+
+        private BoundStatement BindVariable(VariableDeclarationSyntax syntax)
+        {
+            var isReadOnly = syntax.Keyword.Kind == SyntaxKind.LetKeyword;
+            var type = BindTypeClause(syntax.TypeClause);
+            var initializer = BindExpression(syntax.Initializer);
+            var variableType = type ?? initializer.Type;
+            var castedInitializer = BindConversion(initializer, variableType, syntax.Initializer.Span);
+            var variable = BindVariableDeclaration(syntax.Identifier, isReadOnly, variableType);
+
+            return new BoundVariableDeclaration(variable, castedInitializer);
+        }
+
+        private VariableSymbol BindVariableReference(string name, TextSpan span)
+        {
+            switch (_scope.TryLookupSymbol(name))
+            {
+                case VariableSymbol variable:
+                    return variable;
+
+                case null:
+                    _diagnostics.ReportUndefinedVariable(span, name);
+                    return null;
+
+                default:
+                    _diagnostics.ReportNotAVariable(span, name);
+                    return null;
+            }
         }
 
         private BoundStatement BindErrorStatement()
