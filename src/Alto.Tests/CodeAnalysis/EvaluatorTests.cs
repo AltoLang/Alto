@@ -487,6 +487,21 @@ namespace Alto.Tests.CodeAnalysis
             AssertDiagnostics(text, diagnostics);
         }
 
+        [Fact]
+        public void Evaluator_NotAllCodePathsReturn_3()
+        {
+            var text = @"
+                function [foobar](x : string) : bool 
+                { }
+            ";
+
+            var diagnostics = @"
+                Function 'foobar' doesn't return on all code paths.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
         
         private void AssertDiagnostics(string text, string diagnosticText)
         {
