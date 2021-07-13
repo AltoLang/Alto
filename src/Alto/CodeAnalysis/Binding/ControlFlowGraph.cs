@@ -68,8 +68,8 @@ namespace Alto.CodeAnalysis.Binding
 
             foreach (var branch in graph.End.Incoming)
             {
-                var stmt = branch.From.Statements.Last();
-                if (stmt.Kind != BoundNodeKind.ReturnStatement)
+                var stmt = branch.From.Statements.LastOrDefault();
+                if (stmt == null || stmt.Kind != BoundNodeKind.ReturnStatement)
                     return false;
             }
 
