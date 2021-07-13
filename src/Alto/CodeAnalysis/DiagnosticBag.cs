@@ -130,7 +130,7 @@ namespace Alto.CodeAnalysis
 
         public void ReportUndefinedFunction(TextSpan span, string name)
         {
-            var message = $"Function '{name}' is not defined.";
+            var message = $"Function '{name}' is not defined in the current scope.";
             Report(span, message);
         }
 
