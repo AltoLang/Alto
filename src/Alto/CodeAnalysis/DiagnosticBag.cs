@@ -99,7 +99,7 @@ namespace Alto.CodeAnalysis
 
         internal void ReportCannotImplicitlyConvert(TextSpan span, TypeSymbol fromType, TypeSymbol targetType)
         {
-            var message = $"Cannot implicitly convert type '{fromType.ToString()}' to type '{targetType.ToString()}'. It is an explicit exists, are you missing a cast?";
+            var message = $"Cannot implicitly convert type '{fromType.ToString()}' to type '{targetType.ToString()}'. It is an explicit conversion, are you missing a cast?";
             Report(span, message);
 
         }
