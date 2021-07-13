@@ -55,12 +55,6 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
-        public void ReportUndefinedName(TextSpan span, string name)
-        {
-           var message = $"Variable '{name}' doesn't exist";
-           Report(span, message);
-        }
-
         public void ReportUndefinedBinaryOperator(TextSpan span, string text, TypeSymbol leftType, TypeSymbol rightType)
         {
             var message = $"Binary operator '{text}' is not defined for type '{leftType.ToString()}' and '{rightType.ToString()}'.";
@@ -116,6 +110,18 @@ namespace Alto.CodeAnalysis
             Report(span, message);
         }
 
+        internal void ReportUndefinedVariable(TextSpan span, string name)
+        {
+            var message = $"Variable '{name}' is not defined in the current scope.";
+            Report(span, message);
+        }
+
+        internal void ReportNotAVariable(TextSpan span, string name)
+        {
+            var message = $"'{name}' is not a variable therefore, it cannot be used like one.";
+            Report(span, message);
+        }
+
         public void ReportUnterminatedString(TextSpan span)
         {
             var message = $"Unterminated string literal.";
@@ -124,7 +130,13 @@ namespace Alto.CodeAnalysis
 
         public void ReportUndefinedFunction(TextSpan span, string name)
         {
-            var message = $"Function '{name}' is not defined.";
+            var message = $"Function '{name}' is not defined in the current scope.";
+            Report(span, message);
+        }
+
+        internal void ReportNotAFunction(TextSpan span, string name)
+        {
+            var message = $"'{name}' is not a function therefore, it cannot be used like one.";
             Report(span, message);
         }
 

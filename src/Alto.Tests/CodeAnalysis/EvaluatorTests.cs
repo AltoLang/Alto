@@ -128,7 +128,48 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Function 'print' is not defined.
+                'print' is not a function therefore, it cannot be used like one.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+        
+        [Fact]
+        public void Evaluator_CallExpression_Reports_Undefined()
+        {
+            var text = @"[test]()";
+
+            var diagnostics = @"
+                Function 'test' is not defined in the current scope.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_CallExpression_Reports_NotAFunction()
+        {
+            var text = @"
+                {
+                    let myVar = false
+                    [myVar](true)
+                }
+            ";
+
+            var diagnostics = @"
+                'myVar' is not a function therefore, it cannot be used like one.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_AssignmentExpression_Reports_NotAVariable()
+        {
+            var text = @"[random] = 42";
+
+            var diagnostics = @"
+                'random' is not a variable therefore, it cannot be used like one.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -148,7 +189,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Variable 'x' doesn't exist
+                Variable 'x' is not defined in the current scope.
             ";
 
             AssertDiagnostics(text, diagnostics);
