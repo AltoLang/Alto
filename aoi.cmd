@@ -1,7 +1,7 @@
 @echo off
 
 cd src
-cd ai
+cd aoi
 dotnet build
 dotnet run
 cd ..

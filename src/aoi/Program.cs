@@ -1,4 +1,4 @@
-﻿namespace REPL
+﻿namespace Alto
 {
 
     internal static class Program

@@ -9,9 +9,9 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/ai/bin/Debug/net5.0/ai.dll",
+            "program": "${workspaceFolder}/src/aoi/bin/Debug/net5.0/aoi.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/ai",
+            "cwd": "${workspaceFolder}/src/aoi",
             "console": "externalTerminal",
             "stopAtEntry": false
         },

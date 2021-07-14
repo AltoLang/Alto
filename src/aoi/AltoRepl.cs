@@ -8,7 +8,7 @@ using Alto.CodeAnalysis.Syntax;
 using Alto.CodeAnalysis.Text;
 using Alto.IO;
 
-namespace REPL
+namespace Alto
 {
     internal sealed class AltoRepl : Repl
     {
