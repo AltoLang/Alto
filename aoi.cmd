@@ -1,8 +1,3 @@
 @echo off
 
-cd src
-cd aoi
-dotnet build
-dotnet run
-cd ..
-cd ..
+dotnet run --project .\src\aoi\aoi.csproj -- %*
