@@ -11,10 +11,10 @@ namespace Alto
 {
     internal static class Program
     {
-        private static void Main(string[] args)
+        private static void Main(string[] args) 
         {
             if (args.Length == 0)
-            {
+            {   
                 Console.Error.WriteLine("Usage: ac <source-paths>");
                 return;
             }
@@ -35,7 +35,8 @@ namespace Alto
             if (result.Diagnostics.Any())
                 DiagnosticsWriter.WriteDiagnostics(Console.Out, result.Diagnostics, syntaxTree);
             else
-                Console.WriteLine(result.Value);
+                if (result.Value != null)
+                    Console.WriteLine(result.Value);
         }
     }
 }

@@ -14,27 +14,15 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "publish",
+            "label": "aoc",
             "command": "dotnet",
             "type": "process",
             "args": [
-                "publish",
-                "${workspaceFolder}/src/aoi/aoi.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
                 "run",
-                "${workspaceFolder}/src/aoi/aoi.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "--project",
+                "${workspaceFolder}/src/aoc/aoc.csproj",
+                "--",
+                "${file}"
             ],
             "problemMatcher": "$msCompile"
         }
