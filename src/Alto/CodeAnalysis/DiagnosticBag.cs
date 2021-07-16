@@ -24,123 +24,122 @@ namespace Alto.CodeAnalysis
             _diagnostics.AddRange(diagnostics._diagnostics);
         }
 
-        private void Report(TextSpan span, string message)
+        private void Report(TextLocation location, string message)
         {
-            var diagnostic = new Diagnostic(span, message);
+            var diagnostic = new Diagnostic(location, message);
             _diagnostics.Add(diagnostic);
         }
 
-        public void ReportInvalidNumber(TextSpan textSpan, string text, TypeSymbol type)
+        public void ReportInvalidNumber(TextLocation location, string text, TypeSymbol type)
         {
             var message = $"The number '{text}' isn't a valid '{type.ToString()}'";
-            Report(textSpan, message);
+            Report(location, message);
         }
 
-        public void ReportBadCharacter(int position, char character)
+        public void ReportBadCharacter(TextLocation location, char character)
         {
             var message = $"Bad character in input: '{character}'";
-            TextSpan span = new TextSpan(position, 1);
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportUnexpectedToken(TextSpan span, SyntaxKind kind, SyntaxKind expectedKind)
+        public void ReportUnexpectedToken(TextLocation location, SyntaxKind kind, SyntaxKind expectedKind)
         {
             var message = $"Unexpected token <{kind}>, expected <{expectedKind}>.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportUndefinedUnaryOperator(TextSpan span, string operatorText, TypeSymbol operandType)
+        public void ReportUndefinedUnaryOperator(TextLocation location, string operatorText, TypeSymbol operandType)
         {
             var message = $"Unary operator '{operatorText}' is not defined for type '{operandType.ToString()}'.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportUndefinedBinaryOperator(TextSpan span, string text, TypeSymbol leftType, TypeSymbol rightType)
+        public void ReportUndefinedBinaryOperator(TextLocation location, string text, TypeSymbol leftType, TypeSymbol rightType)
         {
             var message = $"Binary operator '{text}' is not defined for type '{leftType.ToString()}' and '{rightType.ToString()}'.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        internal void ReportParameterAlreadyDeclared(string name, TextSpan span)
+        internal void ReportParameterAlreadyDeclared(string name, TextLocation location)
         {
             var message = $"A parameter with name '{name}' is already defined.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        internal void ReportOptionalParametersMustAppearLast(TextSpan span)
+        internal void ReportOptionalParametersMustAppearLast(TextLocation location)
         {
             var message = $"Optional parameters must appear after required parameters.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportSymbolAlreadyDeclared(TextSpan span, string name)
+        public void ReportSymbolAlreadyDeclared(TextLocation location, string name)
         {
             var message = $"'{name}' is already declared in the current scope.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void VariableCannotConvert(TextSpan span, TypeSymbol fromType, TypeSymbol toType)
+        public void VariableCannotConvert(TextLocation location, TypeSymbol fromType, TypeSymbol toType)
         {
             var message = $"Cannot convert type '{fromType.ToString()}' to type '{toType.ToString()}'.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        internal void ReportNotAllCodePathsReturn(TextSpan span, string name)
+        internal void ReportNotAllCodePathsReturn(TextLocation location, string name)
         {
             var message = $"Function '{name}' doesn't return on all code paths.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportCannotConvert(TextSpan span, TypeSymbol fromType, TypeSymbol targetType)
+        public void ReportCannotConvert(TextLocation location, TypeSymbol fromType, TypeSymbol targetType)
         {
             var message = $"Cannot convert type '{fromType.ToString()}' to type '{targetType.ToString()}'.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        internal void ReportCannotImplicitlyConvert(TextSpan span, TypeSymbol fromType, TypeSymbol targetType)
+        internal void ReportCannotImplicitlyConvert(TextLocation location, TypeSymbol fromType, TypeSymbol targetType)
         {
             var message = $"Cannot implicitly convert type '{fromType.ToString()}' to type '{targetType.ToString()}'. It is an explicit exists, are you missing a cast?";
-            Report(span, message);
+            Report(location, message);
 
         }
 
-        public void ReportCannotAssign(TextSpan span, string name)
+        public void ReportCannotAssign(TextLocation location, string name)
         {
             var message = $"Cannot assign to variable '{name}'.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        internal void ReportUndefinedVariable(TextSpan span, string name)
+        internal void ReportUndefinedVariable(TextLocation location, string name)
         {
             var message = $"Variable '{name}' is not defined in the current scope.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        internal void ReportNotAVariable(TextSpan span, string name)
+        internal void ReportNotAVariable(TextLocation location, string name)
         {
             var message = $"'{name}' is not a variable therefore, it cannot be used like one.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportUnterminatedString(TextSpan span)
+        public void ReportUnterminatedString(TextLocation location)
         {
             var message = $"Unterminated string literal.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportUndefinedFunction(TextSpan span, string name)
+        public void ReportUndefinedFunction(TextLocation location, string name)
         {
             var message = $"Function '{name}' is not defined in the current scope.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        internal void ReportNotAFunction(TextSpan span, string name)
+        internal void ReportNotAFunction(TextLocation location, string name)
         {
             var message = $"'{name}' is not a function therefore, it cannot be used like one.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportWrongArgumentCount(TextSpan span, string name, int expectedCount, int count)
+        public void ReportWrongArgumentCount(TextLocation location, string name, int expectedCount, int count)
         {
             string message;
 
@@ -149,49 +148,49 @@ namespace Alto.CodeAnalysis
             else
                 message = $"Function '{name}' expects {expectedCount} arguments, got {count}.";
             
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportWrongArgumentType(TextSpan span, string funcName, string paramName, TypeSymbol paramType, TypeSymbol argumentType)
+        public void ReportWrongArgumentType(TextLocation location, string funcName, string paramName, TypeSymbol paramType, TypeSymbol argumentType)
         {
             var message = $"Parameter '{paramName}' in '{funcName}' has to be of type '{paramType}' is of type '{argumentType}'.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportUndefinedType(TextSpan span, string type)
+        public void ReportUndefinedType(TextLocation location, string type)
         {
             var message = $"Type '{type} is not defined in the current scope.'";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportExpressionMustHaveAValue(TextSpan span)
+        public void ReportExpressionMustHaveAValue(TextLocation location)
         {
             var message = $"Expression must have a different value than void.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportInvalidBreakOrContinue(TextSpan span, string text)
+        public void ReportInvalidBreakOrContinue(TextLocation location, string text)
         {
             var message = $"Statement '{text}' is not valid outside of loops.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportUnexpectedReturn(TextSpan span)
+        public void ReportUnexpectedReturn(TextLocation location)
         {
             var message = "Unexpected return statement. Return statements are only allowed insite functions.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportUnexpectedReturnExpression(TextSpan span, TypeSymbol type, string functionName)
+        public void ReportUnexpectedReturnExpression(TextLocation location, TypeSymbol type, string functionName)
         {
             var message = $"The function '{functionName}' expects a return value of type 'void', got an expression of type '{type}'.";
-            Report(span, message);
+            Report(location, message);
         }
 
-        public void ReportReturnExpectsAnExpression(TextSpan span, string functionName)
+        public void ReportReturnExpectsAnExpression(TextLocation location, string functionName)
         {
             var message = $"The return statement for this function '{functionName}' expects a return expression.";
-            Report(span, message);
+            Report(location, message);
         }
     }
 }

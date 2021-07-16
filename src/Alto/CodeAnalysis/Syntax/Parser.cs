@@ -13,12 +13,13 @@ namespace Alto.CodeAnalysis.Syntax
         private readonly DiagnosticBag _diagnostics = new DiagnosticBag();
         private readonly ImmutableArray<SyntaxToken> _tokens;
         private readonly SourceText _text;
+        private readonly SyntaxTree _tree;
         private int _position;
 
-        public Parser(SourceText text)
+        public Parser(SyntaxTree tree)
         {
             var tokens = new List<SyntaxToken>();
-            Lexer lexer = new Lexer(text);
+            Lexer lexer = new Lexer(tree);
             SyntaxToken token;
             do
             {
@@ -29,7 +30,8 @@ namespace Alto.CodeAnalysis.Syntax
 
             _tokens = tokens.ToImmutableArray();
             _diagnostics.AddRange(lexer.Diagnostics);
-            _text = text;
+            _text = tree.Text;
+            _tree = tree;
         }
 
         public DiagnosticBag Diagnostics => _diagnostics;
@@ -57,15 +59,15 @@ namespace Alto.CodeAnalysis.Syntax
             if (Current.Kind == kind)
                 return NextToken();
 
-            _diagnostics.ReportUnexpectedToken(Current.Span, Current.Kind, kind);
-            return new SyntaxToken(kind, Current.Position, null, null);
+            _diagnostics.ReportUnexpectedToken(Current.Location, Current.Kind, kind);
+            return new SyntaxToken(_tree, kind, Current.Position, null, null);
         }
 
         public CompilationUnitSyntax ParseCompilationUnit()
         {
             var members =  ParseMembers();
             var endOfFileToken = MatchToken(SyntaxKind.EndOfFileToken);
-            return new CompilationUnitSyntax(members, endOfFileToken);
+            return new CompilationUnitSyntax(_tree, members, endOfFileToken);
         }
 
         private ImmutableArray<MemberSyntax> ParseMembers()
@@ -98,7 +100,7 @@ namespace Alto.CodeAnalysis.Syntax
         private MemberSyntax ParseGlobalStatement()
         {
             var statement = ParseStatement();
-            return new GlobalStatementSyntax(statement);
+            return new GlobalStatementSyntax(_tree, statement);
         }
 
         private MemberSyntax ParseFunctionDeclaration()
@@ -113,7 +115,7 @@ namespace Alto.CodeAnalysis.Syntax
             var type = ParseOptionalTypeClause();
             var body = ParseBlockStatement();
 
-            return new FunctionDeclarationSyntax(keyword, identifier, openParenthesis, parameters, closedParenthesis, type, body);
+            return new FunctionDeclarationSyntax(_tree, keyword, identifier, openParenthesis, parameters, closedParenthesis, type, body);
         }
 
 
@@ -143,7 +145,7 @@ namespace Alto.CodeAnalysis.Syntax
 
                 if (lastParamerer != null)
                     if (lastParamerer.IsOptional && !parameter.IsOptional)
-                        _diagnostics.ReportOptionalParametersMustAppearLast(parameter.Span);
+                        _diagnostics.ReportOptionalParametersMustAppearLast(parameter.Location);
 
                 lastParamerer = parameter;
             }
@@ -170,7 +172,7 @@ namespace Alto.CodeAnalysis.Syntax
             if (isOptional)
                 optionalExpression = ParseExpression();
 
-            return new ParameterSyntax(identifier, type, isOptional, optionalExpression);
+            return new ParameterSyntax(_tree, identifier, type, isOptional, optionalExpression);
         }
 
         private StatementSyntax ParseStatement()
@@ -210,7 +212,7 @@ namespace Alto.CodeAnalysis.Syntax
             var equals = MatchToken(SyntaxKind.EqualsToken);
             var initializer = ParseExpression();
 
-            return new VariableDeclarationSyntax(keyword, identifier, typeClause, equals, initializer);
+            return new VariableDeclarationSyntax(_tree, keyword, identifier, typeClause, equals, initializer);
         }
 
         private TypeClauseSyntax ParseOptionalTypeClause()
@@ -226,7 +228,7 @@ namespace Alto.CodeAnalysis.Syntax
             var colonToken = MatchToken(SyntaxKind.ColonToken);
             var identifier = MatchToken(SyntaxKind.IdentifierToken);
 
-            return new TypeClauseSyntax(colonToken, identifier);
+            return new TypeClauseSyntax(_tree, colonToken, identifier);
         }
 
         private StatementSyntax ParseIfStatement()
@@ -235,7 +237,7 @@ namespace Alto.CodeAnalysis.Syntax
             var condition = ParseExpression();
             var statement = ParseStatement();
             var elseClause = ParseElseClause();
-            return new IfStatementSyntax(keyword, condition, statement, elseClause);
+            return new IfStatementSyntax(_tree, keyword, condition, statement, elseClause);
         }
 
         private StatementSyntax ParseForStatement()
@@ -247,7 +249,7 @@ namespace Alto.CodeAnalysis.Syntax
             var toKeyword = MatchToken(SyntaxKind.ToKeyword);
             var upperBound = ParseExpression();
             var body = ParseStatement();
-            return new ForStatementSyntax(keyword, identifier, equalsToken, lowerBound, toKeyword, upperBound, body);
+            return new ForStatementSyntax(_tree, keyword, identifier, equalsToken, lowerBound, toKeyword, upperBound, body);
         }
 
         private ElseClauseSyntax ParseElseClause()
@@ -257,7 +259,7 @@ namespace Alto.CodeAnalysis.Syntax
 
             var keyword = NextToken();
             var statement = ParseStatement();
-            return new ElseClauseSyntax(keyword, statement);
+            return new ElseClauseSyntax(_tree, keyword, statement);
         }
 
         private StatementSyntax ParseWhileStatement()
@@ -266,7 +268,7 @@ namespace Alto.CodeAnalysis.Syntax
             var condition = ParseExpression();
             var body = ParseStatement();
 
-            return new WhileStatementSyntax(keyword, condition, body);
+            return new WhileStatementSyntax(_tree, keyword, condition, body);
         }
 
         private StatementSyntax ParseDoWhileStatement()
@@ -276,19 +278,19 @@ namespace Alto.CodeAnalysis.Syntax
             var whileKeyword = MatchToken(SyntaxKind.WhileKeyword);
             var condition = ParseExpression();
 
-            return new DoWhileStatementSyntax(doKeyword, body, whileKeyword, condition);
+            return new DoWhileStatementSyntax(_tree, doKeyword, body, whileKeyword, condition);
         }
 
         private StatementSyntax ParseBreakStatement()
         {
             var keyword = MatchToken(SyntaxKind.BreakKeyword);
-            return new BreakStatementSyntax(keyword);
+            return new BreakStatementSyntax(_tree, keyword);
         }
 
         private StatementSyntax ParseContinueStatement()
         {
             var keyword = MatchToken(SyntaxKind.ContinueKeyword);
-            return new ContinueStatementSyntax(keyword);
+            return new ContinueStatementSyntax(_tree, keyword);
         }
 
         private StatementSyntax ParseReturnStatement()
@@ -302,7 +304,7 @@ namespace Alto.CodeAnalysis.Syntax
             
             var expression =  sameLine ? ParseExpression() : null;
 
-            return new ReturnStatementSyntax(keyword, expression);
+            return new ReturnStatementSyntax(_tree, keyword, expression);
         }
 
         private BlockStatementSyntax ParseBlockStatement()
@@ -323,13 +325,13 @@ namespace Alto.CodeAnalysis.Syntax
             }
 
             var closeBraceToken = MatchToken(SyntaxKind.CloseBraceToken);
-            return new BlockStatementSyntax(openBraceToken, statements.ToImmutable(), closeBraceToken);
+            return new BlockStatementSyntax(_tree, openBraceToken, statements.ToImmutable(), closeBraceToken);
         }
 
         private ExpressionStatementSyntax ParseExpressionStatement()
         {
             var expression = ParseExpression();
-            return new ExpressionStatementSyntax(expression);
+            return new ExpressionStatementSyntax(_tree, expression);
         }
 
         private  ExpressionSyntax ParseExpression()
@@ -347,7 +349,7 @@ namespace Alto.CodeAnalysis.Syntax
                         var identifierToken = NextToken();
                         var operatorToken = NextToken();
                         var right = ParseAssignmentExpression();
-                        return new AssignmentExpressionSyntax(identifierToken, operatorToken, right);
+                        return new AssignmentExpressionSyntax(_tree, identifierToken, operatorToken, right);
                 }
             }
             return ParseBinaryExpression();
@@ -361,7 +363,7 @@ namespace Alto.CodeAnalysis.Syntax
             {
                 var operatorToken = NextToken();
                 var operand = ParseBinaryExpression();
-                left = new UnaryExpressionSyntax(operatorToken, operand);
+                left = new UnaryExpressionSyntax(_tree, operatorToken, operand);
             } 
             else
             {
@@ -376,7 +378,7 @@ namespace Alto.CodeAnalysis.Syntax
                 
                 var operatorToken = NextToken();
                 var right = ParseBinaryExpression(precedence);
-                left = new BinaryExpressionSyntax(left, operatorToken, right); 
+                left = new BinaryExpressionSyntax(_tree, left, operatorToken, right); 
             }
             return left;    
         }
@@ -407,13 +409,13 @@ namespace Alto.CodeAnalysis.Syntax
         private ExpressionSyntax ParseNumberLiteral()
         {
             var stringToken = MatchToken(SyntaxKind.NumberToken);
-            return new LiteralExpressionSyntax(stringToken);
+            return new LiteralExpressionSyntax(_tree, stringToken);
         }
 
         private ExpressionSyntax ParseStringLiteral()
         {
             var numberToken = MatchToken(SyntaxKind.StringToken);
-            return new LiteralExpressionSyntax(numberToken);
+            return new LiteralExpressionSyntax(_tree, numberToken);
         }
 
         private ExpressionSyntax ParseParenthesizedExpression()
@@ -421,7 +423,7 @@ namespace Alto.CodeAnalysis.Syntax
             var left = MatchToken(SyntaxKind.OpenParenthesesToken);
             var expression = ParseExpression();
             var right = MatchToken(SyntaxKind.CloseParenthesesToken);
-            return new ParenthesizedExpressionSyntax(left, expression, right);
+            return new ParenthesizedExpressionSyntax(_tree, left, expression, right);
         }
  
         private ExpressionSyntax ParseBooleanLiteral()
@@ -429,7 +431,7 @@ namespace Alto.CodeAnalysis.Syntax
             var isTrue = Current.Kind == SyntaxKind.TrueKeyword;
             var keywordToken = isTrue ? MatchToken(SyntaxKind.TrueKeyword) : MatchToken(SyntaxKind.FalseKeyword);
             var value = keywordToken.Kind == SyntaxKind.TrueKeyword;
-            return new LiteralExpressionSyntax(Current, value);
+            return new LiteralExpressionSyntax(_tree, Current, value);
         }
 
         private ExpressionSyntax ParseNameOrCallExpression()
@@ -446,7 +448,7 @@ namespace Alto.CodeAnalysis.Syntax
             var openParenthesisToken = MatchToken(SyntaxKind.OpenParenthesesToken);
             var args = ParseArguments();
             var closedParenthesisToken = MatchToken(SyntaxKind.CloseParenthesesToken);
-            return new CallExpressionSyntax(identifier, openParenthesisToken, args, closedParenthesisToken);
+            return new CallExpressionSyntax(_tree, identifier, openParenthesisToken, args, closedParenthesisToken);
         }
 
         private SeparatedSyntaxList<ExpressionSyntax> ParseArguments()
@@ -477,7 +479,7 @@ namespace Alto.CodeAnalysis.Syntax
         private ExpressionSyntax ParseNameExpression()
         {
             var identifierToken = MatchToken(SyntaxKind.IdentifierToken);
-            return new NameExpressionSyntax(identifierToken);
+            return new NameExpressionSyntax(_tree, identifierToken);
         }
 
     }

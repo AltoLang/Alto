@@ -2,7 +2,8 @@ namespace Alto.CodeAnalysis.Syntax
 {
     internal class WhileStatementSyntax : StatementSyntax
     {
-        public WhileStatementSyntax(SyntaxToken whileKeyword, ExpressionSyntax condition, StatementSyntax body)
+        public WhileStatementSyntax(SyntaxTree syntaxTree, SyntaxToken whileKeyword, ExpressionSyntax condition, StatementSyntax body)
+            : base(syntaxTree)
         {
             Keyword = whileKeyword;
             Condition = condition;

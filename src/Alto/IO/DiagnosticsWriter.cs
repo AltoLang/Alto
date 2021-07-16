@@ -14,13 +14,14 @@ namespace Alto.IO
         public static void WriteDiagnostics(TextWriter writer, IEnumerable<Diagnostic> diagnostics, SyntaxTree syntaxTree) {
             var isToConsole = writer.IsConsoleOut();
 
-            foreach (var diagnostic in diagnostics.OrderBy(d => d.Span.Start)
-                                                  .ThenBy(d => d.Span.Length))
+            foreach (var diagnostic in diagnostics.OrderBy(d => d.Location.Text.FileName)
+                                                  .ThenBy(d => d.Location.Span.Start)
+                                                  .ThenBy(d => d.Location.Span.Length))
             {
-                var lineIndex = syntaxTree.Text.GetLineIndex(diagnostic.Span.Start);
+                var lineIndex = syntaxTree.Text.GetLineIndex(diagnostic.Location.Span.Start);
                 var lineNumber = lineIndex + 1;
                 var line = syntaxTree.Text.Lines[lineIndex];
-                var character = diagnostic.Span.Start - line.Start;
+                var character = diagnostic.Location.Span.Start - line.Start;
 
                 writer.WriteLine();
                 if (isToConsole)
@@ -29,11 +30,11 @@ namespace Alto.IO
                 writer.WriteLine(diagnostic);
                 writer.ResetColor();
 
-                var prefixSpan = TextSpan.FromBounds(line.Start, diagnostic.Span.Start);
-                var suffixSpan = TextSpan.FromBounds(diagnostic.Span.End, line.End);
+                var prefixSpan = TextSpan.FromBounds(line.Start, diagnostic.Location.Span.Start);
+                var suffixSpan = TextSpan.FromBounds(diagnostic.Location.Span.End, line.End);
 
                 var prefix = syntaxTree.Text.ToString(prefixSpan);
-                var error = syntaxTree.Text.ToString(diagnostic.Span);
+                var error = syntaxTree.Text.ToString(diagnostic.Location.Span);
                 var suffix = syntaxTree.Text.ToString(suffixSpan);
 
                 writer.Write("    ");

@@ -2,7 +2,8 @@ namespace Alto.CodeAnalysis.Syntax
 {
     public sealed class ParameterSyntax : SyntaxNode
     {
-        public ParameterSyntax(SyntaxToken identifier, TypeClauseSyntax type, bool isOptional, ExpressionSyntax optionalExpression)
+        public ParameterSyntax(SyntaxTree syntaxTree, SyntaxToken identifier, TypeClauseSyntax type, bool isOptional, ExpressionSyntax optionalExpression)
+            : base(syntaxTree)
         {
             Identifier = identifier;
             Type = type;

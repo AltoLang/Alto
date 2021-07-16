@@ -7,10 +7,11 @@ namespace Alto.CodeAnalysis.Text
     {
         private readonly string _text;
 
-        private SourceText(string text)
+        private SourceText(string text, string fileName)
         {
             Lines = ParseLines(this, text);
             _text = text;
+            FileName = fileName;
         }
 
         public ImmutableArray<TextLine> Lines { get; }
@@ -18,6 +19,13 @@ namespace Alto.CodeAnalysis.Text
         public char this[int index] => _text[index];
 
         public int Length => _text.Length;
+
+        public string FileName { get; }
+
+        public static SourceText From(string text, string fileName = "")
+        {
+            return new SourceText(text, fileName);
+        }
 
         public int GetLineIndex(int position)
         {
@@ -33,13 +41,9 @@ namespace Alto.CodeAnalysis.Text
                     return index;
                 
                 if (start > position)
-                {
                     upper = index - 1; 
-                } 
                 else
-                {
                     lower = index + 1;
-                }
             }
 
             return lower - 1;
@@ -93,11 +97,6 @@ namespace Alto.CodeAnalysis.Text
                 return 1;
 
             return 0;
-        }
-
-        public static SourceText From(string text)
-        {
-            return new SourceText(text);
         }
 
         public override string ToString() => _text;

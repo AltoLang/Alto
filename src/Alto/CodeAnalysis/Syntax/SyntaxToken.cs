@@ -7,13 +7,15 @@ namespace Alto.CodeAnalysis.Syntax
 {
     public sealed class SyntaxToken : SyntaxNode
     {
-        public SyntaxToken(SyntaxKind kind, int position, string text, object value)
+        public SyntaxToken(SyntaxTree syntaxTree, SyntaxKind kind, int position, string text, object value)
+            : base(syntaxTree)
         {
             Kind = kind;
             Position = position;
             Text = text;
             Value = value;
         }
+
         public override SyntaxKind Kind {get;}
         public int Position {get;}
         public string Text {get;}

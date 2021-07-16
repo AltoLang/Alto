@@ -2,7 +2,8 @@ namespace Alto.CodeAnalysis.Syntax
 {
     public sealed class NameExpressionSyntax : ExpressionSyntax
     {
-        internal NameExpressionSyntax(SyntaxToken identifierToken)
+        internal NameExpressionSyntax(SyntaxTree syntaxTree, SyntaxToken identifierToken)
+            : base(syntaxTree)
         {
             IdentifierToken = identifierToken;
         }
