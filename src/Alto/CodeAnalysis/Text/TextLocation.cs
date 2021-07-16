@@ -9,6 +9,7 @@ namespace Alto.CodeAnalysis.Text
         }
 
         public SourceText Text { get; }
+        public string FileName => Text.FileName;
         public TextSpan Span { get; }
         public int StartLine => Text.GetLineIndex(Span.Start);
         public int StartCharacter => Span.Start - Text.Lines[StartLine].Start;  

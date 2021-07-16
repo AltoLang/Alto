@@ -14,27 +14,34 @@ namespace Alto.IO
         public static void WriteDiagnostics(TextWriter writer, IEnumerable<Diagnostic> diagnostics, SyntaxTree syntaxTree) {
             var isToConsole = writer.IsConsoleOut();
 
-            foreach (var diagnostic in diagnostics.OrderBy(d => d.Location.Text.FileName)
+            foreach (var diagnostic in diagnostics.OrderBy(d => d.Location.FileName)
                                                   .ThenBy(d => d.Location.Span.Start)
                                                   .ThenBy(d => d.Location.Span.Length))
             {
-                var lineIndex = syntaxTree.Text.GetLineIndex(diagnostic.Location.Span.Start);
+                var file = Path.GetFileName(diagnostic.Location.FileName);
+                var span = diagnostic.Location.Span;
+                var lineIndex = syntaxTree.Text.GetLineIndex(span.Start);
                 var lineNumber = lineIndex + 1;
                 var line = syntaxTree.Text.Lines[lineIndex];
-                var character = diagnostic.Location.Span.Start - line.Start;
+                var character = span.Start - line.Start;
 
                 writer.WriteLine();
                 if (isToConsole)
                     Console.ForegroundColor = ConsoleColor.DarkRed;
-                writer.Write($"({lineNumber}, {character}): ");
+                
+                if (file == "")
+                    writer.Write($"({lineNumber}, {character}): ");
+                else
+                    writer.Write($"{file} ({lineNumber}, {character}): ");
+                
                 writer.WriteLine(diagnostic);
                 writer.ResetColor();
 
-                var prefixSpan = TextSpan.FromBounds(line.Start, diagnostic.Location.Span.Start);
-                var suffixSpan = TextSpan.FromBounds(diagnostic.Location.Span.End, line.End);
+                var prefixSpan = TextSpan.FromBounds(line.Start, span.Start);
+                var suffixSpan = TextSpan.FromBounds(span.End, line.End);
 
                 var prefix = syntaxTree.Text.ToString(prefixSpan);
-                var error = syntaxTree.Text.ToString(diagnostic.Location.Span);
+                var error = syntaxTree.Text.ToString(span);
                 var suffix = syntaxTree.Text.ToString(suffixSpan);
 
                 writer.Write("    ");

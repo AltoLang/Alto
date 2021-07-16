@@ -21,14 +21,19 @@ namespace Alto
     
             if (args.Length > 1)
             {
-                Console.Error.WriteLine("Currently, only one path is supported.");
+                Console.Error.WriteLine("ERR: Currently, only one path is supported.");
                 return;
             }
 
             var path = args.Single();
-            var text = File.ReadAllText(path);
 
-            var syntaxTree = SyntaxTree.Parse(text);
+            if (!File.Exists(path))
+            {
+                Console.Error.WriteLine("ERR: One or more files do not exist.");
+                return;
+            }
+
+            var syntaxTree = SyntaxTree.Load(path);
             var compilation = new Compilation(syntaxTree);
             var result = compilation.Evaluate(new Dictionary<VariableSymbol, object>());
 
