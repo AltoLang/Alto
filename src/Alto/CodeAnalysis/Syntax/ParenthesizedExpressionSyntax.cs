@@ -2,7 +2,8 @@ namespace Alto.CodeAnalysis.Syntax
 {
     public sealed class ParenthesizedExpressionSyntax : ExpressionSyntax
     {
-        public ParenthesizedExpressionSyntax(SyntaxToken openParenthesToken, ExpressionSyntax expression, SyntaxToken closedParenthesesToken)
+        public ParenthesizedExpressionSyntax(SyntaxTree syntaxTree, SyntaxToken openParenthesToken, ExpressionSyntax expression, SyntaxToken closedParenthesesToken)
+            : base(syntaxTree)
         {
             OpenParenthesToken = openParenthesToken;
             Expression = expression;

@@ -2,8 +2,9 @@ namespace Alto.CodeAnalysis.Syntax
 {
     internal class DoWhileStatementSyntax : StatementSyntax
     {
-        public DoWhileStatementSyntax(SyntaxToken doKeyword, StatementSyntax body, 
+        public DoWhileStatementSyntax(SyntaxTree syntaxTree, SyntaxToken doKeyword, StatementSyntax body, 
             SyntaxToken whileKeyword, ExpressionSyntax condition)
+            : base(syntaxTree)
         {
             DoKeyword = doKeyword;
             Body = body;
