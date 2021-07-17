@@ -2,7 +2,8 @@ namespace Alto.CodeAnalysis.Syntax
 {
     public sealed class CallExpressionSyntax : ExpressionSyntax
     {
-        public CallExpressionSyntax(SyntaxToken identifier, SyntaxToken openParenthesisToken, SeparatedSyntaxList<ExpressionSyntax> arguments, SyntaxToken closedParenthesisToken)
+        public CallExpressionSyntax(SyntaxTree syntaxTree, SyntaxToken identifier, SyntaxToken openParenthesisToken, SeparatedSyntaxList<ExpressionSyntax> arguments, SyntaxToken closedParenthesisToken)
+            : base(syntaxTree)
         {
             Identifier = identifier;
             OpenParenthesisToken = openParenthesisToken;

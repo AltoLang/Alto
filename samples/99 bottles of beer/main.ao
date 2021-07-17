@@ -1,0 +1,15 @@
+function playSong() {
+    var bottles = 99
+    while (true) {
+        if (bottles == 0) {
+            print("No more bottles of beer on the wall, no more bottles of beer")
+            print("Go to the store and buy some more, 99 bottles of beer on the wall")
+            return
+        } else {
+            printLyrics(bottles)
+            bottles = bottles - 1
+        }
+    }
+}
+
+playSong()

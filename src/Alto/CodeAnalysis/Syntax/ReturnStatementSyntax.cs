@@ -2,7 +2,8 @@ namespace Alto.CodeAnalysis.Syntax
 {
     internal class ReturnStatementSyntax : StatementSyntax
     {
-        public ReturnStatementSyntax(SyntaxToken keyword, ExpressionSyntax returnExpression)
+        public ReturnStatementSyntax(SyntaxTree syntaxTree, SyntaxToken keyword, ExpressionSyntax returnExpression)
+            : base(syntaxTree)
         {
             Keyword = keyword;
             ReturnExpression = returnExpression;

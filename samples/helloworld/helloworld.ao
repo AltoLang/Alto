@@ -1,0 +1,7 @@
+function main()
+{
+    var name = getName()
+    print("Hello, " + name + "!")
+}
+
+main()

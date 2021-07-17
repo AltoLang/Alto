@@ -1,0 +1,11 @@
+function printLyrics(bottles : int) {
+    var bottleStr = tostring(bottles) 
+    if (bottles == 1) {
+        print(bottleStr + " bottle of beer on the wall," + bottleStr + " bottle of beer")
+        print("Take one down and pass it around, no more bottles of beer on the wall")
+    } else {
+        print(bottleStr + " bottles of beer on the wall," + bottleStr + " bottles of beer")
+        print("Take one down and pass it around, " + tostring(bottles - 1) + " bottles of beer on the wall")
+    }
+    print("")
+}

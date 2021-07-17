@@ -9,7 +9,7 @@ function validateGuess(guess : int, min  : int, max : int) : bool {
 
 function run() {
     print("Enter a number from 0 to 3")
-    var i = toInt(readLine())
+    var i = toint(readline())
     
     var match = validateGuess(i, 0, 3)
     if (match)
