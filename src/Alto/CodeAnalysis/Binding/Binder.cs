@@ -30,17 +30,19 @@ namespace Alto.CodeAnalysis.Binding
                 
         }
 
-        public static BoundGlobalScope BindGlobalScope(BoundGlobalScope previous, CompilationUnitSyntax syntax)
+        public static BoundGlobalScope BindGlobalScope(BoundGlobalScope previous, ImmutableArray<SyntaxTree> syntaxTrees)
         {
             var parentScope = CreateParentScope(previous);
             var binder = new Binder(parentScope, null);
 
-            foreach (var function in syntax.Members.OfType<FunctionDeclarationSyntax>())
+            var functionDeclarations = syntaxTrees.SelectMany(t => t.Root.Members).OfType<FunctionDeclarationSyntax>();
+            foreach (var function in functionDeclarations)
                 binder.BindFunctionDeclaration(function);
 
+            var globalStatements = syntaxTrees.SelectMany(t => t.Root.Members).OfType<GlobalStatementSyntax>();
             var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
 
-            foreach (var globalStatement in syntax.Members.OfType<GlobalStatementSyntax>())
+            foreach (var globalStatement in globalStatements)
             {
                 var st = binder.BindStatement(globalStatement.Statement);
                 statementBuilder.Add(st);

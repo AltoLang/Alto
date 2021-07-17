@@ -66,7 +66,7 @@ namespace Alto
             }
             else
             {
-                DiagnosticsWriter.WriteDiagnostics(Console.Out, result.Diagnostics, syntaxTree);
+                DiagnosticsWriter.WriteDiagnostics(Console.Out, result.Diagnostics);
             }
         }
 

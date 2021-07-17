@@ -11,18 +11,19 @@ namespace Alto.IO
 {
     public static class DiagnosticsWriter
     {
-        public static void WriteDiagnostics(TextWriter writer, IEnumerable<Diagnostic> diagnostics, SyntaxTree syntaxTree) {
+        public static void WriteDiagnostics(TextWriter writer, IEnumerable<Diagnostic> diagnostics) {
             var isToConsole = writer.IsConsoleOut();
 
             foreach (var diagnostic in diagnostics.OrderBy(d => d.Location.FileName)
                                                   .ThenBy(d => d.Location.Span.Start)
                                                   .ThenBy(d => d.Location.Span.Length))
             {
+                var text = diagnostic.Location.Text;
                 var file = diagnostic.Location.FileName;
                 var span = diagnostic.Location.Span;
-                var lineIndex = syntaxTree.Text.GetLineIndex(span.Start);
+                var lineIndex = text.GetLineIndex(span.Start);
                 var lineNumber = lineIndex + 1;
-                var line = syntaxTree.Text.Lines[lineIndex];
+                var line = text.Lines[lineIndex];
                 var character = span.Start - line.Start;
 
                 var startLine = diagnostic.Location.StartLine + 1;
@@ -45,9 +46,9 @@ namespace Alto.IO
                 var prefixSpan = TextSpan.FromBounds(line.Start, span.Start);
                 var suffixSpan = TextSpan.FromBounds(span.End, line.End);
 
-                var prefix = syntaxTree.Text.ToString(prefixSpan);
-                var error = syntaxTree.Text.ToString(span);
-                var suffix = syntaxTree.Text.ToString(suffixSpan);
+                var prefix = text.ToString(prefixSpan);
+                var error = text.ToString(span);
+                var suffix = text.ToString(suffixSpan);
 
                 writer.Write("    ");
                 writer.Write(prefix);

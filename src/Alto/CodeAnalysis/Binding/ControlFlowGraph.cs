@@ -52,7 +52,7 @@ namespace Alto.CodeAnalysis.Binding
 
             writer.WriteLine("}");
         }
-
+    
         public static ControlFlowGraph Create(BoundBlockStatement body)
         {
             var blockBuilder = new BasicBlockBuilder();

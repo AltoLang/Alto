@@ -15,20 +15,19 @@ namespace Alto.CodeAnalysis
     {
         private BoundGlobalScope _globalScope;
 
-        public Compilation(SyntaxTree syntaxTree) : this(null, syntaxTree)
+        public Compilation(params SyntaxTree[] syntaxTrees) : this(null, syntaxTrees)
         {
-            SyntaxTree = syntaxTree;
         }
 
-        private Compilation(Compilation previous, SyntaxTree syntaxTree)
+        private Compilation(Compilation previous, params SyntaxTree[] syntaxTrees)
         {
             Previous = previous;
-            SyntaxTree = syntaxTree;
+            SyntaxTrees = syntaxTrees.ToImmutableArray();
         }
 
 
         public Compilation Previous { get; }
-        public SyntaxTree SyntaxTree { get; set; }
+        public ImmutableArray<SyntaxTree> SyntaxTrees { get; set; }
 
         internal BoundGlobalScope GlobalScope
         {
@@ -36,7 +35,7 @@ namespace Alto.CodeAnalysis
             {
                 if (_globalScope == null)
                 {
-                    var globalScope = Binder.BindGlobalScope(Previous?.GlobalScope, SyntaxTree.Root);
+                    var globalScope = Binder.BindGlobalScope(Previous?.GlobalScope, SyntaxTrees);
                     Interlocked.CompareExchange(ref _globalScope, globalScope, null);
                 }
 
@@ -46,14 +45,14 @@ namespace Alto.CodeAnalysis
 
         public Compilation ContinueWith(SyntaxTree syntaxTree)
         {
-            var c = new Compilation(this, SyntaxTree);
-            c.SyntaxTree = syntaxTree;
+            var c = new Compilation(this, syntaxTree);
             return c;
         }
 
         public EvaluationResult Evaluate(Dictionary<VariableSymbol, object> variables)
         {
-            var diagnostics = SyntaxTree.Diagnostics.Concat(GlobalScope.Diagnostics).ToImmutableArray();
+            var selectDiagnostics = SyntaxTrees.SelectMany(tree => tree.Diagnostics);
+            var diagnostics = selectDiagnostics .Concat(GlobalScope.Diagnostics).ToImmutableArray();
             if (diagnostics.Any())
                 return new EvaluationResult(diagnostics, null);
 
