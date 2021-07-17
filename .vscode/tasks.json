@@ -22,7 +22,7 @@
                 "--project",
                 "${workspaceFolder}/src/aoc/aoc.csproj",
                 "--",
-                "${file}"
+                "${fileDirname}"
             ],
             "presentation": {
                 "echo": true,
@@ -36,7 +36,7 @@
                 "fileLocation": "absolute",
                 "pattern": [
                     {
-                        "regexp": "^(.*)\\((\\d,\\d\\,\\d\\,\\d\\))\\: (.*)$",
+                        "regexp": "^(.*)\\((\\d+,\\d+\\,\\d+\\,\\d+\\))\\: (.*)$",
                         "file": 1,
                         "location": 2,
                         "message": 3
