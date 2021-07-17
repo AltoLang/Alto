@@ -1,4 +1,8 @@
-print("What's your name?")
-var name = readline()
-print("Hello, " + name + "!")
+function main()
+{
+    print("What's your name?")
+    var name = readline()
+    print("Hello, " + name + "!")
+}
+
 main()
