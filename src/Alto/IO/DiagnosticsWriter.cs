@@ -18,21 +18,26 @@ namespace Alto.IO
                                                   .ThenBy(d => d.Location.Span.Start)
                                                   .ThenBy(d => d.Location.Span.Length))
             {
-                var file = Path.GetFileName(diagnostic.Location.FileName);
+                var file = diagnostic.Location.FileName;
                 var span = diagnostic.Location.Span;
                 var lineIndex = syntaxTree.Text.GetLineIndex(span.Start);
                 var lineNumber = lineIndex + 1;
                 var line = syntaxTree.Text.Lines[lineIndex];
                 var character = span.Start - line.Start;
 
+                var startLine = diagnostic.Location.StartLine + 1;
+                var startCharacter = diagnostic.Location.StartCharacter + 1;
+                var endLine = diagnostic.Location.EndLine + 1;
+                var endCharacter = diagnostic.Location.EndCharacter + 1;
+
                 writer.WriteLine();
                 if (isToConsole)
                     Console.ForegroundColor = ConsoleColor.DarkRed;
                 
                 if (file == "")
-                    writer.Write($"({lineNumber}, {character}): ");
+                    writer.Write($"({startLine},{startCharacter},{endLine},{endCharacter}): ");
                 else
-                    writer.Write($"{file} ({lineNumber}, {character}): ");
+                    writer.Write($"{file}({startLine},{startCharacter},{endLine},{endCharacter}): ");
                 
                 writer.WriteLine(diagnostic);
                 writer.ResetColor();
