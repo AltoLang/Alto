@@ -1,7 +1,4 @@
-function main()
-{
-    var name = getName()
-    print("Hello, " + name + "!")
-}
+import getName
 
-main()
+var name = getName()
+print("Hello, " + name + "!")
