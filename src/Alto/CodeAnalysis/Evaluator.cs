@@ -69,6 +69,9 @@ namespace Alto.CodeAnalysis
                     case BoundNodeKind.LabelStatement:
                         index++;
                         break;
+                    case BoundNodeKind.ImportStatement:
+                        index++;
+                        break;
                     case BoundNodeKind.ReturnStatement:
                         var brs = (BoundReturnStatement)s;
                         _lastValue = brs.ReturnExpression == null ? null : EvaluateExpression(brs.ReturnExpression);
