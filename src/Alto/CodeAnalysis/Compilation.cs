@@ -56,7 +56,7 @@ namespace Alto.CodeAnalysis
         public EvaluationResult Evaluate(Dictionary<VariableSymbol, object> variables)
         {
             var selectDiagnostics = SyntaxTrees.SelectMany(tree => tree.Diagnostics);
-            var diagnostics = selectDiagnostics .Concat(GlobalScope.Diagnostics).ToImmutableArray();
+            var diagnostics = selectDiagnostics.Concat(GlobalScope.Diagnostics).Concat(CoreSyntax.Diagnostics).ToImmutableArray();
             if (diagnostics.Any())
                 return new EvaluationResult(diagnostics, null);
 

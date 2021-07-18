@@ -371,7 +371,7 @@ namespace Alto.Tests.CodeAnalysis
             var text = @"
                 function test(x: int = 5, [y : int])
                 {
-                    print(toString(x + y))
+                    print(tostring(x + y))
                 }
             ";
 
