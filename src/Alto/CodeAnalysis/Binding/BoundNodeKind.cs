@@ -29,5 +29,6 @@ namespace Alto.CodeAnalysis.Binding
         ConditionalGotoStatement,
         LabelStatement,
         ReturnStatement,
+        ImportStatement,
     }
 }

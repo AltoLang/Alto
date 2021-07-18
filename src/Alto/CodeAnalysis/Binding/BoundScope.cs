@@ -28,7 +28,7 @@ namespace Alto.CodeAnalysis.Binding
                 _symbols = new Dictionary<string, Symbol>();
             else if (_symbols.ContainsKey(symbol.Name))
                 return false;
-
+            
             _symbols.Add(symbol.Name, symbol);
             return true;
         }

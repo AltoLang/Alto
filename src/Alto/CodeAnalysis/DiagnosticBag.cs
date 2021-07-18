@@ -191,5 +191,17 @@ namespace Alto.CodeAnalysis
             var message = $"The return statement for this function '{functionName}' expects a return expression.";
             Report(location, message);
         }
+
+        internal void MissingImportStatement(TextLocation location, string name, string fileName)
+        {
+            var message = $"You are referencing the object '{name}', but it's contained in a different file '{fileName}', are you missing an import statement?";
+            Report(location, message);
+        }
+
+        internal void ReportCannotFindImportFile(TextLocation location, string name)
+        {
+            var message = $"Cannot find file '{name}' to import.";
+            Report(location, message);
+        }
     }
 }

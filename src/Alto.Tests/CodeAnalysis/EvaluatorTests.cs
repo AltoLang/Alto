@@ -371,7 +371,7 @@ namespace Alto.Tests.CodeAnalysis
             var text = @"
                 function test(x: int = 5, [y : int])
                 {
-                    print(toString(x + y))
+                    print(tostring(x + y))
                 }
             ";
 
@@ -497,6 +497,20 @@ namespace Alto.Tests.CodeAnalysis
 
             var diagnostics = @"
                 Function 'foobar' doesn't return on all code paths.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_ImportFileMissing()
+        {
+            var text = @"
+                [import myFoobarLib]
+            ";
+
+            var diagnostics = @"
+                Cannot find file 'myFoobarLib' to import.
             ";
 
             AssertDiagnostics(text, diagnostics);

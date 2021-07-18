@@ -111,6 +111,9 @@ namespace Alto.CodeAnalysis.Binding
                 case BoundNodeKind.ReturnStatement:
                     WriteReturnStatement((BoundReturnStatement)node, writer);
                     break;
+                case BoundNodeKind.ImportStatement:
+                    WriteImportStatement((BoundImportStatement)node, writer);
+                    break;
                 default:
                     throw new Exception($"Unexprected BoundNodeKind {node.Kind}");
             }
@@ -208,6 +211,14 @@ namespace Alto.CodeAnalysis.Binding
             writer.WriteKeyword(SyntaxKind.ReturnKeyword);
             writer.WriteWhitespace();
             writer.Write(node.ReturnExpression);
+            writer.WriteLine();
+        }
+
+        private static void WriteImportStatement(BoundImportStatement node, IndentedTextWriter writer)
+        {
+            writer.WriteKeyword(SyntaxKind.ImportKeyword);
+            writer.WriteWhitespace();
+            writer.Write(node.Name);
             writer.WriteLine();
         }
 
