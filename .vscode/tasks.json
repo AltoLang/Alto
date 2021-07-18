@@ -22,7 +22,7 @@
                 "--project",
                 "${workspaceFolder}/src/aoc/aoc.csproj",
                 "--",
-                "${fileDirname}"
+                "${file}"
             ],
             "presentation": {
                 "echo": true,

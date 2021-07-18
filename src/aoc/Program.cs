@@ -15,15 +15,31 @@ namespace Alto
         {
             if (args.Length == 0)
             {   
-                Console.Error.WriteLine("Usage: ac <source-paths>");
+                Console.Error.WriteLine("Usage: ac <source-path>");
                 return;
             }
+            else if (args.Length > 1)
+            {
+                Console.Error.WriteLine("ERR: Only single project paths are supported.");
+            }
 
-            var paths = GetSourcePath(args);
-            var syntaxTrees = new List<SyntaxTree>(paths.Count());
+            var p = args[0];
             bool hasErrors = false;
 
-            foreach (var path in paths)
+            if (!File.Exists(p))
+            {
+                Console.Error.WriteLine("ERR: One or more files do not exist.");
+                 hasErrors = true;
+            }
+
+            var coreSyntax = SyntaxTree.Load(p);
+
+            var otherPaths = GetSourcePath(p);
+            foreach (var path in otherPaths)
+                Console.WriteLine("other path: " + path);
+
+            var syntaxTrees = new List<SyntaxTree>();
+            foreach (var path in otherPaths)
             {
                 if (!File.Exists(path))
                 {
@@ -38,7 +54,7 @@ namespace Alto
             if (hasErrors)
                 return;
             
-            var compilation = new Compilation(syntaxTrees.ToArray());
+            var compilation = new Compilation(coreSyntax, syntaxTrees.ToArray());
             var result = compilation.Evaluate(new Dictionary<VariableSymbol, object>());
 
             if (result.Diagnostics.Any())
@@ -48,17 +64,16 @@ namespace Alto
                     Console.WriteLine(result.Value);
         }
 
-        private static IEnumerable<string> GetSourcePath(IEnumerable<string> paths)
+        private static IEnumerable<string> GetSourcePath(string path)
         {
-            var result = new SortedSet<string>();
-            foreach (var path in paths)
-            {
-                if (Directory.Exists(path))
-                    result.UnionWith(Directory.EnumerateFiles(path, "*.ao", SearchOption.AllDirectories));
-                else
-                    result.Add(path);
-            }
+            var result = new List<string>();
+            var dirPath = Directory.GetParent(path).FullName;
 
+            if (Directory.Exists(dirPath))
+                foreach (var file in Directory.EnumerateFiles(dirPath, "*.ao", SearchOption.AllDirectories))
+                    if (file != path)
+                        result.Add(file);
+        
             return result;
         }
     }
