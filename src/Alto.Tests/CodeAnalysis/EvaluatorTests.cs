@@ -502,6 +502,20 @@ namespace Alto.Tests.CodeAnalysis
             AssertDiagnostics(text, diagnostics);
         }
 
+        [Fact]
+        public void Evaluator_ImportFileMissing()
+        {
+            var text = @"
+                [import myFoobarLib]
+            ";
+
+            var diagnostics = @"
+                Cannot find file 'myFoobarLib' to import.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
         
         private void AssertDiagnostics(string text, string diagnosticText)
         {
