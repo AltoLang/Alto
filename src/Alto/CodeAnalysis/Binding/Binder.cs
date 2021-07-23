@@ -15,7 +15,7 @@ namespace Alto.CodeAnalysis.Binding
         private readonly FunctionSymbol _function;
         private Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)> _loopStack = new Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)>();
         private Dictionary<string, SyntaxTree> _syntaxTrees = new Dictionary<string, SyntaxTree>();
-        private List<SyntaxTree> _importedTrees = new List<SyntaxTree>();
+        private Dictionary<SyntaxTree, IEnumerable<SyntaxTree>> _importedTrees = new Dictionary<SyntaxTree, IEnumerable<SyntaxTree>>();
         private int _labelCount;
         private BoundScope _scope;
 
@@ -35,11 +35,11 @@ namespace Alto.CodeAnalysis.Binding
         }
 
         private Binder(BoundScope parent, FunctionSymbol function, bool checkCallsiteTrees = true, 
-                       IEnumerable<SyntaxTree> importedTrees = null)
+                       Dictionary<SyntaxTree, IEnumerable<SyntaxTree>> importedTrees = null)
             : this(parent, function, checkCallsiteTrees)
         {
                 if (importedTrees != null)
-                    _importedTrees = importedTrees.ToList();
+                    _importedTrees = importedTrees;
         }
 
         /// <summary>
@@ -68,7 +68,9 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             // automatically import the 0th syntax tree
-            binder._importedTrees.Add(coreSyntax);
+            var coreSyntaxes = new SyntaxTree[1] { coreSyntax };
+            foreach (var tree in syntaxTrees)
+                binder._importedTrees.Add(tree, coreSyntaxes);
 
             foreach (var tree in syntaxTrees) 
             {
@@ -95,7 +97,7 @@ namespace Alto.CodeAnalysis.Binding
                 diagnostics = diagnostics.InsertRange(0, previous.Diagnostics);
 
             return new BoundGlobalScope(previous, diagnostics, functions, variables, 
-                                        statementBuilder.ToImmutable(), binder._importedTrees.ToImmutableArray());
+                                        statementBuilder.ToImmutable(), binder._importedTrees);
         }
 
         public static BoundProgram BindProgram(BoundGlobalScope globalScope)
@@ -367,7 +369,21 @@ namespace Alto.CodeAnalysis.Binding
             else
                 _diagnostics.ReportCannotFindImportFile(syntax.Location, name);
 
-            _importedTrees.Add(importTree);
+            if (_importedTrees.ContainsKey(syntax.SyntaxTree))
+            {
+                var imports = _importedTrees[syntax.SyntaxTree].ToList();
+                imports.Add(importTree);
+
+                _importedTrees.Remove(syntax.SyntaxTree);
+                _importedTrees.Add(syntax.SyntaxTree, imports);
+            }
+            else
+            {
+                var syntaxTrees = new SyntaxTree[] { importTree };
+                _importedTrees.Add(syntax.SyntaxTree, syntaxTrees);
+            }
+            
+            
             return new BoundImportStatement(importTree, name);
         }
 
@@ -568,7 +584,7 @@ namespace Alto.CodeAnalysis.Binding
             }
             
             // if function.Tree == null, it's a built-in function
-            if (CheckCallsiteTrees && function.Tree != null && !IsImported(function.Tree))
+            if (CheckCallsiteTrees && function.Tree != null && !IsImported(syntax.SyntaxTree, function.Tree))
             {
                 _diagnostics.MissingImportStatement(syntax.Identifier.Location, function.Name, function.Tree.Root.Location.FileName);
                 return new BoundErrorExpression();
@@ -731,9 +747,13 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundLabel(name);
         }
 
-        private bool IsImported(SyntaxTree tree) 
+        private bool IsImported(SyntaxTree currentTree, SyntaxTree tree) 
         {   
-            foreach (var importedTree in _importedTrees)
+            if (!_importedTrees.ContainsKey(currentTree))
+                return false;
+            
+            var importedTrees = _importedTrees[currentTree];
+            foreach (var importedTree in importedTrees)
                 if (importedTree.Text.FileName == tree.Text.FileName)
                     return true;
             
