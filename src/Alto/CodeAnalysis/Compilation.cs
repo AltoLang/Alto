@@ -14,6 +14,7 @@ namespace Alto.CodeAnalysis
     public sealed class Compilation
     {
         private BoundGlobalScope _globalScope;
+        private Dictionary<BoundBlockStatement, List<Tuple<FunctionSymbol, BoundBlockStatement>>> _localFunctions = new Dictionary<BoundBlockStatement, List<Tuple<FunctionSymbol, BoundBlockStatement>>>();
 
         public Compilation(SyntaxTree coreSyntax, params SyntaxTree[] syntaxTrees) : this(null, coreSyntax, true, syntaxTrees)
         {
@@ -33,13 +34,22 @@ namespace Alto.CodeAnalysis
         public ImmutableArray<SyntaxTree> SyntaxTrees { get; set; }
         public SyntaxTree CoreSyntax { get; }
 
+        internal Dictionary<BoundBlockStatement, List<Tuple<FunctionSymbol, BoundBlockStatement>>> LocalFunctions 
+        {
+            get 
+            { 
+                return _localFunctions; 
+            } 
+        }
+
         internal BoundGlobalScope GlobalScope
         {
             get
             {
                 if (_globalScope == null)
                 {
-                    var globalScope = Binder.BindGlobalScope(Previous?.GlobalScope, CoreSyntax, SyntaxTrees, CheckCallsiteTrees);
+                    var globalScope = Binder.BindGlobalScope(Previous?.GlobalScope, CoreSyntax, SyntaxTrees, CheckCallsiteTrees, out var localFunctions);
+                    _localFunctions = localFunctions;
                     Interlocked.CompareExchange(ref _globalScope, globalScope, null);
                 }
 
