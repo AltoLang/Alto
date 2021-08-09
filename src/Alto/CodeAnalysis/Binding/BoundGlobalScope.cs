@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using Alto.CodeAnalysis.Symbols;
+using Alto.CodeAnalysis.Syntax;
 
 namespace Alto.CodeAnalysis.Binding
 {
@@ -7,19 +9,21 @@ namespace Alto.CodeAnalysis.Binding
     {
         public BoundGlobalScope(BoundGlobalScope previous, ImmutableArray<Diagnostic> diagnostics, 
             ImmutableArray<FunctionSymbol> functions, ImmutableArray<VariableSymbol> variables, 
-            BoundStatement statement)
+            ImmutableArray<BoundStatement> statements, Dictionary<SyntaxTree, IEnumerable<SyntaxTree>> importedTrees)
         {
             Previous = previous;
             Diagnostics = diagnostics;
-            Functions = functions;
+            Functions = functions;  
             Variables = variables;
-            Statement = statement;
+            Statements = statements;
+            ImportedTrees = importedTrees;
         }
 
         public BoundGlobalScope Previous { get; }
         public ImmutableArray<Diagnostic> Diagnostics { get; }
         public ImmutableArray<FunctionSymbol> Functions { get; }
         public ImmutableArray<VariableSymbol> Variables { get; }
-        public BoundStatement Statement { get; }
+        public ImmutableArray<BoundStatement> Statements { get; }
+        public Dictionary<SyntaxTree, IEnumerable<SyntaxTree>> ImportedTrees { get; }
     }
 }

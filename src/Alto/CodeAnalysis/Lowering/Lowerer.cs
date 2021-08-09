@@ -23,6 +23,12 @@ namespace Alto.CodeAnalysis.Lowering
             return new BoundLabel(name);
         }
 
+        private BoundLabel GenerateLabel(string prefix)
+        {
+            var name = prefix + (++_labelCount).ToString();
+            return new BoundLabel(name);
+        }
+
         public static BoundBlockStatement Lower(BoundStatement statement)
         {
             var lowerer = new Lowerer();
@@ -113,29 +119,27 @@ namespace Alto.CodeAnalysis.Lowering
             //
             // ------->
             //
-            // goto check
-            // continue:
+            // goto continue
+            // body:
             //     x = x + 1
-            // check:
-            //     gotoFalse true end
-            // end:
+            // continue:
+            //     gotoFalse true body
+            // break:
 
-            var continueLabel = GenerateLabel();
-            var checkLabel = GenerateLabel();
-            var endLabel = GenerateLabel();
+            var bodyLabel = GenerateLabel();
 
-            var gotoCheck = new BoundGotoStatement(checkLabel);
-            var continueLabelStatement = new BoundLabelStatement(continueLabel);
-            var checkLabelStatement = new BoundLabelStatement(checkLabel);
-            var gotoTrue = new BoundConditionalGotoStatement(continueLabel, node.Condition, true);
-            var endLabelStatement = new BoundLabelStatement(endLabel);
+            var gotoContinue = new BoundGotoStatement(node.ContinueLabel);
+            var bodyLabelStatement = new BoundLabelStatement(bodyLabel);
+            var continueLabelStatement = new BoundLabelStatement(node.ContinueLabel);
+            var gotoTrue = new BoundConditionalGotoStatement(bodyLabel, node.Condition, true);
+            var breakLabelStatement = new BoundLabelStatement(node.BreakLabel);
             var result = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(
-                    gotoCheck, 
-                    continueLabelStatement, 
+                    gotoContinue, 
+                    bodyLabelStatement, 
                     node.Body,
-                    checkLabelStatement, 
+                    continueLabelStatement,
                     gotoTrue, 
-                    endLabelStatement
+                    breakLabelStatement
                 )
             );
 
@@ -152,29 +156,25 @@ namespace Alto.CodeAnalysis.Lowering
 
             // --------->
 
-            // goto check
+            // body:
+            //    print("do while statement test")
             // continue:
-            //      print("do while statement test")
-            // check:
-            //      gotoFalse <condition> end
-            // end:
+            //    gotoTrue <condition> body
+            // break:
 
-            var continueLabel = GenerateLabel();
-            var checkLabel = GenerateLabel();
-            var endLabel = GenerateLabel();
+            var bodyLabel = GenerateLabel();
 
-            var gotoCheck = new BoundGotoStatement(checkLabel);
-            var continueLabelStatement = new BoundLabelStatement(continueLabel);
-            var checkLabelStatement = new BoundLabelStatement(checkLabel);
-            var gotoTrue = new BoundConditionalGotoStatement(continueLabel, node.Condition, true);
-            var endLabelStatement = new BoundLabelStatement(endLabel);
+            var bodyLabelStatement = new BoundLabelStatement(bodyLabel);
+            var continueLabelStatement = new BoundLabelStatement(node.ContinueLabel);
+            var gotoTrue = new BoundConditionalGotoStatement(bodyLabel, node.Condition);
+            var breakLabelStatement = new BoundLabelStatement(node.BreakLabel);
+
             var result = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(
-                    gotoCheck, 
-                    continueLabelStatement, 
+                    bodyLabelStatement,
                     node.Body,
-                    checkLabelStatement, 
+                    continueLabelStatement,
                     gotoTrue, 
-                    endLabelStatement
+                    breakLabelStatement
                 )
             );
 
@@ -193,6 +193,8 @@ namespace Alto.CodeAnalysis.Lowering
             //     while (<var> <= upperBound)
             //     {
             //         print i
+            //
+            //         continue:
             //         i = i + 1
             //     }
             //}
@@ -206,7 +208,8 @@ namespace Alto.CodeAnalysis.Lowering
                 BoundBinaryOperator.Bind(SyntaxKind.LesserOrEqualsToken, TypeSymbol.Int, TypeSymbol.Int), 
                 new BoundVariableExpression(upperBoundSymbol)
             );
-            
+
+            var continueLabelStatement = new BoundLabelStatement(node.ContinueLabel);
             var increment = new BoundExpressionStatement(
                 new BoundAssignmentExpression(node.Variable, 
                     new BoundBinaryExpression(
@@ -217,8 +220,8 @@ namespace Alto.CodeAnalysis.Lowering
                 )
             );
             
-            var whileBody = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(node.Body, increment));
-            var whileStatement = new BoundWhileStatement(condition, whileBody);
+            var whileBody = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(node.Body, continueLabelStatement, increment));
+            var whileStatement = new BoundWhileStatement(condition, whileBody, node.BreakLabel, GenerateLabel());
             var result = new BoundBlockStatement(ImmutableArray.Create<BoundStatement>(variableDeclaration, upperBoundDeclaration, whileStatement));
 
             return RewriteStatement(result);

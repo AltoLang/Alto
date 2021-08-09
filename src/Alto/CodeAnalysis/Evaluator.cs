@@ -57,7 +57,7 @@ namespace Alto.CodeAnalysis
                     case BoundNodeKind.GotoStatement:
                         var gs = (BoundGotoStatement)s;
                         index = labelToIndex[gs.Label];
-                        break;
+                        break;  
                     case BoundNodeKind.ConditionalGotoStatement:
                         var cgs = (BoundConditionalGotoStatement)s;
                         var condition = (bool)EvaluateExpression(cgs.Condition);
@@ -69,6 +69,13 @@ namespace Alto.CodeAnalysis
                     case BoundNodeKind.LabelStatement:
                         index++;
                         break;
+                    case BoundNodeKind.ImportStatement:
+                        index++;
+                        break;
+                    case BoundNodeKind.ReturnStatement:
+                        var brs = (BoundReturnStatement)s;
+                        _lastValue = brs.ReturnExpression == null ? null : EvaluateExpression(brs.ReturnExpression);
+                        return _lastValue;
                     default:
                         throw new Exception($"Unexpected node {s.Kind}");
                 }

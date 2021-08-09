@@ -76,6 +76,21 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("{ var n = 0 var m = 10 while m ~= 0 { n = n + m m = m - 1 } n}", 55)]
         [InlineData("{var result = 0 for i = 0 to 10 {result = result + i} result}", 55)]
         [InlineData("{var result = 0 do {result = result + 1} while(result < 10) result }", 10)]
+        [InlineData("\"foo\" + \"bar\"", "foobar")]
+        [InlineData("\"foo\"", "foo")]
+        [InlineData("\"foo\" == \"foo\"", true)]
+        [InlineData("\"foo\" == \"foobar\"", false)]
+        [InlineData("\"foo\" ~= \"foo\"", false)]
+        [InlineData("\"foo\" ~= \"foobar\"", true)]
+        [InlineData("\"idk\" == \"idk\"", true)]
+        [InlineData("\"idk\" == \"test\"", false)]
+        [InlineData("\"test\" ~= \"test\"", false)]
+        [InlineData("\"test\" ~= \"idk\"", true)]
+        [InlineData("{ var i = 0 while i < 5 { i = i + 1 if i == 5 continue } i }", 5)]
+        [InlineData("{ var i = 0 do { i = i + 1 if i == 5 continue } while i < 5 i }", 5)]
+        [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add()", 15)]
+        [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add(7)", 17)]
+        [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add(4, 2)", 6)]
         public void Evaluator_Computes_CorrectValues(string text, object expectedValue)
         {
             AssertValue(text, expectedValue);
@@ -113,7 +128,48 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Function 'print' is not defined.
+                'print' is not a function therefore, it cannot be used like one.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+        
+        [Fact]
+        public void Evaluator_CallExpression_Reports_Undefined()
+        {
+            var text = @"[test]()";
+
+            var diagnostics = @"
+                Function 'test' is not defined in the current scope.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_CallExpression_Reports_NotAFunction()
+        {
+            var text = @"
+                {
+                    let myVar = false
+                    [myVar](true)
+                }
+            ";
+
+            var diagnostics = @"
+                'myVar' is not a function therefore, it cannot be used like one.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_AssignmentExpression_Reports_NotAVariable()
+        {
+            var text = @"[random] = 42";
+
+            var diagnostics = @"
+                'random' is not a variable therefore, it cannot be used like one.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -133,7 +189,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                Variable 'x' doesn't exist
+                Variable 'x' is not defined in the current scope.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -291,22 +347,175 @@ namespace Alto.Tests.CodeAnalysis
         public void Evaluator_FunctionParameters_Reports_NoInfiniteLoop()
         {
             var text = @"
-                function test(name: string[[[=]]][)]
+                function test(name: string[[[*]]][[)]]
                 {
                     print(""Hi "" + name + ""!"" )
                 }[]
             ";
 
             var diagnostics = @"
-                Unexpected token <EqualsToken>, expected <CloseParenthesesToken>.
-                Unexpected token <EqualsToken>, expected <OpenBraceToken>.
-                Unexpected token <EqualsToken>, expected <IdentifierToken>.
+                Unexpected token <StarToken>, expected <CloseParenthesesToken>.
+                Unexpected token <StarToken>, expected <OpenBraceToken>.
+                Unexpected token <StarToken>, expected <IdentifierToken>.
+                Unexpected token <CloseParenthesesToken>, expected <IdentifierToken>.
                 Unexpected token <CloseParenthesesToken>, expected <IdentifierToken>.
                 Unexpected token <EndOfFileToken>, expected <CloseBraceToken>.
             ";
 
             AssertDiagnostics(text, diagnostics);
         }
+
+        [Fact]
+        public void Evaluator_FunctionOptionalParameters_MustAppearLast()
+        {
+            var text = @"
+                function test(x: int = 5, [y : int])
+                {
+                    print(tostring(x + y))
+                }
+            ";
+
+            var diagnostics = @"
+                Optional parameters must appear after required parameters.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArgument_Missing()
+        {
+            var text = @"
+                print([)]
+            ";
+
+            var diagnostics = @"
+                Function 'print' expects 1 argument, got 0.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArgument_Exceeding()
+        {
+            var text = @"
+                print(""hello!""[, ""test"", ""foo""])
+            ";
+
+            var diagnostics = @"
+                Function 'print' expects 1 argument, got 3.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArguments_Exceeding()
+        {
+            var text = @"
+                var num = random(0, 256[, 3000, 3000])
+            ";
+
+            var diagnostics = @"
+                Function 'random' expects 2 arguments, got 4.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_InvokeFunctionArguments_Missing()
+        {
+            var text = @"
+                var num = random(0[)]
+            ";
+
+            var diagnostics = @"
+                Function 'random' expects 2 arguments, got 1.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_NotAllCodePathsReturn_1()
+        {
+            var text = @"
+                function [foo](x : int) : int {
+                    var sum = 0
+                    var i = x
+                    while true {
+                        if i == 0
+                            break
+        
+                        sum = sum + i
+                        i = i - 1
+                    }
+                }
+            ";
+
+            var diagnostics = @"
+                Function 'foo' doesn't return on all code paths.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_NotAllCodePathsReturn_2()
+        {
+            var text = @"
+                function [foo](x : int) : int {
+                    var sum = 0
+                    var i = x
+                    while true {
+                        if i == 0
+                            break
+        
+                        sum = sum + i
+                        i = i - 1
+                    }
+                    print(tostring(x))
+                }
+            ";
+
+            var diagnostics = @"
+                Function 'foo' doesn't return on all code paths.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_NotAllCodePathsReturn_3()
+        {
+            var text = @"
+                function [foobar](x : string) : bool 
+                { }
+            ";
+
+            var diagnostics = @"
+                Function 'foobar' doesn't return on all code paths.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_ImportFileMissing()
+        {
+            var text = @"
+                [import myFoobarLib]
+            ";
+
+            var diagnostics = @"
+                Cannot find file 'myFoobarLib' to import.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
         
         private void AssertDiagnostics(string text, string diagnosticText)
         {
@@ -329,7 +538,7 @@ namespace Alto.Tests.CodeAnalysis
                 Assert.Equal(expectedMessage, actualMessage);
 
                 var expectedSpan = annotatedText.Spans[i];
-                var actualSpan = result.Diagnostics[i].Span;
+                var actualSpan = result.Diagnostics[i].Location.Span;
                 Assert.Equal(actualSpan, expectedSpan);
             }
         }

@@ -6,8 +6,9 @@ using Alto.CodeAnalysis;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Syntax;
 using Alto.CodeAnalysis.Text;
+using Alto.IO;
 
-namespace REPL
+namespace Alto
 {
     internal sealed class AltoRepl : Repl
     {
@@ -65,39 +66,7 @@ namespace REPL
             }
             else
             {
-                foreach (var diagnostic in result.Diagnostics.OrderBy(diag => diag.Span, new TextSpanComparer()))
-                {
-                    var lineIndex = syntaxTree.Text.GetLineIndex(diagnostic.Span.Start);
-                    var lineNumber = lineIndex + 1;
-                    var line = syntaxTree.Text.Lines[lineIndex];
-                    var character = diagnostic.Span.Start - line.Start;
-
-                    Console.WriteLine();
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.Write($"({lineNumber}, {character}): ");
-                    Console.WriteLine(diagnostic);
-                    Console.ResetColor();
-
-                    var prefixSpan = TextSpan.FromBounds(line.Start, diagnostic.Span.Start);
-                    var suffixSpan = TextSpan.FromBounds(diagnostic.Span.End, line.End);
-
-                    var prefix = syntaxTree.Text.ToString(prefixSpan);
-                    var error = syntaxTree.Text.ToString(diagnostic.Span);
-                    var suffix = syntaxTree.Text.ToString(suffixSpan);
-
-                    Console.Write("    ");
-                    Console.Write(prefix);
-
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.Write(error);
-                    Console.ResetColor();
-
-                    Console.Write(suffix);
-
-                    Console.WriteLine();
-                }
-
-                Console.WriteLine();
+                DiagnosticsWriter.WriteDiagnostics(Console.Out, result.Diagnostics);
             }
         }
 

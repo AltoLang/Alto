@@ -38,6 +38,7 @@ namespace Alto.CodeAnalysis.Syntax
         HatToken,
         CommaToken,
         ColonToken,
+        QuestionMarkToken,
 
         //Keywords
         FalseKeyword,
@@ -51,6 +52,10 @@ namespace Alto.CodeAnalysis.Syntax
         ForKeyword,
         ToKeyword,
         DoKeyword,
+        BreakKeyword,
+        ContinueKeyword,
+        ReturnKeyword,
+        ImportKeyword,
         
         //Nodes
         CompilationUnit,
@@ -76,6 +81,10 @@ namespace Alto.CodeAnalysis.Syntax
         IfStatement,
         WhileStatement,
         ForStatement,
-        DoWhileStatement
+        DoWhileStatement,
+        BreakStatement,
+        ContinueStatement,
+        ReturnStatement,
+        ImportStatement,
     }
 }

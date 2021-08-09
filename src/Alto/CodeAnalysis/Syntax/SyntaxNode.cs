@@ -9,8 +9,14 @@ namespace Alto.CodeAnalysis.Syntax
 {
     public abstract class SyntaxNode
     {
-        public abstract SyntaxKind Kind {get;}
+        public SyntaxNode(SyntaxTree syntaxTree)
+        {
+            SyntaxTree = syntaxTree;
+        }
 
+        public abstract SyntaxKind Kind {get;}
+        public SyntaxTree SyntaxTree { get; }
+        
         public virtual TextSpan Span
         {
             get
@@ -20,6 +26,8 @@ namespace Alto.CodeAnalysis.Syntax
                 return TextSpan.FromBounds(first.Start, last.End);
             }
         }
+
+        public TextLocation Location => new TextLocation(SyntaxTree.Text, Span);
 
         public IEnumerable<SyntaxNode> GetChildren()
         {

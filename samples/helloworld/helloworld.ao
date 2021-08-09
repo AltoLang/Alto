@@ -1,0 +1,4 @@
+import getName
+
+var name = getName()
+print("Hello, " + name + "!")
