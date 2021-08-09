@@ -11,16 +11,17 @@ namespace Alto
 {
     internal static class Program
     {
-        private static void Main(string[] args) 
+        private static int Main(string[] args) 
         {
             if (args.Length == 0)
             {   
                 Console.Error.WriteLine("Usage: ac <source-path>");
-                return;
+                return 1;
             }
             else if (args.Length > 1)
             {
                 Console.Error.WriteLine("ERR: Only single project paths are supported.");
+                return 1;
             }
 
             var p = args[0];
@@ -52,16 +53,25 @@ namespace Alto
             }
 
             if (hasErrors)
-                return;
+                return 1;
             
             var compilation = new Compilation(coreSyntax, syntaxTrees.ToArray());
             var result = compilation.Evaluate(new Dictionary<VariableSymbol, object>());
 
             if (result.Diagnostics.Any())
+            {
                 DiagnosticsWriter.WriteDiagnostics(Console.Out, result.Diagnostics);
+                return 1;
+            }
             else
+            {
                 if (result.Value != null)
+                {
                     Console.WriteLine(result.Value);
+                }
+            }
+
+            return 0;
         }
 
         private static IEnumerable<string> GetSourcePath(string path)
