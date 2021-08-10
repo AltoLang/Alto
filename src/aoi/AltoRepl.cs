@@ -99,7 +99,7 @@ namespace Alto
             }
         }
 
-        protected override void EvaluateMetaCommand(string input)
+        /*protected override void EvaluateMetaCommand(string input)
         {
             switch (input.ToLower())
             {
@@ -125,6 +125,36 @@ namespace Alto
                     base.EvaluateMetaCommand(input);
                     break;
             }
+        }*/
+
+        [MetaCommand("showtree", description: "Shows the parse tree representation.")]
+        private void EvaluateShowTree()
+        {
+            _showTree = !_showTree;
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine(_showTree ? "Showing parse trees" : "Not showing parse trees");
+            Console.ResetColor();
+        }
+
+        [MetaCommand("showprogram", description: "Shows the bound tree representation.")]
+        private void EvaluateShowProgram()
+        {
+            _showProgram = !_showProgram;
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine(_showProgram ? "Showing bound trees" : "Not showing bound trees");
+            Console.ResetColor();
+        }
+
+        [MetaCommand("cls", description: "Clears the screen.")]
+        private void EvaluateCls()
+        {
+            Console.Clear();
+        }
+
+        [MetaCommand("reset", description: "Resets chained compilations.")]
+        private void EvaluateReset()
+        {
+            _previous = null;
         }
 
         protected override bool IsCompleteSubmission(string text)

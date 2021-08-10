@@ -2,15 +2,36 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace Alto
 {
     internal abstract class Repl
     {
-        private List<string> _submissionHistory = new List<string>();
+        private readonly List<MetaCommand> _metaCommands = new List<MetaCommand>();
+        private readonly List<string> _submissionHistory = new List<string>();
         private int _submissionHistoryIndex;
         private bool _done;
+
+        protected Repl()
+        {
+            InitMetaCommands();
+        }
+
+        private void InitMetaCommands()
+        {
+            foreach (var method in GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
+            {
+                var attribute = method.GetCustomAttribute<MetaCommandAttribute>();
+                if (attribute == null)
+                    continue;
+
+                var command = new MetaCommand(attribute.Name, attribute.Description, method);
+                _metaCommands.Add(command);
+            }
+        }
 
         public void Run()
         {
@@ -385,15 +406,50 @@ namespace Alto
             Console.Write(line);
         }
 
-        protected virtual void EvaluateMetaCommand(string input)
+        private void EvaluateMetaCommand(string input)
         {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.WriteLine($"Invalid meta command: {input}.");
-            Console.ResetColor();
+            var name = input.Substring(1);
+            var cmd = _metaCommands.SingleOrDefault(c => c.Name.ToLower() == name.ToLower()); 
+            if (cmd == null)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"Invalid meta command: {input}.");
+                Console.ResetColor();
+                return;
+            }
+            
+            cmd.Method.Invoke(this, null);
         }
 
         protected abstract void EvaluateSubmission(string text);
 
         protected abstract bool IsCompleteSubmission(string text);
+
+        [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+        protected sealed class MetaCommandAttribute : Attribute
+        {
+            public MetaCommandAttribute(string name, string description)
+            {
+                Name = name;
+                Description = description;
+            }
+
+            public string Name { get; }
+            public string Description { get; }
+        }
+
+        private sealed class MetaCommand
+        {
+            public MetaCommand(string name, string description, MethodInfo method)
+            {
+                Name = name;
+                Description = description;
+                Method = method;
+            }
+
+            public string Name { get; }
+            public string Description { get; }
+            public MethodInfo Method { get; }
+        }
     }
 }
