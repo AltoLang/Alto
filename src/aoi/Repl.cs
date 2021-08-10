@@ -451,5 +451,30 @@ namespace Alto
             public string Description { get; }
             public MethodInfo Method { get; }
         }
+
+        [MetaCommand("help", description: "Shows the help menu.")]
+        protected void EvaluateHelp()
+        {
+            var max = _metaCommands.Max(c => c.Name.Length);
+
+            Console.WriteLine();
+            foreach (var cmd in _metaCommands)
+            {
+                var name = cmd.Name.PadRight(max);
+
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write("#" + name);
+
+                Console.ResetColor();
+                Console.Write(" :  ");
+
+                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                Console.Write(cmd.Description);
+                Console.WriteLine();
+            }
+
+            Console.WriteLine();
+            Console.ResetColor();
+        }
     }
 }
