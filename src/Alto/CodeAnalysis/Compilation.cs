@@ -128,11 +128,21 @@ namespace Alto.CodeAnalysis
 
         public IEnumerable<Symbol> GetSymbols()
         {
-            foreach (var function in Functions)
-                yield return function;
+            var compilation = this;
+            var seenNames = new HashSet<string>();
 
-            foreach (var variable in Variables)
-                yield return variable;
+            while (compilation != null)
+            {
+                foreach (var function in compilation.Functions)
+                    if (seenNames.Add(function.Name))
+                        yield return function;
+                
+                foreach (var variable in compilation.Variables)
+                    if (seenNames.Add(variable.Name))
+                        yield return variable;
+                
+                compilation = compilation.Previous;
+            }
         }
     }
 }

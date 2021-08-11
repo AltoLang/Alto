@@ -170,18 +170,12 @@ namespace Alto
 
         [MetaCommand("syms", description: "Lists all symbols.")]
         private void EvaluateListSymbols()
-        {
-            var compilation = _previous;
-            while (compilation != null)
+        {   
+            var symbols = _previous.GetSymbols();
+            foreach (var symbol in symbols)
             {
-                var symbols = compilation.GetSymbols();
-                foreach (var symbol in symbols)
-                {
-                    symbol.WriteTo(Console.Out);
-                    Console.WriteLine();
-                }
-
-                compilation = compilation.Previous;
+                symbol.WriteTo(Console.Out);
+                Console.WriteLine();
             }
         }
 
