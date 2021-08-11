@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Alto.CodeAnalysis;
@@ -143,6 +144,28 @@ namespace Alto
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.WriteLine(_showProgram ? "Showing bound trees" : "Not showing bound trees");
             Console.ResetColor();
+        }
+
+        [MetaCommand("load", description: "Loads a file.")]
+        private void EvaluateLoad(string path)
+        {
+            path = Path.GetFullPath(path);
+            if (!File.Exists(path))
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"File '{path}' does not exist!");
+                Console.ResetColor();
+                return;
+            }
+
+            var txt = File.ReadAllText(path);
+            EvaluateSubmission(txt);
+
+            var tree = SyntaxTree.Load(path);
+            if (_previous == null)
+                _previous = new Compilation(tree);
+            else
+                _previous = _previous.ContinueWith(tree);
         }
 
         [MetaCommand("cls", description: "Clears the screen.")]
