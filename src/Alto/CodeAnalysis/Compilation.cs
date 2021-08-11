@@ -30,7 +30,9 @@ namespace Alto.CodeAnalysis
 
         public Compilation Previous { get; }
         public bool CheckCallsiteTrees { get; }
-        public ImmutableArray<SyntaxTree> SyntaxTrees { get; set; }
+        public ImmutableArray<SyntaxTree> SyntaxTrees { get; }
+        public ImmutableArray<FunctionSymbol> Functions => GlobalScope.Functions;
+        public ImmutableArray<VariableSymbol> Variables => GlobalScope.Variables;
         public SyntaxTree CoreSyntax { get; }
 
         internal BoundGlobalScope GlobalScope
