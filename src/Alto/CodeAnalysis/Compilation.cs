@@ -125,5 +125,14 @@ namespace Alto.CodeAnalysis
                 return statement;
             }   
         }
+
+        public IEnumerable<Symbol> GetSymbols()
+        {
+            foreach (var function in Functions)
+                yield return function;
+
+            foreach (var variable in Variables)
+                yield return variable;
+        }
     }
 }
