@@ -75,7 +75,7 @@ namespace Alto.CodeAnalysis.Symbols
 
                 p.WriteTo(writer);
             }
-            writer.WritePunctuation(SyntaxKind.CloseBraceToken);
+            writer.WritePunctuation(SyntaxKind.CloseParenthesesToken);
         }
 
         private static void WriteParameterTo(ParameterSymbol symbol, TextWriter writer)
