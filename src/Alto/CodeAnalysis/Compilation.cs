@@ -106,6 +106,17 @@ namespace Alto.CodeAnalysis
             }
         }
 
+        public void EmitTree(FunctionSymbol symbol, TextWriter writer)
+        {
+            var program = Binder.BindProgram(GlobalScope);
+            if (!program.FunctionBodies.TryGetValue(symbol, out var body))
+                return;
+            
+            symbol.WriteTo(writer);
+            writer.Write(" ");
+            body.WriteTo(writer);
+        }
+
         private BoundBlockStatement GetStatement()
         {
             var statements = GlobalScope.Statements;

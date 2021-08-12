@@ -196,9 +196,12 @@ namespace Alto
                 _previous = _previous.ContinueWith(tree);
         }
 
-        [MetaCommand("syms", description: "Lists all symbols.")]
+        [MetaCommand("ls", description: "Lists all symbols.")]
         private void EvaluateListSymbols()
         {   
+            if (_previous == null)
+                return;
+            
             var symbols = _previous.GetSymbols();
             foreach (var symbol in symbols)
             {
@@ -207,16 +210,36 @@ namespace Alto
             }
         }
 
+        [MetaCommand("dump", description: "Shows the bound tree representation of a given function.")]
+        private void EvaluateDump(string functionName)
+        {   
+            if (_previous == null)
+                return;
+
+            var symbol = _previous.GetSymbols().OfType<FunctionSymbol>().SingleOrDefault(s => s.Name == functionName);
+            if (symbol == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Function '{functionName}' not found!");
+                Console.ResetColor();
+                return;
+            }
+
+            _previous.EmitTree(symbol, Console.Out);
+
+        }
+
         [MetaCommand("cls", description: "Clears the screen.")]
         private void EvaluateCls()
         {
             Console.Clear();
         }
 
-        [MetaCommand("reset", description: "Resets chained compilations.")]
+        [MetaCommand("reset", description: "Resets chained compilations and all stored submissions.")]
         private void EvaluateReset()
         {
             _previous = null;
+            ClearSubmissions();
         }
 
         protected override bool IsCompleteSubmission(string text)
