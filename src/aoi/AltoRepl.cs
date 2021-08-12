@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Alto.CodeAnalysis;
@@ -16,7 +17,13 @@ namespace Alto
         private Compilation _previous;
         private bool _showTree = false;
         private bool _showProgram = false;
+        private bool _loadingSubmissions = false;
         private readonly Dictionary<VariableSymbol, object> _variables = new Dictionary<VariableSymbol, object>();
+
+        public AltoRepl()
+        {
+            LoadSubmissions();
+        }
 
         protected override void EvaluateSubmission(string text)
         {
@@ -61,13 +68,63 @@ namespace Alto
                     Console.WriteLine(result.Value);
                     Console.ResetColor();
                 }
-                
+
                 _previous = compilation;
+                SaveSubmission(text);
             }
             else
             {
                 DiagnosticsWriter.WriteDiagnostics(Console.Out, result.Diagnostics);
             }
+        }
+
+        private void LoadSubmissions()
+        {
+            var dir = GetSubmissionsDirectory();
+            if (!Directory.Exists(dir))
+                return;
+            
+            var submissions = Directory.GetFiles(dir).OrderBy(f => f);
+            if (submissions.Count() == 0)
+                return;
+
+            var count = submissions.Count();
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            if (count > 1 || count == 0)
+                Console.WriteLine($"{count} submissions loaded.");
+            else
+                Console.WriteLine($"{count} submission loaded.");
+            Console.ResetColor();
+
+            _loadingSubmissions = true;
+            foreach (var file in submissions)
+            {
+                var text = File.ReadAllText(file);
+                EvaluateSubmission(text);
+            }
+            _loadingSubmissions = false;
+        }
+
+        private static void ClearSubmissions() => Directory.Delete(GetSubmissionsDirectory(), recursive: true);
+
+        private void SaveSubmission(string text)
+        {
+            if (_loadingSubmissions)
+                return;
+            
+            var submissionFolder = GetSubmissionsDirectory();
+            Directory.CreateDirectory(submissionFolder);
+            var count = Directory.GetFiles(submissionFolder).Length;
+            var name = $"submission{count:0000}";
+            var filename = Path.Combine(submissionFolder, name);
+            File.WriteAllText(filename, text);
+        }
+
+        private static string GetSubmissionsDirectory()
+        {
+            var localAppData = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var submissionFolder = Path.Combine(localAppData, "Alto", "Submissions");
+            return submissionFolder;
         }
 
         protected override void RenderLine(string line)
@@ -99,32 +156,90 @@ namespace Alto
             }
         }
 
-        protected override void EvaluateMetaCommand(string input)
+        [MetaCommand("showtree", description: "Shows the parse tree representation.")]
+        private void EvaluateShowTree()
         {
-            switch (input.ToLower())
+            _showTree = !_showTree;
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine(_showTree ? "Showing parse trees" : "Not showing parse trees");
+            Console.ResetColor();
+        }
+
+        [MetaCommand("showprogram", description: "Shows the bound tree representation.")]
+        private void EvaluateShowProgram()
+        {
+            _showProgram = !_showProgram;
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            Console.WriteLine(_showProgram ? "Showing bound trees" : "Not showing bound trees");
+            Console.ResetColor();
+        }
+
+        [MetaCommand("load", description: "Loads a file.")]
+        private void EvaluateLoad(string path)
+        {
+            path = Path.GetFullPath(path);
+            if (!File.Exists(path))
             {
-                case "#showtree":
-                    _showTree = !_showTree;
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.WriteLine(_showTree ? "Showing parse trees" : "Not showing parse trees");
-                    Console.ResetColor();
-                    break;
-                case "#showprogram":
-                    _showProgram = !_showProgram;
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.WriteLine(_showProgram ? "Showing bound trees" : "Not showing bound trees");
-                    Console.ResetColor();
-                    break;
-                case "#cls":
-                    Console.Clear();
-                    break;
-                case "#reset":
-                    _previous = null;
-                    break;
-                default:
-                    base.EvaluateMetaCommand(input);
-                    break;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"File '{path}' does not exist!");
+                Console.ResetColor();
+                return;
             }
+
+            var txt = File.ReadAllText(path);
+            EvaluateSubmission(txt);
+
+            var tree = SyntaxTree.Load(path);
+            if (_previous == null)
+                _previous = new Compilation(tree);
+            else
+                _previous = _previous.ContinueWith(tree);
+        }
+
+        [MetaCommand("ls", description: "Lists all symbols.")]
+        private void EvaluateListSymbols()
+        {   
+            if (_previous == null)
+                return;
+            
+            var symbols = _previous.GetSymbols();
+            foreach (var symbol in symbols)
+            {
+                symbol.WriteTo(Console.Out);
+                Console.WriteLine();
+            }
+        }
+
+        [MetaCommand("dump", description: "Shows the bound tree representation of a given function.")]
+        private void EvaluateDump(string functionName)
+        {   
+            if (_previous == null)
+                return;
+
+            var symbol = _previous.GetSymbols().OfType<FunctionSymbol>().SingleOrDefault(s => s.Name == functionName);
+            if (symbol == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Function '{functionName}' not found!");
+                Console.ResetColor();
+                return;
+            }
+
+            _previous.EmitTree(symbol, Console.Out);
+
+        }
+
+        [MetaCommand("cls", description: "Clears the screen.")]
+        private void EvaluateCls()
+        {
+            Console.Clear();
+        }
+
+        [MetaCommand("reset", description: "Resets chained compilations and all stored submissions.")]
+        private void EvaluateReset()
+        {
+            _previous = null;
+            ClearSubmissions();
         }
 
         protected override bool IsCompleteSubmission(string text)
@@ -134,10 +249,10 @@ namespace Alto
 
             // checks if the 2 last lines are blank
             var forceComplete = text.Split(Environment.NewLine)
-                                        .Reverse()
-                                        .TakeWhile(s => string.IsNullOrEmpty(s))
-                                        .Take(2)
-                                        .Count() == 2;
+                                    .Reverse()
+                                    .TakeWhile(s => string.IsNullOrEmpty(s))
+                                    .Take(2)
+                                    .Count() == 2;
 
             if (forceComplete)
                 return true;

@@ -30,7 +30,9 @@ namespace Alto.CodeAnalysis
 
         public Compilation Previous { get; }
         public bool CheckCallsiteTrees { get; }
-        public ImmutableArray<SyntaxTree> SyntaxTrees { get; set; }
+        public ImmutableArray<SyntaxTree> SyntaxTrees { get; }
+        public ImmutableArray<FunctionSymbol> Functions => GlobalScope.Functions;
+        public ImmutableArray<VariableSymbol> Variables => GlobalScope.Variables;
         public SyntaxTree CoreSyntax { get; }
 
         internal BoundGlobalScope GlobalScope
@@ -104,6 +106,17 @@ namespace Alto.CodeAnalysis
             }
         }
 
+        public void EmitTree(FunctionSymbol symbol, TextWriter writer)
+        {
+            var program = Binder.BindProgram(GlobalScope);
+            if (!program.FunctionBodies.TryGetValue(symbol, out var body))
+                return;
+            
+            symbol.WriteTo(writer);
+            writer.Write(" ");
+            body.WriteTo(writer);
+        }
+
         private BoundBlockStatement GetStatement()
         {
             var statements = GlobalScope.Statements;
@@ -122,6 +135,25 @@ namespace Alto.CodeAnalysis
 
                 return statement;
             }   
+        }
+
+        public IEnumerable<Symbol> GetSymbols()
+        {
+            var compilation = this;
+            var seenNames = new HashSet<string>();
+
+            while (compilation != null)
+            {
+                foreach (var function in compilation.Functions)
+                    if (seenNames.Add(function.Name))
+                        yield return function;
+                
+                foreach (var variable in compilation.Variables)
+                    if (seenNames.Add(variable.Name))
+                        yield return variable;
+                
+                compilation = compilation.Previous;
+            }
         }
     }
 }
