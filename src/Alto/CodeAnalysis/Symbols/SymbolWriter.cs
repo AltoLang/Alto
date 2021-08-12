@@ -69,6 +69,7 @@ namespace Alto.CodeAnalysis.Symbols
 
                 if (i > 0)
                 {
+                    writer.WriteWhitespace();
                     writer.WritePunctuation(SyntaxKind.ColonToken);
                     writer.WriteWhitespace();
                 }
@@ -76,6 +77,14 @@ namespace Alto.CodeAnalysis.Symbols
                 p.WriteTo(writer);
             }
             writer.WritePunctuation(SyntaxKind.CloseParenthesesToken);
+
+            if (symbol.Type != TypeSymbol.Void)
+            {
+                writer.WriteWhitespace();
+                writer.WritePunctuation(SyntaxKind.ColonToken);
+                writer.WriteWhitespace();
+                symbol.Type.WriteTo(writer);
+            }
         }
 
         private static void WriteParameterTo(ParameterSymbol symbol, TextWriter writer)

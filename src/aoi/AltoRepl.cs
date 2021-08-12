@@ -100,34 +100,6 @@ namespace Alto
             }
         }
 
-        /*protected override void EvaluateMetaCommand(string input)
-        {
-            switch (input.ToLower())
-            {
-                case "#showtree":
-                    _showTree = !_showTree;
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.WriteLine(_showTree ? "Showing parse trees" : "Not showing parse trees");
-                    Console.ResetColor();
-                    break;
-                case "#showprogram":
-                    _showProgram = !_showProgram;
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.WriteLine(_showProgram ? "Showing bound trees" : "Not showing bound trees");
-                    Console.ResetColor();
-                    break;
-                case "#cls":
-                    Console.Clear();
-                    break;
-                case "#reset":
-                    _previous = null;
-                    break;
-                default:
-                    base.EvaluateMetaCommand(input);
-                    break;
-            }
-        }*/
-
         [MetaCommand("showtree", description: "Shows the parse tree representation.")]
         private void EvaluateShowTree()
         {
@@ -198,10 +170,10 @@ namespace Alto
 
             // checks if the 2 last lines are blank
             var forceComplete = text.Split(Environment.NewLine)
-                                        .Reverse()
-                                        .TakeWhile(s => string.IsNullOrEmpty(s))
-                                        .Take(2)
-                                        .Count() == 2;
+                                    .Reverse()
+                                    .TakeWhile(s => string.IsNullOrEmpty(s))
+                                    .Take(2)
+                                    .Count() == 2;
 
             if (forceComplete)
                 return true;

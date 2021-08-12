@@ -1,0 +1,8 @@
+<Project>
+
+  <PropertyGroup>
+    <Features>strict</Features>
+    <LangVersion>10.0</LangVersion>
+  </PropertyGroup>
+
+</Project>
