@@ -17,7 +17,13 @@ namespace Alto
         private Compilation _previous;
         private bool _showTree = false;
         private bool _showProgram = false;
+        private bool _loadingSubmissions = false;
         private readonly Dictionary<VariableSymbol, object> _variables = new Dictionary<VariableSymbol, object>();
+
+        public AltoRepl()
+        {
+            LoadSubmissions();
+        }
 
         protected override void EvaluateSubmission(string text)
         {
@@ -62,13 +68,63 @@ namespace Alto
                     Console.WriteLine(result.Value);
                     Console.ResetColor();
                 }
-                
+
                 _previous = compilation;
+                SaveSubmission(text);
             }
             else
             {
                 DiagnosticsWriter.WriteDiagnostics(Console.Out, result.Diagnostics);
             }
+        }
+
+        private void LoadSubmissions()
+        {
+            var dir = GetSubmissionsDirectory();
+            if (!Directory.Exists(dir))
+                return;
+            
+            var submissions = Directory.GetFiles(dir).OrderBy(f => f);
+            if (submissions.Count() == 0)
+                return;
+
+            var count = submissions.Count();
+            Console.ForegroundColor = ConsoleColor.DarkGray;
+            if (count > 1 || count == 0)
+                Console.WriteLine($"{count} submissions loaded.");
+            else
+                Console.WriteLine($"{count} submission loaded.");
+            Console.ResetColor();
+
+            _loadingSubmissions = true;
+            foreach (var file in submissions)
+            {
+                var text = File.ReadAllText(file);
+                EvaluateSubmission(text);
+            }
+            _loadingSubmissions = false;
+        }
+
+        private static void ClearSubmissions() => Directory.Delete(GetSubmissionsDirectory(), recursive: true);
+
+        private void SaveSubmission(string text)
+        {
+            if (_loadingSubmissions)
+                return;
+            
+            var submissionFolder = GetSubmissionsDirectory();
+            Directory.CreateDirectory(submissionFolder);
+            var count = Directory.GetFiles(submissionFolder).Length;
+            var name = $"submission{count:0000}";
+            var filename = Path.Combine(submissionFolder, name);
+            File.WriteAllText(filename, text);
+        }
+
+        private static string GetSubmissionsDirectory()
+        {
+            var localAppData = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var submissionFolder = Path.Combine(localAppData, "Alto", "Submissions");
+            return submissionFolder;
         }
 
         protected override void RenderLine(string line)
