@@ -405,14 +405,14 @@ namespace Alto.CodeAnalysis.Binding
             {
                 var funcSymbol = BindFunctionDeclaration(function, syntax.SyntaxTree, declare: false);
                 // TODO: Also have to check for duplicate names
-
+                if (!LocalFunctionNameIsUnique(funcSymbol))
+                    _diagnostics.ReportSymbolAlreadyDeclared(function.Identifier.Location, funcSymbol.Name);
+                
                 var body = BindStatement(function.Body);
                 var loweredBody = Lowerer.Lower(body);
 
                 if (funcSymbol.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn(loweredBody))
                     _diagnostics.ReportNotAllCodePathsReturn(function.Identifier.Location, funcSymbol.Name);
-                
-                //functionBodies.Add(function, loweredBody);
                 
                 if (!_localFunctions.ContainsKey(_scope))
                 {
@@ -825,6 +825,16 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             return symbol;
+        }
+
+        private bool LocalFunctionNameIsUnique(FunctionSymbol function)
+        {
+            foreach (var localScope in _localFunctions)
+                foreach (var func in localScope.Value)
+                    if (func.Item1.Name == function.Name)
+                        return false;
+
+            return true;
         }
     }
 }
