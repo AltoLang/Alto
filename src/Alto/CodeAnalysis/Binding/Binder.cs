@@ -32,7 +32,6 @@ namespace Alto.CodeAnalysis.Binding
                 foreach (var p in function.Parameters)
                     _scope.TryDeclareVariable(p);
             }
-                
         }
 
         private Binder(BoundScope parent, FunctionSymbol function, bool checkCallsiteTrees = true, 
@@ -396,19 +395,24 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundImportStatement(importTree, name);
         }
 
-        private BoundStatement BindBlockStatement(BlockStatementSyntax syntax)
+        private BoundStatement BindBlockStatement(BlockStatementSyntax syntax, IEnumerable<VariableSymbol> declareAdditionalVariables = null)
         {
             var statements = ImmutableArray.CreateBuilder<BoundStatement>();
             _scope = new BoundScope(_scope);
 
+            if (declareAdditionalVariables != null)
+                foreach (var v in declareAdditionalVariables)
+                    _scope.TryDeclareVariable(v);
+            
             foreach (var function in syntax.Functions)
             {
                 var funcSymbol = BindFunctionDeclaration(function, syntax.SyntaxTree, declare: false);
+
                 // TODO: Also have to check for duplicate names
                 if (!LocalFunctionNameIsUnique(funcSymbol))
                     _diagnostics.ReportSymbolAlreadyDeclared(function.Identifier.Location, funcSymbol.Name);
                 
-                var body = BindStatement(function.Body);
+                var body = BindBlockStatement(function.Body, funcSymbol.Parameters);
                 var loweredBody = Lowerer.Lower(body);
 
                 if (funcSymbol.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn(loweredBody))
