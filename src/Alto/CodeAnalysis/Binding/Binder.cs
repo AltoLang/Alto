@@ -16,6 +16,7 @@ namespace Alto.CodeAnalysis.Binding
         private Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)> _loopStack = new Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)>();
         private Dictionary<string, SyntaxTree> _syntaxTrees = new Dictionary<string, SyntaxTree>();
         private Dictionary<SyntaxTree, IEnumerable<SyntaxTree>> _importedTrees = new Dictionary<SyntaxTree, IEnumerable<SyntaxTree>>();
+        private Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> _localFunctions = new Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>>();
         private int _labelCount;
         private BoundScope _scope;
 
@@ -31,7 +32,6 @@ namespace Alto.CodeAnalysis.Binding
                 foreach (var p in function.Parameters)
                     _scope.TryDeclareVariable(p);
             }
-                
         }
 
         private Binder(BoundScope parent, FunctionSymbol function, bool checkCallsiteTrees = true, 
@@ -47,9 +47,11 @@ namespace Alto.CodeAnalysis.Binding
         /// This is set to false in the interactive experience.
         /// </summary>
         private bool CheckCallsiteTrees { get; }
+        public Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> LocalFunctions => _localFunctions;
 
         public static BoundGlobalScope BindGlobalScope(BoundGlobalScope previous, SyntaxTree coreSyntax, 
-                                                       ImmutableArray<SyntaxTree> syntaxTrees, bool checkCallsiteTrees)
+                                                       ImmutableArray<SyntaxTree> syntaxTrees, bool checkCallsiteTrees,
+                                                       out Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> localFunctions)
         {
             var parentScope = CreateParentScope(previous);
             var binder = new Binder(parentScope, null, checkCallsiteTrees);
@@ -96,6 +98,7 @@ namespace Alto.CodeAnalysis.Binding
             if (previous != null)
                 diagnostics = diagnostics.InsertRange(0, previous.Diagnostics);
 
+            localFunctions = binder._localFunctions;
             return new BoundGlobalScope(previous, diagnostics, functions, variables, 
                                         statementBuilder.ToImmutable(), binder._importedTrees);
         }
@@ -119,7 +122,7 @@ namespace Alto.CodeAnalysis.Binding
 
                     if (function.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn(loweredBody))
                         binder._diagnostics.ReportNotAllCodePathsReturn(function.Declaration.Identifier.Location, function.Name);
-                    
+
                     functionBodies.Add(function, loweredBody);
                     diagnostics.AddRange(binder.Diagnostics);
                 }
@@ -128,11 +131,12 @@ namespace Alto.CodeAnalysis.Binding
             }
             
             var statement = Lowerer.Lower(new BoundBlockStatement(globalScope.Statements));
+            
             var program = new BoundProgram(diagnostics, functionBodies.ToImmutable(), statement);
             return program;
         }
 
-        private void BindFunctionDeclaration(FunctionDeclarationSyntax syntax, SyntaxTree tree)
+        private FunctionSymbol BindFunctionDeclaration(FunctionDeclarationSyntax syntax, SyntaxTree tree, bool declare = true)
         {
             var parameters = ImmutableArray.CreateBuilder<ParameterSymbol>();
             var seenParameterNames = new HashSet<string>();
@@ -163,12 +167,16 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             var type = BindTypeClause(syntax.Type) ?? TypeSymbol.Void;
-
             var function = new FunctionSymbol(syntax.Identifier.Text, parameters.ToImmutable(), type, syntax, tree);
 
-            var sucess = _scope.TryDeclareFunction(function);
-            if (function.Declaration.Identifier.Text != null && !sucess)
-                _diagnostics.ReportSymbolAlreadyDeclared(syntax.Identifier.Location, function.Name);
+            if (declare)
+            {
+                var sucess = _scope.TryDeclareFunction(function);
+                if (function.Declaration.Identifier.Text != null && !sucess)
+                    _diagnostics.ReportSymbolAlreadyDeclared(syntax.Identifier.Location, function.Name);
+            }
+
+            return function;
         }
 
         private static BoundScope CreateParentScope(BoundGlobalScope previous)
@@ -387,10 +395,42 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundImportStatement(importTree, name);
         }
 
-        private BoundStatement BindBlockStatement(BlockStatementSyntax syntax)
+        private BoundStatement BindBlockStatement(BlockStatementSyntax syntax, IEnumerable<VariableSymbol> declareAdditionalVariables = null)
         {
             var statements = ImmutableArray.CreateBuilder<BoundStatement>();
             _scope = new BoundScope(_scope);
+
+            if (declareAdditionalVariables != null)
+                foreach (var v in declareAdditionalVariables)
+                    _scope.TryDeclareVariable(v);
+            
+            foreach (var function in syntax.Functions)
+            {
+                var funcSymbol = BindFunctionDeclaration(function, syntax.SyntaxTree, declare: false);
+
+                Binder binder = new Binder(_scope, funcSymbol, CheckCallsiteTrees);
+
+                // TODO: Also have to check for duplicate names
+                if (!LocalFunctionNameIsUnique(funcSymbol))
+                    _diagnostics.ReportSymbolAlreadyDeclared(function.Identifier.Location, funcSymbol.Name);
+                
+                var body = binder.BindBlockStatement(function.Body, funcSymbol.Parameters);
+                var loweredBody = Lowerer.Lower(body);
+
+                if (funcSymbol.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn(loweredBody))
+                    _diagnostics.ReportNotAllCodePathsReturn(function.Identifier.Location, funcSymbol.Name);
+                
+                if (!_localFunctions.ContainsKey(_scope))
+                {
+                    var funcs = new List<Tuple<FunctionSymbol, BoundBlockStatement>>();
+                    funcs.Add(new Tuple<FunctionSymbol, BoundBlockStatement>(funcSymbol, loweredBody));
+                    _localFunctions.Add(_scope, funcs);
+                }
+                else
+                {
+                    _localFunctions[_scope].Add(new Tuple<FunctionSymbol, BoundBlockStatement>(funcSymbol, loweredBody));
+                }
+            }
 
             foreach (var statementSyntax in syntax.Statements)
             {
@@ -398,9 +438,10 @@ namespace Alto.CodeAnalysis.Binding
                 statements.Add(statement);
             }
 
-            _scope = _scope.Parent;
+            var blockStatement = new BoundBlockStatement(statements.ToImmutable());
 
-            return new BoundBlockStatement(statements.ToImmutable());
+            _scope = _scope.Parent;
+            return blockStatement;
         }
         
         private BoundStatement BindExpressionStatement(ExpressionStatementSyntax syntax)
@@ -569,7 +610,7 @@ namespace Alto.CodeAnalysis.Binding
                 boundArguments.Add(boundArgument);
             }
 
-            var symbol = _scope.TryLookupSymbol(syntax.Identifier.Text);
+            var symbol = LookupFunction(syntax.Identifier.Text);
             if (symbol == null)
             {
                 _diagnostics.ReportUndefinedFunction(syntax.Identifier.Location, syntax.Identifier.Text);
@@ -758,6 +799,48 @@ namespace Alto.CodeAnalysis.Binding
                     return true;
             
             return false;
+        }
+
+        private Symbol LookupFunction(string name)
+        {
+            // search through local functions
+            var symbol = _scope.TryLookupSymbol(name);
+            if (symbol == null)
+            {
+                
+            }
+
+            if (symbol == null)
+            {
+                var scope = _scope;
+                while (scope != null)
+                {
+                    if (_localFunctions.ContainsKey(scope))
+                    {
+                        foreach (var body in _localFunctions[scope])
+                        {
+                            if (body.Item1.Name == name)
+                            {
+                                symbol = body.Item1;
+                                return symbol;
+                            }
+                        }
+                    }
+                    scope = scope.Parent;
+                }
+            }
+
+            return symbol;
+        }
+
+        private bool LocalFunctionNameIsUnique(FunctionSymbol function)
+        {
+            foreach (var localScope in _localFunctions)
+                foreach (var func in localScope.Value)
+                    if (func.Item1.Name == function.Name)
+                        return false;
+
+            return true;
         }
     }
 }

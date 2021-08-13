@@ -74,7 +74,7 @@ namespace Alto.CodeAnalysis
 
         public void ReportSymbolAlreadyDeclared(TextLocation location, string name)
         {
-            var message = $"'{name}' is already declared in the current scope.";
+            var message = $"A symbol with name '{name}' is already declared.";
             Report(location, message);
         }
 

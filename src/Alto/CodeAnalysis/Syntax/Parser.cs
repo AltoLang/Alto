@@ -103,7 +103,7 @@ namespace Alto.CodeAnalysis.Syntax
             return new GlobalStatementSyntax(_tree, statement);
         }
 
-        private MemberSyntax ParseFunctionDeclaration()
+        private FunctionDeclarationSyntax ParseFunctionDeclaration()
         {
             var keyword = MatchToken(SyntaxKind.FunctionKeyword);
             var identifier = MatchToken(SyntaxKind.IdentifierToken);
@@ -320,14 +320,23 @@ namespace Alto.CodeAnalysis.Syntax
         private BlockStatementSyntax ParseBlockStatement()
         {
             var statements = ImmutableArray.CreateBuilder<StatementSyntax>();
+            var functions = ImmutableArray.CreateBuilder<FunctionDeclarationSyntax>();
             var openBraceToken = MatchToken(SyntaxKind.OpenBraceToken);
 
             while (Current.Kind != SyntaxKind.EndOfFileToken && Current.Kind != SyntaxKind.CloseBraceToken)
             {
                 var startToken = Current;
 
-                var statement = ParseStatement();
-                statements.Add(statement);
+                if (startToken.Kind == SyntaxKind.FunctionKeyword)
+                {
+                    var declaration = ParseFunctionDeclaration();
+                    functions.Add(declaration);
+                }
+                else    
+                {
+                    var statement = ParseStatement();
+                    statements.Add(statement);
+                }
 
                 // Skip current token in order to avoide an infinite loop.
                 if (Current == startToken)
@@ -335,7 +344,7 @@ namespace Alto.CodeAnalysis.Syntax
             }
 
             var closeBraceToken = MatchToken(SyntaxKind.CloseBraceToken);
-            return new BlockStatementSyntax(_tree, openBraceToken, statements.ToImmutable(), closeBraceToken);
+            return new BlockStatementSyntax(_tree, openBraceToken, statements.ToImmutable(), functions.ToImmutable(), closeBraceToken);
         }
 
         private ExpressionStatementSyntax ParseExpressionStatement()

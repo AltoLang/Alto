@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Alto\Alto.csproj" />
-    <ProjectReference Include="..\ai\ai.csproj" />
+    <ProjectReference Include="..\aoi\aoi.csproj" />
   </ItemGroup>
 
 </Project>

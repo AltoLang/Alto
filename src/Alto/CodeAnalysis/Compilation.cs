@@ -14,6 +14,7 @@ namespace Alto.CodeAnalysis
     public sealed class Compilation
     {
         private BoundGlobalScope _globalScope;
+        private Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> _localFunctions = new Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>>();
 
         public Compilation(SyntaxTree coreSyntax, params SyntaxTree[] syntaxTrees) : this(null, coreSyntax, true, syntaxTrees)
         {
@@ -35,13 +36,22 @@ namespace Alto.CodeAnalysis
         public ImmutableArray<VariableSymbol> Variables => GlobalScope.Variables;
         public SyntaxTree CoreSyntax { get; }
 
+        internal Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> LocalFunctions 
+        {
+            get 
+            { 
+                return _localFunctions; 
+            } 
+        }
+
         internal BoundGlobalScope GlobalScope
         {
             get
             {
                 if (_globalScope == null)
                 {
-                    var globalScope = Binder.BindGlobalScope(Previous?.GlobalScope, CoreSyntax, SyntaxTrees, CheckCallsiteTrees);
+                    var globalScope = Binder.BindGlobalScope(Previous?.GlobalScope, CoreSyntax, SyntaxTrees, CheckCallsiteTrees, out var localFunctions);
+                    _localFunctions = localFunctions;
                     Interlocked.CompareExchange(ref _globalScope, globalScope, null);
                 }
 
@@ -79,7 +89,8 @@ namespace Alto.CodeAnalysis
                 return new EvaluationResult(program.Diagnostics.ToImmutableArray(), null);
 
             var statement = GetStatement();
-            var evaluator = new Evaluator(program.FunctionBodies, statement, variables);
+            var bodies = MergeLocalAndGlobalFunctions(program);
+            var evaluator = new Evaluator(bodies, statement, variables);
             var value = evaluator.Evaluate();
 
             return new EvaluationResult(ImmutableArray<Diagnostic>.Empty, value);
@@ -117,6 +128,25 @@ namespace Alto.CodeAnalysis
             body.WriteTo(writer);
         }
 
+        public IEnumerable<Symbol> GetSymbols()
+        {
+            var compilation = this;
+            var seenNames = new HashSet<string>();
+
+            while (compilation != null)
+            {
+                foreach (var function in compilation.Functions)
+                    if (seenNames.Add(function.Name))
+                        yield return function;
+                
+                foreach (var variable in compilation.Variables)
+                    if (seenNames.Add(variable.Name))
+                        yield return variable;
+                
+                compilation = compilation.Previous;
+            }
+        }
+
         private BoundBlockStatement GetStatement()
         {
             var statements = GlobalScope.Statements;
@@ -137,23 +167,20 @@ namespace Alto.CodeAnalysis
             }   
         }
 
-        public IEnumerable<Symbol> GetSymbols()
+        private ImmutableDictionary<FunctionSymbol, BoundBlockStatement> MergeLocalAndGlobalFunctions(BoundProgram program)
         {
-            var compilation = this;
-            var seenNames = new HashSet<string>();
+            var functions = new Dictionary<FunctionSymbol, BoundBlockStatement>();
 
-            while (compilation != null)
+            foreach (var func in program.FunctionBodies)
+                functions.Add(func.Key, func.Value);
+
+            foreach (var localScope in _localFunctions)
             {
-                foreach (var function in compilation.Functions)
-                    if (seenNames.Add(function.Name))
-                        yield return function;
-                
-                foreach (var variable in compilation.Variables)
-                    if (seenNames.Add(variable.Name))
-                        yield return variable;
-                
-                compilation = compilation.Previous;
+                foreach (var function in localScope.Value)
+                    functions.Add(function.Item1, function.Item2);
             }
+
+            return functions.ToImmutableDictionary();
         }
     }
 }
