@@ -91,6 +91,11 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add()", 15)]
         [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add(7)", 17)]
         [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add(4, 2)", 6)]
+        [InlineData("{ function add(x : int = 2, y : int = 2) : int { return x + y } add() }", 4)]
+        [InlineData("{ function add(x : int = 2, y : int = 2) : int { return x + y } add(3) }", 5)]
+        [InlineData("{ function add(x : int = 2, y : int = 2) : int { return x + y } add(3, 10) }", 13)]
+        [InlineData("{ function add(x : int = 2, y : int = 2) : int { return x + y } { add(10, 10) } }", 20)]
+        [InlineData("{ function add(x : int = 2, y : int = 2) : int { return x + y } { { add(10, 10) } } }", 20)]
         public void Evaluator_Computes_CorrectValues(string text, object expectedValue)
         {
             AssertValue(text, expectedValue);
@@ -111,7 +116,7 @@ namespace Alto.Tests.CodeAnalysis
             ";
 
             var diagnostics = @"
-                'x' is already declared in the current scope.
+                A symbol with name 'x' is already declared.
             ";
 
             AssertDiagnostics(text, diagnostics);
@@ -511,6 +516,29 @@ namespace Alto.Tests.CodeAnalysis
 
             var diagnostics = @"
                 Cannot find file 'myFoobarLib' to import.
+            ";
+
+            AssertDiagnostics(text, diagnostics);
+        }
+
+        [Fact]
+        public void Evaluator_NestedFunctions1()
+        {
+            var text = @"
+                {
+                    {
+                        function myFunc(text : string) {
+                            print(text)
+                        }
+                    }
+
+                    var txt = ""Test""
+                    [myFunc](txt)
+                }
+            ";
+
+            var diagnostics = @"
+                Function 'myFunc' is not defined in the current scope.
             ";
 
             AssertDiagnostics(text, diagnostics);

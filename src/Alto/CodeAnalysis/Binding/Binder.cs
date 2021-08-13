@@ -408,11 +408,13 @@ namespace Alto.CodeAnalysis.Binding
             {
                 var funcSymbol = BindFunctionDeclaration(function, syntax.SyntaxTree, declare: false);
 
+                Binder binder = new Binder(_scope, funcSymbol, CheckCallsiteTrees);
+
                 // TODO: Also have to check for duplicate names
                 if (!LocalFunctionNameIsUnique(funcSymbol))
                     _diagnostics.ReportSymbolAlreadyDeclared(function.Identifier.Location, funcSymbol.Name);
                 
-                var body = BindBlockStatement(function.Body, funcSymbol.Parameters);
+                var body = binder.BindBlockStatement(function.Body, funcSymbol.Parameters);
                 var loweredBody = Lowerer.Lower(body);
 
                 if (funcSymbol.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn(loweredBody))
