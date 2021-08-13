@@ -801,16 +801,26 @@ namespace Alto.CodeAnalysis.Binding
             var symbol = _scope.TryLookupSymbol(name);
             if (symbol == null)
             {
-                if (_localFunctions.ContainsKey(_scope))
+                
+            }
+
+            if (symbol == null)
+            {
+                var scope = _scope;
+                while (scope != null)
                 {
-                    foreach (var body in _localFunctions[_scope])
+                    if (_localFunctions.ContainsKey(scope))
                     {
-                        if (body.Item1.Name == name)
+                        foreach (var body in _localFunctions[scope])
                         {
-                            symbol = body.Item1;
-                            break;
+                            if (body.Item1.Name == name)
+                            {
+                                symbol = body.Item1;
+                                return symbol;
+                            }
                         }
                     }
+                    scope = scope.Parent;
                 }
             }
 
