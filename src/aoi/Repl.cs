@@ -2,15 +2,36 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace Alto
 {
     internal abstract class Repl
     {
-        private List<string> _submissionHistory = new List<string>();
+        private readonly List<MetaCommand> _metaCommands = new List<MetaCommand>();
+        private readonly List<string> _submissionHistory = new List<string>();
         private int _submissionHistoryIndex;
         private bool _done;
+
+        protected Repl()
+        {
+            InitMetaCommands();
+        }
+
+        private void InitMetaCommands()
+        {
+            foreach (var method in GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
+            {
+                var attribute = method.GetCustomAttribute<MetaCommandAttribute>();
+                if (attribute == null)
+                    continue;
+
+                var command = new MetaCommand(attribute.Name, attribute.Description, method);
+                _metaCommands.Add(command);
+            }
+        }
 
         public void Run()
         {
@@ -385,15 +406,142 @@ namespace Alto
             Console.Write(line);
         }
 
-        protected virtual void EvaluateMetaCommand(string input)
+        private void EvaluateMetaCommand(string input)
         {
-            Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.WriteLine($"Invalid meta command: {input}.");
-            Console.ResetColor();
+            // parse args
+            var arguments = new List<string>();
+            var quoted = false;
+            var p = 1;
+            var builder = new StringBuilder();
+            while (p < input.Length)
+            {
+                var current = input[p];
+                var lookahead = p + 1 >= input.Length ? '\0' : input[p + 1];
+                if (char.IsWhiteSpace(current))
+                {
+                    if (!quoted)
+                        CommitArg();
+                    else
+                        builder.Append(current);
+                }
+                else if (current == '\"')
+                {
+                    if (quoted)
+                    {
+                        quoted = false;
+                    }
+                    else if (lookahead == '\"')
+                    {
+                        builder.Append(current);
+                        p++;
+                    }
+                    else
+                    {
+                        quoted = true;
+                    }
+                }
+                else
+                {
+                    builder.Append(current);
+                }
+
+                p++;
+            }
+
+            CommitArg();
+
+            void CommitArg()
+            {
+                var argument = builder.ToString();
+                if (!string.IsNullOrWhiteSpace(argument))
+                    arguments.Add(argument);
+
+                builder.Clear();
+            }
+
+            var name = arguments[0];
+
+            // removes the command name
+            if (arguments.Count > 0)
+                arguments.RemoveAt(0);
+            
+            var cmd = _metaCommands.SingleOrDefault(c => c.Name.ToLower() == name.ToLower()); 
+            if (cmd == null)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"Invalid meta command: {input}.");
+                Console.ResetColor();
+                return;
+            }
+
+            var parameters = cmd.Method.GetParameters();
+            if (arguments.Count != parameters.Length)
+            {
+                var names = string.Join(" ", parameters.Select(p => $"<{p.Name}>"));
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"Invalid argument count.");
+                Console.WriteLine($"Usage: #{cmd.Name} {names}");
+                Console.ResetColor();
+                return;
+            }
+            
+            cmd.Method.Invoke(this, arguments.ToArray());
         }
 
         protected abstract void EvaluateSubmission(string text);
 
         protected abstract bool IsCompleteSubmission(string text);
+
+        [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+        protected sealed class MetaCommandAttribute : Attribute
+        {
+            public MetaCommandAttribute(string name, string description)
+            {
+                Name = name;
+                Description = description;
+            }
+
+            public string Name { get; }
+            public string Description { get; }
+        }
+
+        private sealed class MetaCommand
+        {
+            public MetaCommand(string name, string description, MethodInfo method)
+            {
+                Name = name;
+                Description = description;
+                Method = method;
+            }
+
+            public string Name { get; }
+            public string Description { get; }
+            public MethodInfo Method { get; }
+        }
+
+        [MetaCommand("help", description: "Shows the help menu.")]
+        protected void EvaluateHelp()
+        {
+            var max = _metaCommands.Max(c => c.Name.Length);
+
+            Console.WriteLine();
+            foreach (var cmd in _metaCommands.OrderBy(c => c.Name))
+            {
+                var name = cmd.Name.PadRight(max);
+
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.Write("#" + name);
+
+                Console.ResetColor();
+                Console.Write(" :  ");
+
+                Console.ForegroundColor = ConsoleColor.DarkBlue;
+                Console.Write(cmd.Description);
+                Console.WriteLine();
+            }
+
+            Console.WriteLine();
+            Console.ResetColor();
+        }
     }
 }
