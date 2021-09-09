@@ -106,7 +106,7 @@ namespace Alto
             _loadingSubmissions = false;
         }
 
-        private static void ClearSubmissions() => Directory.Delete(GetSubmissionsDirectory(), recursive: true);
+        private void ClearSubmissions() => Directory.Delete(GetSubmissionsDirectory(), recursive: true);
 
         private void SaveSubmission(string text)
         {
@@ -121,7 +121,7 @@ namespace Alto
             File.WriteAllText(filename, text);
         }
 
-        private static string GetSubmissionsDirectory()
+        private string GetSubmissionsDirectory()
         {
             var localAppData = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var submissionFolder = Path.Combine(localAppData, "Alto", "Submissions");
