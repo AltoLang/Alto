@@ -523,15 +523,43 @@ namespace Alto
         [MetaCommand("help", description: "Shows the help menu.")]
         protected void EvaluateHelp()
         {
-            var max = _metaCommands.Max(c => c.Name.Length);
+            int max = 0;
+            foreach (var cmd in _metaCommands)
+            {
+                var length = cmd.Name.Length;
+                var parameters = cmd.Method.GetParameters();
+                foreach (var parameter in parameters)
+                {
+                    length += parameter.Name.Length + " <>,".Length;
+                    if (parameter != parameters.Last())
+                        length += ",".Length;
+                }
+
+                if (max < length)
+                    max = length;
+            }
 
             Console.WriteLine();
             foreach (var cmd in _metaCommands.OrderBy(c => c.Name))
             {
-                var name = cmd.Name.PadRight(max);
-
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write("#" + name);
+                Console.Write("#" + cmd.Name);
+                
+                int paramLength = 0;
+                var parameters = cmd.Method.GetParameters();
+                foreach (var parameter in parameters)
+                {
+                    Console.Write(" <");
+                    Console.Write(parameter.Name);
+                    Console.Write(">");
+
+                    if (parameter != parameters.Last())
+                        Console.Write(",");
+
+                    paramLength += parameter.Name.Length + " <>".Length;
+                }
+
+                Console.Write(new string(' ', max - cmd.Name.Length - paramLength));
 
                 Console.ResetColor();
                 Console.Write(" :  ");
