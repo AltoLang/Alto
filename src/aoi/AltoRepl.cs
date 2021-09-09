@@ -18,6 +18,7 @@ namespace Alto
         private bool _showTree = false;
         private bool _showProgram = false;
         private bool _loadingSubmissions = false;
+        private static readonly Compilation emptyCompilation = new Compilation();
         private readonly Dictionary<VariableSymbol, object> _variables = new Dictionary<VariableSymbol, object>();
 
         public AltoRepl()
@@ -199,10 +200,8 @@ namespace Alto
         [MetaCommand("ls", description: "Lists all symbols.")]
         private void EvaluateListSymbols()
         {   
-            if (_previous == null)
-                return;
-            
-            var symbols = _previous.GetSymbols();
+            var compilation = _previous ?? emptyCompilation;
+            var symbols = compilation.GetSymbols().OrderBy(s => s.Kind).ThenBy(s => s.Name);
             foreach (var symbol in symbols)
             {
                 symbol.WriteTo(Console.Out);
@@ -213,10 +212,8 @@ namespace Alto
         [MetaCommand("dump", description: "Shows the bound tree representation of a given function.")]
         private void EvaluateDump(string functionName)
         {   
-            if (_previous == null)
-                return;
-
-            var symbol = _previous.GetSymbols().OfType<FunctionSymbol>().SingleOrDefault(s => s.Name == functionName);
+            var compilation = _previous ?? emptyCompilation;
+            var symbol = compilation.GetSymbols().OfType<FunctionSymbol>().SingleOrDefault(f => f.Name == functionName);
             if (symbol == null)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -225,7 +222,7 @@ namespace Alto
                 return;
             }
 
-            _previous.EmitTree(symbol, Console.Out);
+            compilation.EmitTree(symbol, Console.Out);
 
         }
 

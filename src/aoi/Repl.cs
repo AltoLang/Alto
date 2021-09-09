@@ -477,7 +477,7 @@ namespace Alto
             var parameters = cmd.Method.GetParameters();
             if (arguments.Count != parameters.Length)
             {
-                var names = string.Join(" ", parameters.Select(p => $"<{p.Name}>"));
+                var names = string.Join(", ", parameters.Select(p => $"<{p.Name}>"));
                 Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine($"Invalid argument count.");
                 Console.WriteLine($"Usage: #{cmd.Name} {names}");
@@ -485,7 +485,8 @@ namespace Alto
                 return;
             }
             
-            cmd.Method.Invoke(this, arguments.ToArray());
+            var instance = cmd.Method.IsStatic ? null : this;
+            cmd.Method.Invoke(instance, arguments.ToArray());
         }
 
         protected abstract void EvaluateSubmission(string text);

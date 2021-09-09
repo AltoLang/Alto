@@ -8,6 +8,7 @@ using System.Threading;
 using System.IO;
 using Alto.CodeAnalysis.Lowering;
 using Alto.CodeAnalysis.Symbols;
+using BindingFlags = System.Reflection.BindingFlags;
 
 namespace Alto.CodeAnalysis
 {
@@ -17,6 +18,10 @@ namespace Alto.CodeAnalysis
         private Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> _localFunctions = new Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>>();
 
         public Compilation(SyntaxTree coreSyntax, params SyntaxTree[] syntaxTrees) : this(null, coreSyntax, true, syntaxTrees)
+        {
+        }
+
+        public Compilation() : this(null, null, true)
         {
         }
 
@@ -120,11 +125,11 @@ namespace Alto.CodeAnalysis
         public void EmitTree(FunctionSymbol symbol, TextWriter writer)
         {
             var program = Binder.BindProgram(GlobalScope);
+            symbol.WriteTo(writer);
+            writer.Write(" ");
             if (!program.FunctionBodies.TryGetValue(symbol, out var body))
                 return;
             
-            symbol.WriteTo(writer);
-            writer.Write(" ");
             body.WriteTo(writer);
         }
 
@@ -135,6 +140,22 @@ namespace Alto.CodeAnalysis
 
             while (compilation != null)
             {
+                // Built-in functions
+                var bindingFlags = 
+                    BindingFlags.Static |
+                    BindingFlags.Public |
+                    BindingFlags.NonPublic;
+
+                var builtinFunctions = typeof(BuiltInFunctions)
+                    .GetFields(bindingFlags)
+                    .Where(fi => fi.FieldType == typeof(FunctionSymbol))
+                    .Select(fi => (FunctionSymbol)fi.GetValue(obj: null))
+                    .ToList();
+
+                foreach (var builtinFunction in builtinFunctions)
+                    if (seenNames.Add(builtinFunction.Name))
+                        yield return builtinFunction;
+                
                 foreach (var function in compilation.Functions)
                     if (seenNames.Add(function.Name))
                         yield return function;
