@@ -103,37 +103,31 @@ namespace Alto.CodeAnalysis.Binding
                                         statementBuilder.ToImmutable(), binder._importedTrees);
         }
 
-        public static BoundProgram BindProgram(BoundGlobalScope globalScope)
+        public static BoundProgram BindProgram(BoundProgram previous, BoundGlobalScope globalScope)
         {
             var parentScope = CreateParentScope(globalScope);
             var functionBodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>();
             var diagnostics = new DiagnosticBag();
 
-            var scope = globalScope;
-            while (scope != null)
+            foreach (var function in globalScope.Functions)
             {
-                foreach (var function in scope.Functions)
-                {
-                    // if we're getting 'missing import' errors, this is where we've gone wrong... in checkCallSiteTrees: true
-                    var binder = new Binder(parentScope, function, checkCallsiteTrees: true, globalScope.ImportedTrees);
+                // if we're getting 'missing import' errors, this is where we've gone wrong... in checkCallSiteTrees: true
+                var binder = new Binder(parentScope, function, checkCallsiteTrees: true, globalScope.ImportedTrees);
 
-                    var body = binder.BindStatement(function.Declaration.Body);
-                    var loweredBody = Lowerer.Lower(body);
+                var body = binder.BindStatement(function.Declaration.Body);
+                var loweredBody = Lowerer.Lower(body);
 
-                    if (function.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn(loweredBody))
-                        binder._diagnostics.ReportNotAllCodePathsReturn(function.Declaration.Identifier.Location, function.Name);
+                if (function.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn(loweredBody))
+                    binder._diagnostics.ReportNotAllCodePathsReturn(function.Declaration.Identifier.Location, function.Name);
 
-                    functionBodies.Add(function, loweredBody);
-                    diagnostics.AddRange(binder.Diagnostics);
-                }
-
-                scope = scope.Previous;
+                functionBodies.Add(function, loweredBody);
+                diagnostics.AddRange(binder.Diagnostics);
             }
             
             var statement = Lowerer.Lower(new BoundBlockStatement(globalScope.Statements));
             
-            var program = new BoundProgram(diagnostics, functionBodies.ToImmutable(), statement);
-            return program;
+            var program = new BoundProgram(previous, diagnostics, functionBodies.ToImmutable(), statement);
+            return program; 
         }
 
         private FunctionSymbol BindFunctionDeclaration(FunctionDeclarationSyntax syntax, SyntaxTree tree, bool declare = true)

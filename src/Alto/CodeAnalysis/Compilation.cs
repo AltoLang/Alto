@@ -77,7 +77,7 @@ namespace Alto.CodeAnalysis
             if (diagnostics.Any())
                 return new EvaluationResult(diagnostics, null);
 
-            var program = Binder.BindProgram(GlobalScope);
+            var program = GetProgram();
             var appPath = Environment.GetCommandLineArgs()[0];
             var appDir = Path.GetDirectoryName(appPath);
             var cfgPath = Path.Combine(appDir, "cfg.dot");
@@ -95,7 +95,7 @@ namespace Alto.CodeAnalysis
 
             var statement = GetStatement();
             var bodies = MergeLocalAndGlobalFunctions(program);
-            var evaluator = new Evaluator(bodies, statement, variables);
+            var evaluator = new Evaluator(program, variables);
             var value = evaluator.Evaluate();
 
             return new EvaluationResult(ImmutableArray<Diagnostic>.Empty, value);
@@ -103,8 +103,7 @@ namespace Alto.CodeAnalysis
         
         public void EmitTree(TextWriter writer)
         {
-            var program = Binder.BindProgram(GlobalScope);
-
+            var program = GetProgram();
             if (program.Statement.Statements.Any())
             {
                 program.Statement.WriteTo(writer);
@@ -124,7 +123,7 @@ namespace Alto.CodeAnalysis
 
         public void EmitTree(FunctionSymbol symbol, TextWriter writer)
         {
-            var program = Binder.BindProgram(GlobalScope);
+            var program = GetProgram();
             symbol.WriteTo(writer);
             writer.Write(" ");
             if (!program.FunctionBodies.TryGetValue(symbol, out var body))
@@ -166,6 +165,12 @@ namespace Alto.CodeAnalysis
                 
                 compilation = compilation.Previous;
             }
+        }
+
+        private BoundProgram GetProgram()
+        {
+            var previous = Previous == null ? null : Previous.GetProgram();
+            return Binder.BindProgram(previous, GlobalScope);
         }
 
         private BoundBlockStatement GetStatement()
