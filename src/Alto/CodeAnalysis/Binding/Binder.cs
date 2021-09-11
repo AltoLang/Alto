@@ -43,7 +43,7 @@ namespace Alto.CodeAnalysis.Binding
         }
 
         /// <summary>
-        /// When this is set to true, it'll check if all function call-sites are in the same tree and if not, it'll check if they're imported.
+        /// Gets the value that indicated whether to check function call-sites are in the same syntax tree or if they're imported.
         /// This is set to false in the interactive experience.
         /// </summary>
         private bool CheckCallsiteTrees { get; }
