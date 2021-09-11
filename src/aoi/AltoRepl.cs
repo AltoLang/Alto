@@ -95,7 +95,12 @@ namespace Alto
             _loadingSubmissions = false;
         }
 
-        private void ClearSubmissions() => Directory.Delete(GetSubmissionsDirectory(), recursive: true);
+        private void ClearSubmissions() 
+        {
+            var dir = GetSubmissionsDirectory();
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, recursive: true);
+        } 
 
         private void SaveSubmission(string text)
         {
