@@ -148,14 +148,14 @@ namespace Alto.CodeAnalysis
                     .Where(fi => fi.FieldType == typeof(FunctionSymbol))
                     .Select(fi => (FunctionSymbol)fi.GetValue(obj: null))
                     .ToList();
-
-                foreach (var builtinFunction in builtinFunctions)
-                    if (seenNames.Add(builtinFunction.Name))
-                        yield return builtinFunction;
                 
                 foreach (var function in compilation.Functions)
                     if (seenNames.Add(function.Name))
                         yield return function;
+
+                foreach (var builtinFunction in builtinFunctions)
+                    if (seenNames.Add(builtinFunction.Name))
+                        yield return builtinFunction;
                 
                 foreach (var variable in compilation.Variables)
                     if (seenNames.Add(variable.Name))
