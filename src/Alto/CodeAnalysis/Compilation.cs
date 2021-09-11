@@ -59,7 +59,7 @@ namespace Alto.CodeAnalysis
             {
                 if (_globalScope == null)
                 {
-                    var globalScope = Binder.BindGlobalScope(Previous?.GlobalScope, CoreSyntax, SyntaxTrees, CheckCallsiteTrees, out var localFunctions);
+                    var globalScope = Binder.BindGlobalScope(IsScript, Previous?.GlobalScope, CoreSyntax, SyntaxTrees, CheckCallsiteTrees, out var localFunctions);
                     _localFunctions = localFunctions;
                     Interlocked.CompareExchange(ref _globalScope, globalScope, null);
                 }
@@ -168,7 +168,7 @@ namespace Alto.CodeAnalysis
         private BoundProgram GetProgram()
         {
             var previous = Previous == null ? null : Previous.GetProgram();
-            return Binder.BindProgram(previous, GlobalScope);
+            return Binder.BindProgram(IsScript, previous, GlobalScope);
         }
 
         private BoundBlockStatement GetStatement()

@@ -12,6 +12,7 @@ namespace Alto.CodeAnalysis.Binding
     internal sealed class Binder
     {
         private readonly DiagnosticBag _diagnostics = new DiagnosticBag();
+        private readonly bool _isScript;
         private readonly FunctionSymbol _function;
         private Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)> _loopStack = new Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)>();
         private Dictionary<string, SyntaxTree> _syntaxTrees = new Dictionary<string, SyntaxTree>();
@@ -20,9 +21,10 @@ namespace Alto.CodeAnalysis.Binding
         private int _labelCount;
         private BoundScope _scope;
 
-        public Binder(BoundScope parent, FunctionSymbol function, bool checkCallsiteTrees = true)
+        public Binder(bool isScript, BoundScope parent, FunctionSymbol function, bool checkCallsiteTrees = true)
         {
             _scope = new BoundScope(parent);
+            _isScript = isScript;
             _function = function;
 
             CheckCallsiteTrees = checkCallsiteTrees;
@@ -34,9 +36,9 @@ namespace Alto.CodeAnalysis.Binding
             }
         }
 
-        private Binder(BoundScope parent, FunctionSymbol function, bool checkCallsiteTrees = true, 
+        private Binder(bool isScript, BoundScope parent, FunctionSymbol function, bool checkCallsiteTrees = true, 
                        Dictionary<SyntaxTree, IEnumerable<SyntaxTree>> importedTrees = null)
-            : this(parent, function, checkCallsiteTrees)
+            : this(isScript, parent, function, checkCallsiteTrees)
         {
                 if (importedTrees != null)
                     _importedTrees = importedTrees;
@@ -48,13 +50,14 @@ namespace Alto.CodeAnalysis.Binding
         /// </summary>
         private bool CheckCallsiteTrees { get; }
         public Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> LocalFunctions => _localFunctions;
+        public DiagnosticBag Diagnostics => _diagnostics;
 
-        public static BoundGlobalScope BindGlobalScope(BoundGlobalScope previous, SyntaxTree coreSyntax, 
+        public static BoundGlobalScope BindGlobalScope(bool isScript, BoundGlobalScope previous, SyntaxTree coreSyntax, 
                                                        ImmutableArray<SyntaxTree> syntaxTrees, bool checkCallsiteTrees,
                                                        out Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> localFunctions)
         {
             var parentScope = CreateParentScope(previous);
-            var binder = new Binder(parentScope, null, checkCallsiteTrees);
+            var binder = new Binder(isScript, parentScope, null, checkCallsiteTrees);
 
             { // add the core syntax tree to the syntax tree arr
                 var trees = syntaxTrees.ToList();
@@ -86,7 +89,7 @@ namespace Alto.CodeAnalysis.Binding
 
             foreach (var globalStatement in globalStatements)
             {
-                var st = binder.BindStatement(globalStatement.Statement);
+                var st = binder.BindGlobalStatement(globalStatement.Statement);
                 statementBuilder.Add(st);
             }
 
@@ -103,7 +106,7 @@ namespace Alto.CodeAnalysis.Binding
                                         statementBuilder.ToImmutable(), binder._importedTrees);
         }
 
-        public static BoundProgram BindProgram(BoundProgram previous, BoundGlobalScope globalScope)
+        public static BoundProgram BindProgram(bool isScript, BoundProgram previous, BoundGlobalScope globalScope)
         {
             var parentScope = CreateParentScope(globalScope);
             var functionBodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>();
@@ -112,9 +115,9 @@ namespace Alto.CodeAnalysis.Binding
             foreach (var function in globalScope.Functions)
             {
                 // if we're getting 'missing import' errors, this is where we've gone wrong... in checkCallSiteTrees: true
-                var binder = new Binder(parentScope, function, checkCallsiteTrees: true, globalScope.ImportedTrees);
+                var binder = new Binder(isScript, parentScope, function, checkCallsiteTrees: true, globalScope.ImportedTrees);
 
-                var body = binder.BindStatement(function.Declaration.Body);
+                var body = binder.BindGlobalStatement(function.Declaration.Body);
                 var loweredBody = Lowerer.Lower(body);
 
                 if (function.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn(loweredBody))
@@ -210,9 +213,32 @@ namespace Alto.CodeAnalysis.Binding
             return result;
         }
 
-        public DiagnosticBag Diagnostics => _diagnostics;
+        private BoundStatement BindGlobalStatement(StatementSyntax syntax)
+        {
+            return BindStatement(syntax, true);
+        }
 
-        private BoundStatement BindStatement(StatementSyntax syntax)
+        private BoundStatement BindStatement(StatementSyntax syntax, bool isGlobal = false)
+        {
+            var result = BindStatementInternal(syntax);
+            
+            if (!_isScript || !isGlobal)
+            {
+                if (result is BoundExpressionStatement e)
+                {
+                    var isAllowed = e.Expression.Kind == BoundNodeKind.ErrorExpression ||
+                                    e.Expression.Kind == BoundNodeKind.AssignmentExpression ||
+                                    e.Expression.Kind == BoundNodeKind.CallExpression;
+
+                    if (!isAllowed)
+                        _diagnostics.ReportInvalidExpressionStatement(syntax.Location);
+                }
+            }
+
+            return result;
+        }
+
+        private BoundStatement BindStatementInternal(StatementSyntax syntax)
         {
             switch (syntax.Kind)
             {
@@ -402,7 +428,7 @@ namespace Alto.CodeAnalysis.Binding
             {
                 var funcSymbol = BindFunctionDeclaration(function, syntax.SyntaxTree, declare: false);
 
-                Binder binder = new Binder(_scope, funcSymbol, CheckCallsiteTrees);
+                Binder binder = new Binder(false, _scope, funcSymbol, CheckCallsiteTrees);
 
                 // TODO: Also have to check for duplicate names
                 if (!LocalFunctionNameIsUnique(funcSymbol))

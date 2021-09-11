@@ -203,5 +203,11 @@ namespace Alto.CodeAnalysis
             var message = $"Cannot find file '{name}' to import.";
             Report(location, message);
         }
+
+        internal void ReportInvalidExpressionStatement(TextLocation location)
+        {
+            var message = $"Only assignment and call expressions can be used as a statement.";
+            Report(location, message);
+        }
     }
 }
