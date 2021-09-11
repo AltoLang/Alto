@@ -51,19 +51,19 @@ namespace Alto.CodeAnalysis.Syntax
         {
            var current = Current;
            _position++;
-           return current; 
+           return current;
         }
         
         private SyntaxToken MatchToken(SyntaxKind kind)
         {
             if (Current.Kind == kind)
-                return NextToken();
+                return NextToken(); 
 
             _diagnostics.ReportUnexpectedToken(Current.Location, Current.Kind, kind);
             return new SyntaxToken(_tree, kind, Current.Position, null, null);
         }
 
-        public CompilationUnitSyntax ParseCompilationUnit()
+        internal CompilationUnitSyntax ParseCompilationUnit()
         {
             var members =  ParseMembers();
             var endOfFileToken = MatchToken(SyntaxKind.EndOfFileToken);

@@ -17,22 +17,26 @@ namespace Alto.CodeAnalysis
         private BoundGlobalScope _globalScope;
         private Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> _localFunctions = new Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>>();
 
-        public Compilation(SyntaxTree coreSyntax, params SyntaxTree[] syntaxTrees) : this(null, coreSyntax, true, syntaxTrees)
+        private Compilation(bool isScript, Compilation previous, SyntaxTree coreSyntax, bool checkCallsiteTrees = true, params SyntaxTree[] syntaxTrees)
         {
-        }
-
-        public Compilation() : this(null, null, true)
-        {
-        }
-
-        private Compilation(Compilation previous, SyntaxTree coreSyntax, bool checkCallsiteTrees = true, params SyntaxTree[] syntaxTrees)
-        {
+            IsScript = isScript;
             Previous = previous;
             CoreSyntax = coreSyntax;
             CheckCallsiteTrees = checkCallsiteTrees;
             SyntaxTrees = syntaxTrees.ToImmutableArray();
         }
 
+        public static Compilation Create(SyntaxTree coreSyntax, params SyntaxTree[] syntaxTrees)
+        {
+            return new Compilation(isScript: false, previous: null, coreSyntax, checkCallsiteTrees: true, syntaxTrees);
+        }
+
+        public static Compilation CreateScript(Compilation previous, SyntaxTree coreSyntax, params SyntaxTree[] syntaxTrees)
+        {
+            return new Compilation(isScript: true, previous: previous, coreSyntax, checkCallsiteTrees: true, syntaxTrees);
+        }
+
+        public bool IsScript { get; }
 
         public Compilation Previous { get; }
         public bool CheckCallsiteTrees { get; }
@@ -62,12 +66,6 @@ namespace Alto.CodeAnalysis
 
                 return _globalScope;
             }
-        }
-
-        public Compilation ContinueWith(SyntaxTree syntaxTree)
-        {
-            var c = new Compilation(this, syntaxTree, false);
-            return c;
         }
 
         public EvaluationResult Evaluate(Dictionary<VariableSymbol, object> variables)

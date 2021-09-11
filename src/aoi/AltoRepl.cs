@@ -18,7 +18,7 @@ namespace Alto
         private bool _showTree = false;
         private bool _showProgram = false;
         private bool _loadingSubmissions = false;
-        private static readonly Compilation emptyCompilation = new Compilation();
+        private static readonly Compilation emptyCompilation = Compilation.CreateScript(null, null);
         private readonly Dictionary<VariableSymbol, object> _variables = new Dictionary<VariableSymbol, object>();
 
         public AltoRepl()
@@ -30,18 +30,7 @@ namespace Alto
         {
             var syntaxTree = SyntaxTree.Parse(text);
 
-            Compilation compilation = _previous == null
-                                    ? new Compilation(syntaxTree)
-                                    : _previous.ContinueWith(syntaxTree);
-
-            if (_previous == null)
-            {
-                compilation = new Compilation(syntaxTree);
-            }
-            else
-            {
-                compilation = _previous.ContinueWith(syntaxTree);
-            }
+            Compilation compilation = Compilation.CreateScript(_previous, syntaxTree);
 
             if (_showTree)
             {
@@ -191,10 +180,7 @@ namespace Alto
             EvaluateSubmission(txt);
 
             var tree = SyntaxTree.Load(path);
-            if (_previous == null)
-                _previous = new Compilation(tree);
-            else
-                _previous = _previous.ContinueWith(tree);
+            _previous = Compilation.CreateScript(_previous, tree);
         }
 
         [MetaCommand("ls", description: "Lists all symbols.")]

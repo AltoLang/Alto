@@ -12,7 +12,6 @@ namespace Alto.CodeAnalysis
         private readonly BoundProgram _program;
         private readonly Dictionary<VariableSymbol, object> _globals;
         private readonly Stack<Dictionary<VariableSymbol, object>> _locals = new Stack<Dictionary<VariableSymbol, object>>();
-        //public BoundBlockStatement _root { get; }
         private Random _random;
         private object _lastValue;
 
