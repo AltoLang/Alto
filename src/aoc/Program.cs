@@ -55,7 +55,7 @@ namespace Alto
             if (hasErrors)
                 return 1;
             
-            var compilation = new Compilation(coreSyntax, syntaxTrees.ToArray());
+            var compilation = Compilation.Create(coreSyntax, syntaxTrees.ToArray());
             var result = compilation.Evaluate(new Dictionary<VariableSymbol, object>());
 
             if (result.Diagnostics.Any())

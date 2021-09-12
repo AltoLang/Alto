@@ -8,26 +8,32 @@ namespace Alto.CodeAnalysis
 {
     internal sealed class Evaluator
     {
-        private readonly ImmutableDictionary<FunctionSymbol, BoundBlockStatement> _functionBodies;
+        private readonly Dictionary<FunctionSymbol, BoundBlockStatement> _functionBodies = new Dictionary<FunctionSymbol, BoundBlockStatement>();
+        private readonly BoundProgram _program;
         private readonly Dictionary<VariableSymbol, object> _globals;
         private readonly Stack<Dictionary<VariableSymbol, object>> _locals = new Stack<Dictionary<VariableSymbol, object>>();
-        public BoundBlockStatement _root { get; }
         private Random _random;
-
         private object _lastValue;
 
-        public Evaluator(ImmutableDictionary<FunctionSymbol, BoundBlockStatement> functionBodies, BoundBlockStatement root, Dictionary<VariableSymbol, object> variables)
+        public Evaluator(BoundProgram program, Dictionary<VariableSymbol, object> variables)
         {
-            _functionBodies = functionBodies;
-            _root = root;
+            _program = program;
             _globals = variables;
-            
             _locals.Push(new Dictionary<VariableSymbol, object>());
+
+            var p = program;
+            while (p != null)
+            {
+                foreach (var (function, body) in p.FunctionBodies)
+                    _functionBodies.Add(function, body);
+
+                p = p.Previous;
+            }
         }
+
         public object Evaluate()
         {
-            var body = _root;
-
+            var body = _program.Statement;
             return EvaluateStatement(body);
         }
 

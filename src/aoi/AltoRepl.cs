@@ -18,6 +18,7 @@ namespace Alto
         private bool _showTree = false;
         private bool _showProgram = false;
         private bool _loadingSubmissions = false;
+        private static readonly Compilation emptyCompilation = Compilation.CreateScript(null, null);
         private readonly Dictionary<VariableSymbol, object> _variables = new Dictionary<VariableSymbol, object>();
 
         public AltoRepl()
@@ -29,18 +30,7 @@ namespace Alto
         {
             var syntaxTree = SyntaxTree.Parse(text);
 
-            Compilation compilation = _previous == null
-                                    ? new Compilation(syntaxTree)
-                                    : _previous.ContinueWith(syntaxTree);
-
-            if (_previous == null)
-            {
-                compilation = new Compilation(syntaxTree);
-            }
-            else
-            {
-                compilation = _previous.ContinueWith(syntaxTree);
-            }
+            Compilation compilation = Compilation.CreateScript(_previous, syntaxTree);
 
             if (_showTree)
             {
@@ -105,7 +95,12 @@ namespace Alto
             _loadingSubmissions = false;
         }
 
-        private static void ClearSubmissions() => Directory.Delete(GetSubmissionsDirectory(), recursive: true);
+        private void ClearSubmissions() 
+        {
+            var dir = GetSubmissionsDirectory();
+            if (Directory.Exists(dir))
+                Directory.Delete(dir, recursive: true);
+        } 
 
         private void SaveSubmission(string text)
         {
@@ -120,7 +115,7 @@ namespace Alto
             File.WriteAllText(filename, text);
         }
 
-        private static string GetSubmissionsDirectory()
+        private string GetSubmissionsDirectory()
         {
             var localAppData = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var submissionFolder = Path.Combine(localAppData, "Alto", "Submissions");
@@ -190,19 +185,14 @@ namespace Alto
             EvaluateSubmission(txt);
 
             var tree = SyntaxTree.Load(path);
-            if (_previous == null)
-                _previous = new Compilation(tree);
-            else
-                _previous = _previous.ContinueWith(tree);
+            _previous = Compilation.CreateScript(_previous, tree);
         }
 
         [MetaCommand("ls", description: "Lists all symbols.")]
         private void EvaluateListSymbols()
-        {   
-            if (_previous == null)
-                return;
-            
-            var symbols = _previous.GetSymbols();
+        {
+            var compilation = _previous ?? emptyCompilation;
+            var symbols = compilation.GetSymbols().OrderBy(s => s.Kind).ThenBy(s => s.Name);
             foreach (var symbol in symbols)
             {
                 symbol.WriteTo(Console.Out);
@@ -213,10 +203,8 @@ namespace Alto
         [MetaCommand("dump", description: "Shows the bound tree representation of a given function.")]
         private void EvaluateDump(string functionName)
         {   
-            if (_previous == null)
-                return;
-
-            var symbol = _previous.GetSymbols().OfType<FunctionSymbol>().SingleOrDefault(s => s.Name == functionName);
+            var compilation = _previous ?? emptyCompilation;
+            var symbol = compilation.GetSymbols().OfType<FunctionSymbol>().SingleOrDefault(f => f.Name == functionName);
             if (symbol == null)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -225,7 +213,7 @@ namespace Alto
                 return;
             }
 
-            _previous.EmitTree(symbol, Console.Out);
+            compilation.EmitTree(symbol, Console.Out);
 
         }
 

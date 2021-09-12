@@ -55,7 +55,7 @@ namespace Alto
         {
             private readonly Action<string> _lineRenderer;
             private readonly ObservableCollection<string> _submissionDocument;
-            private readonly int _cursorTop;
+            private int _cursorTop;
             private int _renderedLineCount;
             private int _currentLineIndex;
             private int _currentCharacter;
@@ -82,15 +82,25 @@ namespace Alto
 
                 foreach (var line in _submissionDocument)
                 {
+                    if (_cursorTop + lineCount >= Console.WindowHeight)
+                    {
+                        Console.SetCursorPosition(0, Console.WindowHeight - 1);
+                        Console.WriteLine();
+                        if (_cursorTop > 0)
+                            _cursorTop--;
+                    }
+
                     Console.SetCursorPosition(0, _cursorTop + lineCount);
                     Console.ForegroundColor = ConsoleColor.Green;
+                    
                     if (lineCount == 0)
                         Console.Write("» ");
                     else
                         Console.Write("· ");
+
                     Console.ResetColor();
                     _lineRenderer(line);
-                    Console.WriteLine(new string(' ', Console.WindowWidth - line.Length));
+                    Console.Write(new string(' ', Console.WindowWidth - line.Length - 2));
                     lineCount++;
                 }
 
@@ -477,7 +487,7 @@ namespace Alto
             var parameters = cmd.Method.GetParameters();
             if (arguments.Count != parameters.Length)
             {
-                var names = string.Join(" ", parameters.Select(p => $"<{p.Name}>"));
+                var names = string.Join(", ", parameters.Select(p => $"<{p.Name}>"));
                 Console.ForegroundColor = ConsoleColor.DarkRed;
                 Console.WriteLine($"Invalid argument count.");
                 Console.WriteLine($"Usage: #{cmd.Name} {names}");
@@ -485,7 +495,8 @@ namespace Alto
                 return;
             }
             
-            cmd.Method.Invoke(this, arguments.ToArray());
+            var instance = cmd.Method.IsStatic ? null : this;
+            cmd.Method.Invoke(instance, arguments.ToArray());
         }
 
         protected abstract void EvaluateSubmission(string text);
@@ -522,15 +533,43 @@ namespace Alto
         [MetaCommand("help", description: "Shows the help menu.")]
         protected void EvaluateHelp()
         {
-            var max = _metaCommands.Max(c => c.Name.Length);
+            int max = 0;
+            foreach (var cmd in _metaCommands)
+            {
+                var length = cmd.Name.Length;
+                var parameters = cmd.Method.GetParameters();
+                foreach (var parameter in parameters)
+                {
+                    length += parameter.Name.Length + " <>,".Length;
+                    if (parameter != parameters.Last())
+                        length += ",".Length;
+                }
+
+                if (max < length)
+                    max = length;
+            }
 
             Console.WriteLine();
             foreach (var cmd in _metaCommands.OrderBy(c => c.Name))
             {
-                var name = cmd.Name.PadRight(max);
-
                 Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.Write("#" + name);
+                Console.Write("#" + cmd.Name);
+                
+                int paramLength = 0;
+                var parameters = cmd.Method.GetParameters();
+                foreach (var parameter in parameters)
+                {
+                    Console.Write(" <");
+                    Console.Write(parameter.Name);
+                    Console.Write(">");
+
+                    if (parameter != parameters.Last())
+                        Console.Write(",");
+
+                    paramLength += parameter.Name.Length + " <>".Length;
+                }
+
+                Console.Write(new string(' ', max - cmd.Name.Length - paramLength));
 
                 Console.ResetColor();
                 Console.Write(" :  ");
