@@ -16,6 +16,6 @@ namespace Alto.CodeAnalysis.Binding
         public BoundBlockStatement Statement { get; }
         public BoundProgram Previous { get; }
         public DiagnosticBag Diagnostics { get; }
-        public ImmutableDictionary<FunctionSymbol, BoundBlockStatement> FunctionBodies { get; }
+        public ImmutableDictionary<FunctionSymbol, BoundBlockStatement> FunctionBodies { get; internal set; }
     }
 }

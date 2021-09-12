@@ -92,7 +92,7 @@ namespace Alto.CodeAnalysis
                 return new EvaluationResult(program.Diagnostics.ToImmutableArray(), null);
 
             var statement = GetStatement();
-            var bodies = MergeLocalAndGlobalFunctions(program);
+            MergeLocalAndGlobalFunctions(program);
             var evaluator = new Evaluator(program, variables);
             var value = evaluator.Evaluate();
 
@@ -191,20 +191,20 @@ namespace Alto.CodeAnalysis
             }   
         }
 
-        private ImmutableDictionary<FunctionSymbol, BoundBlockStatement> MergeLocalAndGlobalFunctions(BoundProgram program)
+        private void MergeLocalAndGlobalFunctions(BoundProgram program)
         {
-            var functions = new Dictionary<FunctionSymbol, BoundBlockStatement>();
+            var functionBodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>();
 
             foreach (var func in program.FunctionBodies)
-                functions.Add(func.Key, func.Value);
+                functionBodies.Add(func.Key, func.Value);
 
             foreach (var localScope in _localFunctions)
             {
                 foreach (var function in localScope.Value)
-                    functions.Add(function.Item1, function.Item2);
+                    functionBodies.Add(function.Item1, function.Item2);
             }
 
-            return functions.ToImmutableDictionary();
+            program.FunctionBodies = functionBodies.ToImmutable();
         }
     }
 }

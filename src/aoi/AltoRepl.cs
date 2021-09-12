@@ -190,7 +190,7 @@ namespace Alto
 
         [MetaCommand("ls", description: "Lists all symbols.")]
         private void EvaluateListSymbols()
-        {   
+        {
             var compilation = _previous ?? emptyCompilation;
             var symbols = compilation.GetSymbols().OrderBy(s => s.Kind).ThenBy(s => s.Name);
             foreach (var symbol in symbols)

@@ -109,7 +109,7 @@ namespace Alto.CodeAnalysis.Binding
         public static BoundProgram BindProgram(bool isScript, BoundProgram previous, BoundGlobalScope globalScope)
         {
             var parentScope = CreateParentScope(globalScope);
-            var functionBodies = ImmutableDictionary.CreateBuilder<FunctionSymbol, BoundBlockStatement>();
+            var functionBodies = new Dictionary<FunctionSymbol, BoundBlockStatement>();
             var diagnostics = new DiagnosticBag();
 
             foreach (var function in globalScope.Functions)
@@ -128,8 +128,13 @@ namespace Alto.CodeAnalysis.Binding
             }
             
             var statement = Lowerer.Lower(new BoundBlockStatement(globalScope.Statements));
+
+            var builder = ImmutableList.CreateBuilder<int>();
+            builder.Add(13);
+            var i = builder.ToImmutableList();
+            i.Add(22);
             
-            var program = new BoundProgram(previous, diagnostics, functionBodies.ToImmutable(), statement);
+            var program = new BoundProgram(previous, diagnostics, functionBodies.ToImmutableDictionary(), statement);
             return program; 
         }
 
