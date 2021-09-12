@@ -67,15 +67,15 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("false ^ true", true)]
         [InlineData("true ^ false", true)]
         [InlineData("true ^ true", false)]
-        [InlineData("{ var a = 0 (a = 10) * (a * 2) }", 200)]
-        [InlineData("{ var a = 10 if a == 10 { a = a + 40} a }", 50)]
-        [InlineData("{ var a = 0 if a == 0 { a = a + 40} a }", 40)]
-        [InlineData("{ var a = true if true { a = false} a }", false)]
-        [InlineData("{ var a = 800 if a ~= 800 { a = 0} a }", 800)]
-        [InlineData("{var foo = false if foo {25 * 4} else {foo = !foo} foo }", true)]
-        [InlineData("{ var n = 0 var m = 10 while m ~= 0 { n = n + m m = m - 1 } n}", 55)]
-        [InlineData("{var result = 0 for i = 0 to 10 {result = result + i} result}", 55)]
-        [InlineData("{var result = 0 do {result = result + 1} while(result < 10) result }", 10)]
+        [InlineData("var a = 0 (a = 10) * (a * 2)", 200)]
+        [InlineData("var result = 0 { var a = 10 if a == 10 { a = a + 40} result = a } result", 50)]
+        [InlineData("var result = 0 { var a = 0 if a == 0 { a = a + 40} result = a } result", 40)]
+        [InlineData("var a = true { if true { a = false} } a", false)]
+        [InlineData("var result = 0 { var a = 800 if a ~= 800 { a = 0} result = a } result", 800)]
+        [InlineData("var foo = false { if foo {print(tostring(25 * 4))} else {foo = !foo} } foo", true)]
+        [InlineData("var n = 0 { var m = 10 while m ~= 0 { n = n + m m = m - 1 } } n", 55)]
+        [InlineData("var result = 0 { for i = 0 to 10 {result = result + i} } result", 55)]
+        [InlineData("var result = 0 { do {result = result + 1} while(result < 10) } result", 10)]
         [InlineData("\"foo\" + \"bar\"", "foobar")]
         [InlineData("\"foo\"", "foo")]
         [InlineData("\"foo\" == \"foo\"", true)]
@@ -86,8 +86,8 @@ namespace Alto.Tests.CodeAnalysis
         [InlineData("\"idk\" == \"test\"", false)]
         [InlineData("\"test\" ~= \"test\"", false)]
         [InlineData("\"test\" ~= \"idk\"", true)]
-        [InlineData("{ var i = 0 while i < 5 { i = i + 1 if i == 5 continue } i }", 5)]
-        [InlineData("{ var i = 0 do { i = i + 1 if i == 5 continue } while i < 5 i }", 5)]
+        [InlineData("var i = 0 { while i < 5 { i = i + 1 if i == 5 continue } } i", 5)]
+        [InlineData("var i = 0 { do { i = i + 1 if i == 5 continue } while i < 5 } i", 5)]
         [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add()", 15)]
         [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add(7)", 17)]
         [InlineData("function add(x : int = 5, y : int = 10) : int { return x + y } add(4, 2)", 6)]
@@ -298,7 +298,7 @@ namespace Alto.Tests.CodeAnalysis
         public void Evaluator_ForStatement_Reports_CannotConvert_UpperBound()
         {
             var text = @"
-                    {var result = 0 for i = 0 to true [{]result = result + i} result}
+                    var result = 0 { for i = 0 to true [{]result = result + i} } result
             ";
 
             var diagnostics = @"
