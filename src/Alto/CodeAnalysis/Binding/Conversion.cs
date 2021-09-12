@@ -26,7 +26,13 @@ namespace Alto.CodeAnalysis.Binding
             // identity
             if (from == to)
                 return Conversion.Identity;
+            
+            if (from != TypeSymbol.Void && to == TypeSymbol.Any)
+                return Conversion.Implicit;
 
+            if (from == TypeSymbol.Any && to != TypeSymbol.Void)
+                return Conversion.Implicit;
+            
             if (from == TypeSymbol.Bool || from == TypeSymbol.Int)
                 if (to == TypeSymbol.String)
                     return Conversion.Explicit;

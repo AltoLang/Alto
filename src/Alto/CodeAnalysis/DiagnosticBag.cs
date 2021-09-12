@@ -150,12 +150,6 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
-        public void ReportWrongArgumentType(TextLocation location, string funcName, string paramName, TypeSymbol paramType, TypeSymbol argumentType)
-        {
-            var message = $"Parameter '{paramName}' in '{funcName}' has to be of type '{paramType}' is of type '{argumentType}'.";
-            Report(location, message);
-        }
-
         public void ReportUndefinedType(TextLocation location, string type)
         {
             var message = $"Type '{type} is not defined in the current scope.'";

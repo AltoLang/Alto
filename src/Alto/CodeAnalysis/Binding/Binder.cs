@@ -686,18 +686,12 @@ namespace Alto.CodeAnalysis.Binding
                 return new BoundErrorExpression();
             }       
             
-            bool hasErrors = false;
             for (var i = 0; i < syntax.Arguments.Count; i++)
             {
+                var argumentLocation = syntax.Arguments[i].Location;
                 var parameter = function.Parameters[i];
                 var argument = boundArguments[i];
-
-                if (argument.Type != parameter.Type)
-                {
-                    hasErrors = true;
-                    if (argument.Type != TypeSymbol.Error)
-                        _diagnostics.ReportWrongArgumentType(syntax.Arguments[i].Location, function.Name, parameter.Name, parameter.Type, argument.Type);
-                }
+                boundArguments[i] = BindConversion(argument, parameter.Type, argumentLocation);
             }
 
             for (var i = syntax.Arguments.Count(); i < function.Parameters.Count(); i++)
@@ -710,9 +704,6 @@ namespace Alto.CodeAnalysis.Binding
                     boundArguments.Add(v);
                 }
             }
-
-            if (hasErrors)
-                return new BoundErrorExpression();
 
             return new BoundCallExpression(function, boundArguments.ToImmutable());
         }
@@ -776,6 +767,8 @@ namespace Alto.CodeAnalysis.Binding
         {
             switch (name)
             {
+                case "any":
+                    return TypeSymbol.Any;
                 case "bool":
                     return TypeSymbol.Bool;
                 case "string":
@@ -791,6 +784,8 @@ namespace Alto.CodeAnalysis.Binding
         {
             switch (name)
             {
+                case "toany":
+                    return TypeSymbol.Any;
                 case "tobool":
                     return TypeSymbol.Bool;
                 case "tostring":
