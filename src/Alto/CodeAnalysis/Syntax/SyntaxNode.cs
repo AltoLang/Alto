@@ -7,16 +7,30 @@ using Alto.CodeAnalysis.Text;
 
 namespace Alto.CodeAnalysis.Syntax
 {
+    /// <summary>
+    /// Represents a node in the syntax tree.
+    /// </summary>
     public abstract class SyntaxNode
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SyntaxNode"/> class.
+        /// </summary>
+        /// <param name="syntaxTree"> the parent syntax tree. </param>
         public SyntaxNode(SyntaxTree syntaxTree)
         {
             SyntaxTree = syntaxTree;
         }
-
+        
         public abstract SyntaxKind Kind {get;}
+
+        /// <summary>
+        /// Gets the tree that the node is a part of.
+        /// </summary>
         public SyntaxTree SyntaxTree { get; }
         
+        /// <summary>
+        /// Gets or sets the node's position in the code being processed.
+        /// </summary>
         public virtual TextSpan Span
         {
             get
@@ -27,8 +41,14 @@ namespace Alto.CodeAnalysis.Syntax
             }
         }
 
+        /// <summary>
+        /// Gets the location of the node which also contains a information about what source the node is in.
+        /// </summary>
         public TextLocation Location => new TextLocation(SyntaxTree.Text, Span);
-
+        
+        /// <summary>
+        /// Gets all child nodes of this node.
+        ///
         public IEnumerable<SyntaxNode> GetChildren()
         {
             var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -56,6 +76,9 @@ namespace Alto.CodeAnalysis.Syntax
             }
         }
 
+        /// <summary>
+        /// Gets the last child token.
+        /// </summary>
         public SyntaxToken GetLastToken()
         {
             if (this is SyntaxToken token)
@@ -64,6 +87,9 @@ namespace Alto.CodeAnalysis.Syntax
             return GetChildren().Last().GetLastToken();
         }
 
+        /// <sumary>
+        /// Writes the node into a text writer as a part of a syntax tree.
+        /// </summary>
         public void WriteTo(TextWriter writer)
         {
             PrettyPrint(writer, this);
