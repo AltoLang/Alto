@@ -4,8 +4,17 @@ using System.Linq;
 
 namespace Alto.CodeAnalysis.Syntax
 {
+    /// <summary>
+    /// Contains definitions for methods used for getting operator precedences.
+    /// And converting <see cref="SyntaxToken"/> to text and vise versa.
+    /// This class cannot be inherited.
+    /// </summary>
     public static class SyntaxFacts
     {
+        /// <summary>
+        /// Gets the precedence of a given operator in a valid binary expression.
+        /// </summary>
+        /// <returns>The precedence of the operator.</returns>
         public static int GetBinaryOperatorPrecedence(this SyntaxKind kind)
         {
             switch (kind)
@@ -40,6 +49,11 @@ namespace Alto.CodeAnalysis.Syntax
                     return 0;
             }
         }
+
+        /// <summary>
+        /// Gets the precedence of a given operator in a valid unary expression.
+        /// </summary>
+        /// <returns>The precedence of the operator.</returns>
         public static int GetUnaryOperatorPrecedence(this SyntaxKind kind)
         {
             switch (kind)
@@ -55,6 +69,10 @@ namespace Alto.CodeAnalysis.Syntax
             }
         }
 
+        /// <summary>
+        /// Gets the <see cred="SyntaxKind"/> for the given keyword text.
+        /// </summary>
+        /// <param name="text">The keyword.</param>
         public static SyntaxKind GetKeywordKind(string text)
         {
             switch (text)
@@ -94,6 +112,10 @@ namespace Alto.CodeAnalysis.Syntax
             }
         }
 
+        /// <summary>
+        /// Gets the text for a given <see cref="SyntaxKind"/>.
+        /// </summary>
+        /// <param name="kind"></param>
         public static string GetText(SyntaxKind kind)
         {
             switch (kind)
@@ -185,6 +207,9 @@ namespace Alto.CodeAnalysis.Syntax
             }
         }
 
+        /// <summary>
+        /// Gets the syntax kinds of all unary operators.
+        /// </summary>
         public static IEnumerable<SyntaxKind> GetUnaryOperatorKinds()
         {
             var kinds = (SyntaxKind[]) Enum.GetValues(typeof(SyntaxKind));
@@ -195,6 +220,9 @@ namespace Alto.CodeAnalysis.Syntax
             }
         }
 
+        /// <summary>
+        /// Gets the syntax kinds of all binary operators.
+        /// </summary>
         public static IEnumerable<SyntaxKind> GetBinaryOperatorKinds()
         {
             var kinds = (SyntaxKind[]) Enum.GetValues(typeof(SyntaxKind));
