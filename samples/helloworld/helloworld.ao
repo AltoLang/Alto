@@ -1,4 +1,6 @@
 import getName
 
-var name = getName()
-print("Hello, " + name + "!")
+function main() {
+    var name = getName()
+    print("Hello, " + name + "!")
+}
