@@ -93,16 +93,64 @@ namespace Alto.CodeAnalysis.Binding
                 statementBuilder.Add(st);
             }
 
-            var functions = binder._scope.GetDeclaredFunctions();
-            var variables = binder._scope.GetDeclaredVariables();
+            var firstGlobalStatementPerSyntaxTree = syntaxTrees.Select(t => t.Root.Members.OfType<GlobalStatementSyntax>().FirstOrDefault())
+                                                               .Where(s => s != null)
+                                                               .ToArray();
 
+            if (firstGlobalStatementPerSyntaxTree.Length > 1)
+            {
+                foreach (var globalStatement in firstGlobalStatementPerSyntaxTree)
+                    binder.Diagnostics.ReportOnlyOneFileCanContainGlobalStatements(globalStatement.Location);
+            }
+            
+            var functions = binder._scope.GetDeclaredFunctions();
+
+            FunctionSymbol mainFunction;
+            FunctionSymbol scriptFunction;
+
+            if (isScript)
+            {
+                mainFunction = null;
+                if (globalStatements.Any())
+                    scriptFunction = new FunctionSymbol("$eval", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.Any);
+                else
+                    scriptFunction = null;
+            }
+            else
+            {
+                mainFunction = functions.FirstOrDefault(f => f.Name == "main");
+                scriptFunction = null;
+
+                if (mainFunction != null)
+                {
+                    if (mainFunction.Type != TypeSymbol.Void || mainFunction.Parameters.Any())
+                        binder.Diagnostics.ReportMainIncorrectSignature(mainFunction.Declaration.Identifier.Location);
+                }
+
+                if (globalStatements.Any())
+                {   
+                    if (mainFunction != null)
+                    {
+                        binder.Diagnostics.ReportCannotMixMainFunctionAndGlobalStatements(mainFunction.Declaration.Identifier.Location);
+
+                        foreach (var globalStatement in globalStatements)
+                            binder.Diagnostics.ReportCannotMixMainFunctionAndGlobalStatements(globalStatement.Location);
+                    }
+                    else
+                    {
+                        mainFunction = new FunctionSymbol("main", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.Void);
+                    }
+                }
+            }
+            
+            var variables = binder._scope.GetDeclaredVariables();
             var diagnostics = binder.Diagnostics.ToImmutableArray();
             
             if (previous != null)
                 diagnostics = diagnostics.InsertRange(0, previous.Diagnostics);
 
             localFunctions = binder._localFunctions;
-            return new BoundGlobalScope(previous, diagnostics, functions, variables, 
+            return new BoundGlobalScope(previous, diagnostics, mainFunction, scriptFunction, functions, variables, 
                                         statementBuilder.ToImmutable(), binder._importedTrees);
         }
 
@@ -127,14 +175,30 @@ namespace Alto.CodeAnalysis.Binding
                 diagnostics.AddRange(binder.Diagnostics);
             }
             
-            var statement = Lowerer.Lower(new BoundBlockStatement(globalScope.Statements));
-
-            var builder = ImmutableList.CreateBuilder<int>();
-            builder.Add(13);
-            var i = builder.ToImmutableList();
-            i.Add(22);
             
-            var program = new BoundProgram(previous, diagnostics, functionBodies.ToImmutableDictionary(), statement);
+            if (globalScope.MainFunction != null && globalScope.Statements.Any())
+            {
+                var body = Lowerer.Lower(new BoundBlockStatement(globalScope.Statements));
+                functionBodies.Add(globalScope.MainFunction, body);
+            }
+            else if (globalScope.ScriptFunction != null)
+            {
+                var statements = globalScope.Statements;
+                if (statements.Length == 1 && statements[0] is BoundExpressionStatement ex && ex.Expression.Type != TypeSymbol.Void)
+                {
+                    statements = statements.SetItem(0, new BoundReturnStatement(ex.Expression));
+                }
+                else
+                {
+                    var nullValue = new BoundLiteralExpression("");
+                    statements = statements.Add(new BoundReturnStatement(nullValue));
+                }
+
+                var body = Lowerer.Lower(new BoundBlockStatement(statements));
+                functionBodies.Add(globalScope.ScriptFunction, body);
+            }
+
+            var program = new BoundProgram(previous, diagnostics, globalScope.MainFunction, globalScope.ScriptFunction, functionBodies.ToImmutableDictionary());
             return program; 
         }
 

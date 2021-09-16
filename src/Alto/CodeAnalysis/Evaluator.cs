@@ -33,7 +33,11 @@ namespace Alto.CodeAnalysis
 
         public object Evaluate()
         {
-            var body = _program.Statement;
+            var rootFunction = _program.MainFunction ?? _program.ScriptFunction;
+            if (rootFunction == null)
+                return null;
+
+            var body = _functionBodies[rootFunction];
             return EvaluateStatement(body);
         }
 
