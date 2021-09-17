@@ -85,14 +85,6 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             var globalStatements = syntaxTrees.SelectMany(t => t.Root.Members).OfType<GlobalStatementSyntax>();
-            var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
-
-            foreach (var globalStatement in globalStatements)
-            {
-                var st = binder.BindGlobalStatement(globalStatement.Statement);
-                statementBuilder.Add(st);
-            }
-
             var firstGlobalStatementPerSyntaxTree = syntaxTrees.Select(t => t.Root.Members.OfType<GlobalStatementSyntax>().FirstOrDefault())
                                                                .Where(s => s != null)
                                                                .ToArray();
@@ -142,10 +134,26 @@ namespace Alto.CodeAnalysis.Binding
                     }
                 }
             }
+
+            var diagnostics = binder.Diagnostics.ToImmutableArray();
+
+            var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
+            var globalStatementFunction = mainFunction ?? scriptFunction;
+            if (globalStatementFunction != null)
+            {
+                var statementBinder = new Binder(isScript, parentScope, globalStatementFunction, checkCallsiteTrees);
+
+                foreach (var globalStatement in globalStatements)
+                {
+                    var st = statementBinder.BindGlobalStatement(globalStatement.Statement);
+                    statementBuilder.Add(st);
+                }
+
+                diagnostics.AddRange(statementBinder.Diagnostics);
+            }
             
             var variables = binder._scope.GetDeclaredVariables();
-            var diagnostics = binder.Diagnostics.ToImmutableArray();
-            
+
             if (previous != null)
                 diagnostics = diagnostics.InsertRange(0, previous.Diagnostics);
 
@@ -188,7 +196,7 @@ namespace Alto.CodeAnalysis.Binding
                 {
                     statements = statements.SetItem(0, new BoundReturnStatement(ex.Expression));
                 }
-                else
+                else if (statements.Any() && statements.Last().Kind != BoundNodeKind.ReturnStatement)
                 {
                     var nullValue = new BoundLiteralExpression("");
                     statements = statements.Add(new BoundReturnStatement(nullValue));
