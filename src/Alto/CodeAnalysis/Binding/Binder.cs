@@ -135,7 +135,7 @@ namespace Alto.CodeAnalysis.Binding
                 }
             }
 
-            var diagnostics = binder.Diagnostics.ToImmutableArray();
+            var diagnostics = binder.Diagnostics.ToList();
 
             var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
             var globalStatementFunction = mainFunction ?? scriptFunction;
@@ -155,10 +155,10 @@ namespace Alto.CodeAnalysis.Binding
             var variables = binder._scope.GetDeclaredVariables();
 
             if (previous != null)
-                diagnostics = diagnostics.InsertRange(0, previous.Diagnostics);
+                diagnostics.InsertRange(0, previous.Diagnostics);
 
             localFunctions = binder._localFunctions;
-            return new BoundGlobalScope(previous, diagnostics, mainFunction, scriptFunction, functions, variables, 
+            return new BoundGlobalScope(previous, diagnostics.ToImmutableArray(), mainFunction, scriptFunction, functions, variables, 
                                         statementBuilder.ToImmutable(), binder._importedTrees);
         }
 
