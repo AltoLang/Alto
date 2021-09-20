@@ -8,7 +8,6 @@ using Alto.CodeAnalysis.Symbols;
 
 namespace Alto.Tests.CodeAnalysis
 {
-
     public class EvaluatorTests
     {
         [Theory]

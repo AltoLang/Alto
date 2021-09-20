@@ -891,11 +891,6 @@ namespace Alto.CodeAnalysis.Binding
             var symbol = _scope.TryLookupSymbol(name);
             if (symbol == null)
             {
-                
-            }
-
-            if (symbol == null)
-            {
                 var scope = _scope;
                 while (scope != null)
                 {
