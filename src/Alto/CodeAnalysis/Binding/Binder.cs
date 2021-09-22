@@ -145,7 +145,7 @@ namespace Alto.CodeAnalysis.Binding
 
                 foreach (var globalStatement in globalStatements)
                 {
-                    var st = statementBinder.BindGlobalStatement(globalStatement.Statement);
+                    var st = binder.BindGlobalStatement(globalStatement.Statement);
                     statementBuilder.Add(st);
                 }
 
@@ -882,6 +882,9 @@ namespace Alto.CodeAnalysis.Binding
 
         private bool IsImported(SyntaxTree currentTree, SyntaxTree tree) 
         {   
+            if (currentTree == tree)
+                return true;
+            
             if (!_importedTrees.ContainsKey(currentTree))
                 return false;
             
@@ -897,11 +900,6 @@ namespace Alto.CodeAnalysis.Binding
         {
             // search through local functions
             var symbol = _scope.TryLookupSymbol(name);
-            if (symbol == null)
-            {
-                
-            }
-
             if (symbol == null)
             {
                 var scope = _scope;
