@@ -89,6 +89,13 @@ namespace Alto.CodeAnalysis.Binding
                                                                .Where(s => s != null)
                                                                .ToArray();
 
+            var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
+            foreach (var globalStatement in globalStatements)
+            {
+                var st = binder.BindGlobalStatement(globalStatement.Statement);
+                statementBuilder.Add(st);
+            }
+
             if (firstGlobalStatementPerSyntaxTree.Length > 1)
             {
                 foreach (var globalStatement in firstGlobalStatementPerSyntaxTree)
@@ -135,28 +142,16 @@ namespace Alto.CodeAnalysis.Binding
                 }
             }
 
-            var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
-            var globalStatementFunction = mainFunction ?? scriptFunction;
-            if (globalStatementFunction != null)
-            {
-                var statementBinder = new Binder(isScript, parentScope, globalStatementFunction, checkCallsiteTrees);
 
-                foreach (var globalStatement in globalStatements)
-                {
-                    var st = binder.BindGlobalStatement(globalStatement.Statement);
-                    statementBuilder.Add(st);
-                }
-            }
-
-            var diagnostics = binder.Diagnostics.ToList();
+            var diagnostics = binder.Diagnostics.ToImmutableArray();
             
             var variables = binder._scope.GetDeclaredVariables();
 
             if (previous != null)
-                diagnostics.InsertRange(0, previous.Diagnostics);
+                diagnostics = diagnostics.InsertRange(0, previous.Diagnostics);
 
             localFunctions = binder._localFunctions;
-            return new BoundGlobalScope(previous, diagnostics.ToImmutableArray(), mainFunction, scriptFunction, functions, variables, 
+            return new BoundGlobalScope(previous, diagnostics, mainFunction, scriptFunction, functions, variables, 
                                         statementBuilder.ToImmutable(), binder._importedTrees);
         }
 
@@ -205,7 +200,7 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             var program = new BoundProgram(previous, diagnostics, globalScope.MainFunction, globalScope.ScriptFunction, functionBodies.ToImmutableDictionary());
-            return program; 
+            return program;
         }
 
         private FunctionSymbol BindFunctionDeclaration(FunctionDeclarationSyntax syntax, SyntaxTree tree, bool declare = true)
