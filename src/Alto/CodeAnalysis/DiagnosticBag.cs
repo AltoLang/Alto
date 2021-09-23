@@ -186,12 +186,6 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
-        public void ReportUnexpectedReturn(TextLocation location)
-        {
-            var message = "Unexpected return statement. Return statements are only allowed insite functions.";
-            Report(location, message);
-        }
-
         public void ReportUnexpectedReturnExpression(TextLocation location, TypeSymbol type, string functionName)
         {
             var message = $"The function '{functionName}' expects a return value of type 'void', got an expression of type '{type}'.";
