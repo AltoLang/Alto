@@ -37,10 +37,11 @@ namespace Alto.CodeAnalysis
         }
 
         public bool IsScript { get; }
-
         public Compilation Previous { get; }
         public bool CheckCallsiteTrees { get; }
         public ImmutableArray<SyntaxTree> SyntaxTrees { get; }
+        public FunctionSymbol MainFunction => GlobalScope.MainFunction;
+        public FunctionSymbol ScriptFunction => GlobalScope.ScriptFunction;
         public ImmutableArray<FunctionSymbol> Functions => GlobalScope.Functions;
         public ImmutableArray<VariableSymbol> Variables => GlobalScope.Variables;
         public SyntaxTree CoreSyntax { get; }
@@ -76,17 +77,17 @@ namespace Alto.CodeAnalysis
                 return new EvaluationResult(diagnostics, null);
 
             var program = GetProgram();
-            var appPath = Environment.GetCommandLineArgs()[0];
-            var appDir = Path.GetDirectoryName(appPath);
-            var cfgPath = Path.Combine(appDir, "cfg.dot");
+            // var appPath = Environment.GetCommandLineArgs()[0];
+            // var appDir = Path.GetDirectoryName(appPath);
+            // var cfgPath = Path.Combine(appDir, "cfg.dot");
 
-            var cfgStatement = !program.Statement.Statements.Any() && program.FunctionBodies.Any() 
-                               ? program.FunctionBodies.Last().Value 
-                               : program.Statement;
+            // var cfgStatement = !program.Statement.Statements.Any() && program.FunctionBodies.Any() 
+            //                    ? program.FunctionBodies.Last().Value 
+            //                    : program.Statement;
 
-            var cfg = ControlFlowGraph.Create(cfgStatement);
-            using (var writer = new StreamWriter(cfgPath))
-                cfg.WriteTo(writer);
+            // var cfg = ControlFlowGraph.Create(cfgStatement);
+            // using (var writer = new StreamWriter(cfgPath))
+            //     cfg.WriteTo(writer);
 
             if (program.Diagnostics.Any())
                 return new EvaluationResult(program.Diagnostics.ToImmutableArray(), null);
@@ -102,21 +103,11 @@ namespace Alto.CodeAnalysis
         public void EmitTree(TextWriter writer)
         {
             var program = GetProgram();
-            if (program.Statement.Statements.Any())
-            {
-                program.Statement.WriteTo(writer);
-            }
-            else
-            {
-                foreach (var functionBody in program.FunctionBodies)
-                {
-                    if (!GlobalScope.Functions.Contains(functionBody.Key))
-                        continue;
 
-                    functionBody.Key.WriteTo(writer);
-                    functionBody.Value.WriteTo(writer);
-                }
-            }
+            if (GlobalScope.MainFunction != null)
+                EmitTree(GlobalScope.MainFunction, writer);
+            else if (GlobalScope.ScriptFunction != null)
+                EmitTree(GlobalScope.ScriptFunction, writer);
         }
 
         public void EmitTree(FunctionSymbol symbol, TextWriter writer)

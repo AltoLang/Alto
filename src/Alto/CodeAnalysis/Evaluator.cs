@@ -33,7 +33,11 @@ namespace Alto.CodeAnalysis
 
         public object Evaluate()
         {
-            var body = _program.Statement;
+            var rootFunction = _program.MainFunction ?? _program.ScriptFunction;
+            if (rootFunction == null)
+                return null;
+
+            var body = _functionBodies[rootFunction];
             return EvaluateStatement(body);
         }
 
@@ -274,7 +278,9 @@ namespace Alto.CodeAnalysis
         {
             var value = EvaluateExpression(node.Expression);
 
-            if (node.Type == TypeSymbol.Bool)
+            if (node.Type == TypeSymbol.Any)
+                return value;
+            else if (node.Type == TypeSymbol.Bool)
                 return Convert.ToBoolean(value);
             else if (node.Type == TypeSymbol.Int)
                 return Convert.ToInt32(value);

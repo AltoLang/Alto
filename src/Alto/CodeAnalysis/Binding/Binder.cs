@@ -85,24 +85,73 @@ namespace Alto.CodeAnalysis.Binding
             }
 
             var globalStatements = syntaxTrees.SelectMany(t => t.Root.Members).OfType<GlobalStatementSyntax>();
-            var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
+            var firstGlobalStatementPerSyntaxTree = syntaxTrees.Select(t => t.Root.Members.OfType<GlobalStatementSyntax>().FirstOrDefault())
+                                                               .Where(s => s != null)
+                                                               .ToArray();
 
+            var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
             foreach (var globalStatement in globalStatements)
             {
                 var st = binder.BindGlobalStatement(globalStatement.Statement);
                 statementBuilder.Add(st);
             }
 
+            if (firstGlobalStatementPerSyntaxTree.Length > 1)
+            {
+                foreach (var globalStatement in firstGlobalStatementPerSyntaxTree)
+                    binder.Diagnostics.ReportOnlyOneFileCanContainGlobalStatements(globalStatement.Location);
+            }
+            
             var functions = binder._scope.GetDeclaredFunctions();
-            var variables = binder._scope.GetDeclaredVariables();
+
+            FunctionSymbol mainFunction;
+            FunctionSymbol scriptFunction;
+
+            if (isScript)
+            {
+                mainFunction = null;
+                if (globalStatements.Any())
+                    scriptFunction = new FunctionSymbol("$eval", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.Any);
+                else
+                    scriptFunction = null;
+            }
+            else
+            {
+                mainFunction = functions.FirstOrDefault(f => f.Name == "main");
+                scriptFunction = null;
+
+                if (mainFunction != null)
+                {
+                    if (mainFunction.Type != TypeSymbol.Void || mainFunction.Parameters.Any())
+                        binder.Diagnostics.ReportMainIncorrectSignature(mainFunction.Declaration.Identifier.Location);
+                }
+
+                if (globalStatements.Any())
+                {   
+                    if (mainFunction != null)
+                    {
+                        binder.Diagnostics.ReportCannotMixMainFunctionAndGlobalStatements(mainFunction.Declaration.Identifier.Location);
+
+                        foreach (var globalStatement in globalStatements)
+                            binder.Diagnostics.ReportCannotMixMainFunctionAndGlobalStatements(globalStatement.Location);
+                    }
+                    else
+                    {
+                        mainFunction = new FunctionSymbol("main", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.Void);
+                    }
+                }
+            }
+
 
             var diagnostics = binder.Diagnostics.ToImmutableArray();
             
+            var variables = binder._scope.GetDeclaredVariables();
+
             if (previous != null)
                 diagnostics = diagnostics.InsertRange(0, previous.Diagnostics);
 
             localFunctions = binder._localFunctions;
-            return new BoundGlobalScope(previous, diagnostics, functions, variables, 
+            return new BoundGlobalScope(previous, diagnostics, mainFunction, scriptFunction, functions, variables, 
                                         statementBuilder.ToImmutable(), binder._importedTrees);
         }
 
@@ -127,15 +176,31 @@ namespace Alto.CodeAnalysis.Binding
                 diagnostics.AddRange(binder.Diagnostics);
             }
             
-            var statement = Lowerer.Lower(new BoundBlockStatement(globalScope.Statements));
-
-            var builder = ImmutableList.CreateBuilder<int>();
-            builder.Add(13);
-            var i = builder.ToImmutableList();
-            i.Add(22);
             
-            var program = new BoundProgram(previous, diagnostics, functionBodies.ToImmutableDictionary(), statement);
-            return program; 
+            if (globalScope.MainFunction != null && globalScope.Statements.Any())
+            {
+                var body = Lowerer.Lower(new BoundBlockStatement(globalScope.Statements));
+                functionBodies.Add(globalScope.MainFunction, body);
+            }
+            else if (globalScope.ScriptFunction != null)
+            {
+                var statements = globalScope.Statements;
+                if (statements.Length == 1 && statements[0] is BoundExpressionStatement ex && ex.Expression.Type != TypeSymbol.Void)
+                {
+                    statements = statements.SetItem(0, new BoundReturnStatement(ex.Expression));
+                }
+                else if (statements.Any() && statements.Last().Kind != BoundNodeKind.ReturnStatement)
+                {
+                    var nullValue = new BoundLiteralExpression("");
+                    statements = statements.Add(new BoundReturnStatement(nullValue));
+                }
+
+                var body = Lowerer.Lower(new BoundBlockStatement(statements));
+                functionBodies.Add(globalScope.ScriptFunction, body);
+            }
+
+            var program = new BoundProgram(previous, diagnostics, globalScope.MainFunction, globalScope.ScriptFunction, functionBodies.ToImmutableDictionary());
+            return program;
         }
 
         private FunctionSymbol BindFunctionDeclaration(FunctionDeclarationSyntax syntax, SyntaxTree tree, bool declare = true)
@@ -371,7 +436,17 @@ namespace Alto.CodeAnalysis.Binding
 
             if (_function == null)
             {
-                _diagnostics.ReportUnexpectedReturn(syntax.Keyword.Location);
+                if (_isScript)
+                {
+                    // Allow for "blank" returns
+                    if (expression == null)
+                        expression = new BoundLiteralExpression("");
+                }
+                else if (expression != null)
+                {
+                    // Main is always of type void
+                    _diagnostics.ReportUnexpectedReturnExpression(syntax.ReturnExpression.Location, _function.Type, _function.Name);
+                }
             }
             else
             {
@@ -686,18 +761,12 @@ namespace Alto.CodeAnalysis.Binding
                 return new BoundErrorExpression();
             }       
             
-            bool hasErrors = false;
             for (var i = 0; i < syntax.Arguments.Count; i++)
             {
+                var argumentLocation = syntax.Arguments[i].Location;
                 var parameter = function.Parameters[i];
                 var argument = boundArguments[i];
-
-                if (argument.Type != parameter.Type)
-                {
-                    hasErrors = true;
-                    if (argument.Type != TypeSymbol.Error)
-                        _diagnostics.ReportWrongArgumentType(syntax.Arguments[i].Location, function.Name, parameter.Name, parameter.Type, argument.Type);
-                }
+                boundArguments[i] = BindConversion(argument, parameter.Type, argumentLocation);
             }
 
             for (var i = syntax.Arguments.Count(); i < function.Parameters.Count(); i++)
@@ -710,9 +779,6 @@ namespace Alto.CodeAnalysis.Binding
                     boundArguments.Add(v);
                 }
             }
-
-            if (hasErrors)
-                return new BoundErrorExpression();
 
             return new BoundCallExpression(function, boundArguments.ToImmutable());
         }
@@ -776,6 +842,8 @@ namespace Alto.CodeAnalysis.Binding
         {
             switch (name)
             {
+                case "any":
+                    return TypeSymbol.Any;
                 case "bool":
                     return TypeSymbol.Bool;
                 case "string":
@@ -791,6 +859,8 @@ namespace Alto.CodeAnalysis.Binding
         {
             switch (name)
             {
+                case "toany":
+                    return TypeSymbol.Any;
                 case "tobool":
                     return TypeSymbol.Bool;
                 case "tostring":
@@ -815,6 +885,9 @@ namespace Alto.CodeAnalysis.Binding
 
         private bool IsImported(SyntaxTree currentTree, SyntaxTree tree) 
         {   
+            if (currentTree == tree)
+                return true;
+            
             if (!_importedTrees.ContainsKey(currentTree))
                 return false;
             
@@ -830,11 +903,6 @@ namespace Alto.CodeAnalysis.Binding
         {
             // search through local functions
             var symbol = _scope.TryLookupSymbol(name);
-            if (symbol == null)
-            {
-                
-            }
-
             if (symbol == null)
             {
                 var scope = _scope;

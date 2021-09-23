@@ -60,13 +60,13 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
-        internal void ReportParameterAlreadyDeclared(string name, TextLocation location)
+        public void ReportParameterAlreadyDeclared(string name, TextLocation location)
         {
             var message = $"A parameter with name '{name}' is already defined.";
             Report(location, message);
         }
 
-        internal void ReportOptionalParametersMustAppearLast(TextLocation location)
+        public void ReportOptionalParametersMustAppearLast(TextLocation location)
         {
             var message = $"Optional parameters must appear after required parameters.";
             Report(location, message);
@@ -84,7 +84,7 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
-        internal void ReportNotAllCodePathsReturn(TextLocation location, string name)
+        public void ReportNotAllCodePathsReturn(TextLocation location, string name)
         {
             var message = $"Function '{name}' doesn't return on all code paths.";
             Report(location, message);
@@ -96,7 +96,7 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
-        internal void ReportCannotImplicitlyConvert(TextLocation location, TypeSymbol fromType, TypeSymbol targetType)
+        public void ReportCannotImplicitlyConvert(TextLocation location, TypeSymbol fromType, TypeSymbol targetType)
         {
             var message = $"Cannot implicitly convert type '{fromType.ToString()}' to type '{targetType.ToString()}'. It is an explicit conversion, are you missing a cast?";
             Report(location, message);
@@ -108,13 +108,13 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
-        internal void ReportUndefinedVariable(TextLocation location, string name)
+        public void ReportUndefinedVariable(TextLocation location, string name)
         {
             var message = $"Variable '{name}' is not defined in the current scope.";
             Report(location, message);
         }
 
-        internal void ReportNotAVariable(TextLocation location, string name)
+        public void ReportNotAVariable(TextLocation location, string name)
         {
             var message = $"'{name}' is not a variable therefore, it cannot be used like one.";
             Report(location, message);
@@ -126,13 +126,31 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
+        public void ReportOnlyOneFileCanContainGlobalStatements(TextLocation location)
+        {
+            var message = $"At most one file can contain global statements.";
+            Report(location, message);
+        }
+
+        public void ReportMainIncorrectSignature(TextLocation location)
+        {
+            var message = $"Main function must be of type void and have no parameters.";
+            Report(location, message);
+        }
+
+        public void ReportCannotMixMainFunctionAndGlobalStatements(TextLocation location)
+        {
+            var message = $"Cannot declare a main function when global statements are used. ";
+            Report(location, message);
+        }
+
         public void ReportUndefinedFunction(TextLocation location, string name)
         {
             var message = $"Function '{name}' is not defined in the current scope.";
             Report(location, message);
         }
 
-        internal void ReportNotAFunction(TextLocation location, string name)
+        public void ReportNotAFunction(TextLocation location, string name)
         {
             var message = $"'{name}' is not a function therefore, it cannot be used like one.";
             Report(location, message);
@@ -147,12 +165,6 @@ namespace Alto.CodeAnalysis
             else
                 message = $"Function '{name}' expects {expectedCount} arguments, got {count}.";
             
-            Report(location, message);
-        }
-
-        public void ReportWrongArgumentType(TextLocation location, string funcName, string paramName, TypeSymbol paramType, TypeSymbol argumentType)
-        {
-            var message = $"Parameter '{paramName}' in '{funcName}' has to be of type '{paramType}' is of type '{argumentType}'.";
             Report(location, message);
         }
 
@@ -174,12 +186,6 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
-        public void ReportUnexpectedReturn(TextLocation location)
-        {
-            var message = "Unexpected return statement. Return statements are only allowed insite functions.";
-            Report(location, message);
-        }
-
         public void ReportUnexpectedReturnExpression(TextLocation location, TypeSymbol type, string functionName)
         {
             var message = $"The function '{functionName}' expects a return value of type 'void', got an expression of type '{type}'.";
@@ -192,19 +198,19 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
-        internal void MissingImportStatement(TextLocation location, string name, string fileName)
+        public void MissingImportStatement(TextLocation location, string name, string fileName)
         {
             var message = $"You are referencing the object '{name}', but it's contained in a different file '{fileName}', are you missing an import statement?";
             Report(location, message);
         }
 
-        internal void ReportCannotFindImportFile(TextLocation location, string name)
+        public void ReportCannotFindImportFile(TextLocation location, string name)
         {
             var message = $"Cannot find file '{name}' to import.";
             Report(location, message);
         }
 
-        internal void ReportInvalidExpressionStatement(TextLocation location)
+        public void ReportInvalidExpressionStatement(TextLocation location)
         {
             var message = $"Only assignment and call expressions can be used as a statement.";
             Report(location, message);

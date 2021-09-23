@@ -5,17 +5,19 @@ namespace Alto.CodeAnalysis.Binding
 {
     internal sealed class BoundProgram
     {
-        public BoundProgram(BoundProgram previous, DiagnosticBag diagnostics, ImmutableDictionary<FunctionSymbol, BoundBlockStatement> functionBodies, BoundBlockStatement statement)
+        public BoundProgram(BoundProgram previous, DiagnosticBag diagnostics, FunctionSymbol mainFunction, FunctionSymbol scriptFunction, ImmutableDictionary<FunctionSymbol, BoundBlockStatement> functionBodies)
         {
-            Statement = statement;
             Previous = previous;
             Diagnostics = diagnostics;
+            MainFunction = mainFunction;
+            ScriptFunction = scriptFunction;
             FunctionBodies = functionBodies;
         }
 
-        public BoundBlockStatement Statement { get; }
         public BoundProgram Previous { get; }
         public DiagnosticBag Diagnostics { get; }
+        public FunctionSymbol MainFunction { get; }
+        public FunctionSymbol ScriptFunction { get; }
         public ImmutableDictionary<FunctionSymbol, BoundBlockStatement> FunctionBodies { get; internal set; }
     }
 }
