@@ -135,8 +135,6 @@ namespace Alto.CodeAnalysis.Binding
                 }
             }
 
-            var diagnostics = binder.Diagnostics.ToList();
-
             var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
             var globalStatementFunction = mainFunction ?? scriptFunction;
             if (globalStatementFunction != null)
@@ -148,9 +146,9 @@ namespace Alto.CodeAnalysis.Binding
                     var st = binder.BindGlobalStatement(globalStatement.Statement);
                     statementBuilder.Add(st);
                 }
-
-                diagnostics.AddRange(statementBinder.Diagnostics);
             }
+
+            var diagnostics = binder.Diagnostics.ToList();
             
             var variables = binder._scope.GetDeclaredVariables();
 
@@ -443,7 +441,17 @@ namespace Alto.CodeAnalysis.Binding
 
             if (_function == null)
             {
-                _diagnostics.ReportUnexpectedReturn(syntax.Keyword.Location);
+                if (_isScript)
+                {
+                    // Allow for "blank" returns
+                    if (expression == null)
+                        expression = new BoundLiteralExpression("");
+                }
+                else if (expression != null)
+                {
+                    // Main is always of type void
+                    _diagnostics.ReportUnexpectedReturnExpression(syntax.ReturnExpression.Location, _function.Type, _function.Name);
+                }
             }
             else
             {
