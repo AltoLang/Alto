@@ -7,6 +7,7 @@ namespace Alto.CodeAnalysis.Syntax
         EndOfFileToken,
         WhitespaceToken,
         IdentifierToken,
+        PreprocessorDirective,
 
         //Data-Type Tokens
         NumberToken,
@@ -38,6 +39,7 @@ namespace Alto.CodeAnalysis.Syntax
         HatToken,
         CommaToken,
         ColonToken,
+        HashtagToken,
         QuestionMarkToken,
 
         //Keywords
@@ -85,6 +87,6 @@ namespace Alto.CodeAnalysis.Syntax
         BreakStatement,
         ContinueStatement,
         ReturnStatement,
-        ImportStatement,
+        ImportStatement
     }
 }

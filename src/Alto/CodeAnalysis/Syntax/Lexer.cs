@@ -1,6 +1,8 @@
 using System.Text;
+using System.Collections.Generic;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Text;
+using System;
 
 namespace Alto.CodeAnalysis.Syntax
 {
@@ -181,8 +183,10 @@ namespace Alto.CodeAnalysis.Syntax
                 case '"':
                     ReadString();
                     break;
+                case '#':
+                    ReadDirective();
+                    break;
                 default:
-
                     if (char.IsDigit(Current))
                     {
                         ReadNumberToken();
@@ -256,6 +260,12 @@ namespace Alto.CodeAnalysis.Syntax
 
             _kind = SyntaxKind.StringToken;
             _value = sb.ToString();
+        }
+
+        private void ReadDirective()
+        {
+            _position++;
+            _kind = SyntaxKind.HashtagToken;
         }
 
         private void ReadWhiteSpaceToken()

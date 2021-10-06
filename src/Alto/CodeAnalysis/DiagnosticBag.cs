@@ -215,5 +215,11 @@ namespace Alto.CodeAnalysis
             var message = $"Only assignment and call expressions can be used as a statement.";
             Report(location, message);
         }
+
+        public void ReportDirectiveExpected(TextLocation location)
+        {
+            var message = $"Preporcessor directive exprected.";
+            Report(location, message);
+        }
     }
 }
