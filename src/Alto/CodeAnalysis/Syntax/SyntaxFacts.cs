@@ -87,8 +87,6 @@ namespace Alto.CodeAnalysis.Syntax
                     return SyntaxKind.ContinueKeyword;
                 case "return":
                     return SyntaxKind.ReturnKeyword;
-                case "import":
-                    return SyntaxKind.ImportKeyword;
                 default:
                     return SyntaxKind.IdentifierToken;
             }
@@ -172,8 +170,6 @@ namespace Alto.CodeAnalysis.Syntax
                     return "continue";
                 case SyntaxKind.ReturnKeyword:
                     return "return";
-                case SyntaxKind.ImportKeyword:
-                    return "import";
                 case SyntaxKind.CommaToken:
                     return ",";
                 case SyntaxKind.ColonToken:

@@ -508,20 +508,6 @@ namespace Alto.Tests.CodeAnalysis
         }
 
         [Fact]
-        public void Evaluator_ImportFileMissing()
-        {
-            var text = @"
-                [import myFoobarLib]
-            ";
-
-            var diagnostics = @"
-                Cannot find file 'myFoobarLib' to import.
-            ";
-
-            AssertDiagnostics(text, diagnostics);
-        }
-
-        [Fact]
         public void Evaluator_NestedFunctions1()
         {
             var text = @"

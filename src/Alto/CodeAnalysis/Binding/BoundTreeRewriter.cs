@@ -31,8 +31,6 @@ namespace Alto.CodeAnalysis.Binding
                     return RewriteReturnStatement((BoundReturnStatement)node);
                 case BoundNodeKind.LabelStatement:
                     return RewriteLabelStatement((BoundLabelStatement)node);
-                case BoundNodeKind.ImportStatement:
-                    return RewriteImportStatement((BoundImportStatement)node);
                 default:
                     throw new Exception($"Unexpected node: {node.Kind}.");
             }
@@ -170,11 +168,6 @@ namespace Alto.CodeAnalysis.Binding
                 return node;
 
             return new BoundReturnStatement(returnExpression);
-        }
-
-        private BoundStatement RewriteImportStatement(BoundImportStatement node)
-        {
-            return node;
         }
 
         protected virtual BoundStatement RewriteLabelStatement(BoundLabelStatement node)

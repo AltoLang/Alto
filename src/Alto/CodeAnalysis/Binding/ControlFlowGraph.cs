@@ -89,7 +89,6 @@ namespace Alto.CodeAnalysis.Binding
                     {
                         case BoundNodeKind.ExpressionStatement:
                         case BoundNodeKind.VariableDeclaration:
-                        case BoundNodeKind.ImportStatement:
                             _statements.Add(statement);
                             break;
                         case BoundNodeKind.GotoStatement:
@@ -188,7 +187,6 @@ namespace Alto.CodeAnalysis.Binding
                     case BoundNodeKind.ExpressionStatement:
                     case BoundNodeKind.LabelStatement:
                     case BoundNodeKind.VariableDeclaration:
-                    case BoundNodeKind.ImportStatement:
                         if (isLast)
                             Connect(current, next);
                         break;

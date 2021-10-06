@@ -202,8 +202,6 @@ namespace Alto.CodeAnalysis.Syntax
                     return ParseContinueStatement();
                 case SyntaxKind.ReturnKeyword:
                     return ParseReturnStatement();
-                case SyntaxKind.ImportKeyword:
-                    return ParseImportStatement();
                 default:
                     return ParseExpressionStatement();
             }
@@ -311,14 +309,6 @@ namespace Alto.CodeAnalysis.Syntax
             var expression =  sameLine ? ParseExpression() : null;
 
             return new ReturnStatementSyntax(_tree, keyword, expression);
-        }
-
-        private StatementSyntax ParseImportStatement()
-        {
-            var keyword = MatchToken(SyntaxKind.ImportKeyword);
-            var identifier = MatchToken(SyntaxKind.IdentifierToken);
-
-            return new ImportStatementSyntax(_tree, keyword, identifier);
         }
 
         private BlockStatementSyntax ParseBlockStatement()
