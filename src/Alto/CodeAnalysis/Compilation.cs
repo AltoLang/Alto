@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Alto.CodeAnalysis.Binding;
 using Alto.CodeAnalysis.Syntax;
+using Alto.CodeAnalysis.Syntax.Preprocessing;
 using System.Collections.Immutable;
 using System.Threading;
 using System.IO;
@@ -17,23 +18,22 @@ namespace Alto.CodeAnalysis
         private BoundGlobalScope _globalScope;
         private Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> _localFunctions = new Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>>();
 
-        private Compilation(bool isScript, Compilation previous, SyntaxTree coreSyntax, bool checkCallsiteTrees = true, params SyntaxTree[] syntaxTrees)
+        private Compilation(bool isScript, Compilation previous, bool checkCallsiteTrees = true, params SyntaxTree[] syntaxTrees)
         {
             IsScript = isScript;
             Previous = previous;
-            CoreSyntax = coreSyntax;
             CheckCallsiteTrees = checkCallsiteTrees;
             SyntaxTrees = syntaxTrees.ToImmutableArray();
         }
 
-        public static Compilation Create(SyntaxTree coreSyntax, params SyntaxTree[] syntaxTrees)
+        public static Compilation Create(params SyntaxTree[] syntaxTrees)
         {
-            return new Compilation(isScript: false, previous: null, coreSyntax, checkCallsiteTrees: true, syntaxTrees);
+            return new Compilation(isScript: false, previous: null, checkCallsiteTrees: true, syntaxTrees);
         }
 
-        public static Compilation CreateScript(Compilation previous, SyntaxTree coreSyntax, params SyntaxTree[] syntaxTrees)
+        public static Compilation CreateScript(Compilation previous, params SyntaxTree[] syntaxTrees)
         {
-            return new Compilation(isScript: true, previous: previous, coreSyntax, checkCallsiteTrees: true, syntaxTrees);
+            return new Compilation(isScript: true, previous: previous, checkCallsiteTrees: true, syntaxTrees);
         }
 
         public bool IsScript { get; }
@@ -44,7 +44,6 @@ namespace Alto.CodeAnalysis
         public FunctionSymbol ScriptFunction => GlobalScope.ScriptFunction;
         public ImmutableArray<FunctionSymbol> Functions => GlobalScope.Functions;
         public ImmutableArray<VariableSymbol> Variables => GlobalScope.Variables;
-        public SyntaxTree CoreSyntax { get; }
 
         internal Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> LocalFunctions 
         {
@@ -60,7 +59,7 @@ namespace Alto.CodeAnalysis
             {
                 if (_globalScope == null)
                 {
-                    var globalScope = Binder.BindGlobalScope(IsScript, Previous?.GlobalScope, CoreSyntax, SyntaxTrees, CheckCallsiteTrees, out var localFunctions);
+                    var globalScope = Binder.BindGlobalScope(IsScript, Previous?.GlobalScope, SyntaxTrees, CheckCallsiteTrees, out var localFunctions);
                     _localFunctions = localFunctions;
                     Interlocked.CompareExchange(ref _globalScope, globalScope, null);
                 }
@@ -72,7 +71,7 @@ namespace Alto.CodeAnalysis
         public EvaluationResult Evaluate(Dictionary<VariableSymbol, object> variables)
         {
             var selectDiagnostics = SyntaxTrees.SelectMany(tree => tree.Diagnostics);
-            var diagnostics = selectDiagnostics.Concat(GlobalScope.Diagnostics).Concat(CoreSyntax.Diagnostics).ToImmutableArray();
+            var diagnostics = selectDiagnostics.Concat(GlobalScope.Diagnostics).ToImmutableArray();
             if (diagnostics.Any())
                 return new EvaluationResult(diagnostics, null);
 
@@ -102,8 +101,6 @@ namespace Alto.CodeAnalysis
         
         public void EmitTree(TextWriter writer)
         {
-            var program = GetProgram();
-
             if (GlobalScope.MainFunction != null)
                 EmitTree(GlobalScope.MainFunction, writer);
             else if (GlobalScope.ScriptFunction != null)

@@ -15,7 +15,7 @@ namespace Alto
         {
             if (args.Length == 0)
             {   
-                Console.Error.WriteLine("Usage: ac <source-path>");
+                Console.Error.WriteLine("Usage: ac <source-directory>");
                 return 1;
             }
             else if (args.Length > 1)
@@ -27,20 +27,15 @@ namespace Alto
             var p = args[0];
             bool hasErrors = false;
 
-            if (!File.Exists(p))
+            if (!Directory.Exists(p))
             {
-                Console.Error.WriteLine("ERR: One or more files do not exist.");
+                Console.Error.WriteLine("ERR: One or more directories do not exist.");
                  hasErrors = true;
             }
 
-            var coreSyntax = SyntaxTree.Load(p);
-
-            var otherPaths = GetSourcePath(p);
-            foreach (var path in otherPaths)
-                Console.WriteLine("other path: " + path);
-
+            var sourcePaths = GetSourcePath(p);
             var syntaxTrees = new List<SyntaxTree>();
-            foreach (var path in otherPaths)
+            foreach (var path in sourcePaths)
             {
                 if (!File.Exists(path))
                 {
@@ -48,6 +43,7 @@ namespace Alto
                     hasErrors = true;
                     continue;
                 }
+
                 var syntaxTree = SyntaxTree.Load(path);
                 syntaxTrees.Add(syntaxTree);
             }
@@ -55,7 +51,7 @@ namespace Alto
             if (hasErrors)
                 return 1;
             
-            var compilation = Compilation.Create(coreSyntax, syntaxTrees.ToArray());
+            var compilation = Compilation.Create(syntaxTrees.ToArray());
             var result = compilation.Evaluate(new Dictionary<VariableSymbol, object>());
 
             if (result.Diagnostics.Any())
@@ -77,10 +73,9 @@ namespace Alto
         private static IEnumerable<string> GetSourcePath(string path)
         {
             var result = new List<string>();
-            var dirPath = Directory.GetParent(path).FullName;
 
-            if (Directory.Exists(dirPath))
-                foreach (var file in Directory.EnumerateFiles(dirPath, "*.ao", SearchOption.AllDirectories))
+            if (Directory.Exists(path))
+                foreach (var file in Directory.EnumerateFiles(path, "*.ao", SearchOption.AllDirectories))
                     if (file != path)
                         result.Add(file);
         

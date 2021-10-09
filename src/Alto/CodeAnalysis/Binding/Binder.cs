@@ -36,18 +36,12 @@ namespace Alto.CodeAnalysis.Binding
         public Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> LocalFunctions => _localFunctions;
         public DiagnosticBag Diagnostics => _diagnostics;
 
-        public static BoundGlobalScope BindGlobalScope(bool isScript, BoundGlobalScope previous, SyntaxTree coreSyntax, 
+        public static BoundGlobalScope BindGlobalScope(bool isScript, BoundGlobalScope previous, 
                                                        ImmutableArray<SyntaxTree> syntaxTrees, bool checkCallsiteTrees,
                                                        out Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> localFunctions)
         {
             var parentScope = CreateParentScope(previous);
             var binder = new Binder(isScript, parentScope, null);
-
-            { // add the core syntax tree to the syntax tree arr
-                var trees = syntaxTrees.ToList();
-                trees.Add(coreSyntax);
-                syntaxTrees = trees.ToImmutableArray();
-            }
 
             foreach (var tree in syntaxTrees) 
             {
@@ -59,8 +53,8 @@ namespace Alto.CodeAnalysis.Binding
             var globalStatements = syntaxTrees.SelectMany(t => t.Root.Members).OfType<GlobalStatementSyntax>();
             var firstGlobalStatementPerSyntaxTree = syntaxTrees.Select(t => t.Root.Members.OfType<GlobalStatementSyntax>().FirstOrDefault())
                                                                .Where(s => s != null)
-                                                               .ToArray();
-
+                                                               .ToArray();  
+    
             var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
             foreach (var globalStatement in globalStatements)
             {
@@ -74,7 +68,7 @@ namespace Alto.CodeAnalysis.Binding
                     binder.Diagnostics.ReportOnlyOneFileCanContainGlobalStatements(globalStatement.Location);
             }
             
-            var functions = binder._scope.GetDeclaredFunctions();
+            var functions = binder._scope.GetDeclaredFunctions(); 
 
             FunctionSymbol mainFunction;
             FunctionSymbol scriptFunction;
@@ -82,7 +76,7 @@ namespace Alto.CodeAnalysis.Binding
             if (isScript)
             {
                 mainFunction = null;
-                if (globalStatements.Any())
+                if (globalStatements.Any()) 
                     scriptFunction = new FunctionSymbol("$eval", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.Any);
                 else
                     scriptFunction = null;
