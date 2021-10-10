@@ -68,7 +68,12 @@ namespace Alto.CodeAnalysis.Syntax
         {
             var members = ParseMembers();
             var endOfFileToken = MatchToken(SyntaxKind.EndOfFileToken);
-            return new CompilationUnitSyntax(_tree, members, endOfFileToken);
+
+            Preprocessor preprocessor = new Preprocessor(members);
+            var processedMembers = preprocessor.Process();
+            _diagnostics.AddRange(preprocessor.Diagnostics);
+
+            return new CompilationUnitSyntax(_tree, processedMembers, endOfFileToken);
         }
 
         private ImmutableArray<MemberSyntax> ParseMembers()
@@ -515,7 +520,11 @@ namespace Alto.CodeAnalysis.Syntax
                 identifiers.Add(identifier);
             }
 
-            return new PreprocessorDirective(hashtag.SyntaxTree, identifiers);
+            var kind = Preprocessor.ClassifyDirective(identifiers.FirstOrDefault().Text);
+            if (kind == null)
+                _diagnostics.ReportDirectiveExpected(identifiers.FirstOrDefault().Location);
+
+            return new PreprocessorDirective(hashtag.SyntaxTree, kind, identifiers);
         } 
     }
 }
