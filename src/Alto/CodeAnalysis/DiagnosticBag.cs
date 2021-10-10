@@ -14,6 +14,7 @@ namespace Alto.CodeAnalysis
         public IEnumerator<Diagnostic> GetEnumerator() => _diagnostics.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        
         public void AddRange(DiagnosticBag diagnostics)
         {
             _diagnostics.AddRange(diagnostics._diagnostics);
@@ -207,6 +208,12 @@ namespace Alto.CodeAnalysis
         public void ReportDirectiveExpected(TextLocation location)
         {
             var message = $"Preporcessor directive exprected.";
+            Report(location, message);
+        }
+
+        public void ReportCannotFindFile(TextLocation location, string fileName)
+        {
+            var message = $"Cannot find file {fileName}.";
             Report(location, message);
         }
     }

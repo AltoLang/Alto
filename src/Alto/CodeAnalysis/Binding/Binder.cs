@@ -6,6 +6,8 @@ using System.Collections.Immutable;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Text;
 using Alto.CodeAnalysis.Lowering;
+using Alto.CodeAnalysis.Syntax.Preprocessing;
+using System.IO;
 
 namespace Alto.CodeAnalysis.Binding
 {
@@ -45,6 +47,19 @@ namespace Alto.CodeAnalysis.Binding
 
             foreach (var tree in syntaxTrees) 
             {
+                // process usings here
+                var usingDirectives = tree.Root.Members.OfType<PreprocessorDirective>().Where(d => d.DirectiveKind == DirectiveKind.UsingDirective);
+                foreach (var @using in usingDirectives)
+                {
+                    var name = @using.Identifiers[1].Text;
+                    Console.WriteLine("n: " + name);
+                    var treesToUse = syntaxTrees.Where(t => Path.GetFileNameWithoutExtension(t.Text.FileName) == name);
+                    if (treesToUse.Count() == 0)
+                        binder._diagnostics.ReportCannotFindFile(@using.Identifiers[1].Location, name);
+                    
+                    tree._importedTrees.Add(treesToUse.FirstOrDefault());
+                }
+
                 var functionDeclarations = tree.Root.Members.OfType<FunctionDeclarationSyntax>();
                 foreach (var function in functionDeclarations)
                     binder.BindFunctionDeclaration(function, tree);
@@ -645,8 +660,13 @@ namespace Alto.CodeAnalysis.Binding
                 boundArguments.Add(boundArgument);
             }
 
-            var symbol = LookupFunction(syntax.Identifier.Text);
+            Symbol symbol = LookupFunction(syntax.Identifier.Text);
             if (symbol == null)
+            {
+                _diagnostics.ReportUndefinedFunction(syntax.Identifier.Location, syntax.Identifier.Text);
+                return new BoundErrorExpression();
+            }
+            else if (!SymbolIsImported(syntax.SyntaxTree, symbol))
             {
                 _diagnostics.ReportUndefinedFunction(syntax.Identifier.Location, syntax.Identifier.Text);
                 return new BoundErrorExpression();
@@ -710,7 +730,7 @@ namespace Alto.CodeAnalysis.Binding
 
             return new BoundCallExpression(function, boundArguments.ToImmutable());
         }
-    
+
         private BoundExpression BindParenthesizedExpression(ParenthesizedExpressionSyntax syntax)
         {
             return BindExpression(syntax.Expression);
@@ -719,8 +739,9 @@ namespace Alto.CodeAnalysis.Binding
         private VariableSymbol BindVariableDeclaration(SyntaxToken identifier, bool isReadOnly, TypeSymbol type)
         {
             var name = identifier.Text ?? "?";
+            var tree = identifier.SyntaxTree;
             var declare = !identifier.IsMissing;
-            var variable = _function == null ? (VariableSymbol) new GlobalVariableSymbol(name, isReadOnly, type) : (VariableSymbol) new LocalVariableSymbol(name, isReadOnly, type);
+            var variable = _function == null ? (VariableSymbol) new GlobalVariableSymbol(name, isReadOnly, type, tree) : (VariableSymbol) new LocalVariableSymbol(name, isReadOnly, type, tree);
 
             if (declare && !_scope.TryDeclareVariable(variable))
                 _diagnostics.ReportSymbolAlreadyDeclared(identifier.Location, name);
@@ -846,6 +867,23 @@ namespace Alto.CodeAnalysis.Binding
                         return false;
 
             return true;
+        }
+
+        /// <summary>
+        /// Checks whether a symbol is imported.
+        /// </summary>
+        /// <param name="tree">The tree we're checking from.</param>
+        /// <param name="symbol">The symbol to check if it's imported.</param>
+        private bool SymbolIsImported(SyntaxTree tree, Symbol symbol)
+        {
+            // If symbol.Tree is null, it means it's a built-in function
+            if (symbol.Tree == null ||
+                tree._importedTrees.Contains(symbol.Tree))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

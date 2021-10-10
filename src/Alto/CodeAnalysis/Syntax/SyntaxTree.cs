@@ -11,6 +11,7 @@ namespace Alto.CodeAnalysis.Syntax
     public sealed class SyntaxTree
     {
         private delegate void ParseHandler(SyntaxTree tree, out CompilationUnitSyntax root, out ImmutableArray<Diagnostic> diagnostics);
+        public List<SyntaxTree> _importedTrees = new List<SyntaxTree>();
 
         private SyntaxTree(SourceText text, ParseHandler handler)
         {
