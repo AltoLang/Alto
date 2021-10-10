@@ -8,19 +8,17 @@ namespace Alto.CodeAnalysis.Symbols
     {
         public FunctionSymbol(string name, ImmutableArray<ParameterSymbol> parameters, TypeSymbol type, 
                               FunctionDeclarationSyntax declaration = null, SyntaxTree tree = null)
-            : base(name)
+            : base(name, tree)
         {
             Parameters = parameters;
             Type = type;
             Declaration = declaration;
-            Tree = tree;
         }
 
         public override SymbolKind Kind => SymbolKind.Function;
         public ImmutableArray<ParameterSymbol> Parameters { get; }
         public TypeSymbol Type { get; }
         public FunctionDeclarationSyntax Declaration { get; }
-        public SyntaxTree Tree { get; }
 
         public override string ToString() => Name;
     }

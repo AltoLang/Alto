@@ -1,9 +1,11 @@
+using Alto.CodeAnalysis.Syntax;
+
 namespace Alto.CodeAnalysis.Symbols
 {
     public class GlobalVariableSymbol : VariableSymbol
     {
-        internal GlobalVariableSymbol(string name, bool isReadOnly, TypeSymbol type)
-            : base(name, isReadOnly, type)
+        internal GlobalVariableSymbol(string name, bool isReadOnly, TypeSymbol type, SyntaxTree tree = null)
+            : base(name, isReadOnly, type, tree)
         {
         }
 
