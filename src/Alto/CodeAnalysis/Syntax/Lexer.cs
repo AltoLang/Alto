@@ -20,6 +20,7 @@ namespace Alto.CodeAnalysis.Syntax
         private int _start;
         private SyntaxKind _kind;
         private object _value;
+        private bool _isReadingDirective;
         
         public Lexer(SyntaxTree tree)
         {
@@ -49,6 +50,11 @@ namespace Alto.CodeAnalysis.Syntax
             {
                 case '\0':
                     _kind = SyntaxKind.EndOfFileToken;
+                    break;
+                case '\n':
+                case '\r':
+                    _position++;
+                    _isReadingDirective = false;
                     break;
                 case '+':
                     _kind = SyntaxKind.PlusToken;
@@ -266,6 +272,7 @@ namespace Alto.CodeAnalysis.Syntax
         {
             _position++;
             _kind = SyntaxKind.HashtagToken;
+            _isReadingDirective = true;
         }
 
         private void ReadWhiteSpaceToken()
@@ -283,7 +290,11 @@ namespace Alto.CodeAnalysis.Syntax
             
             var length = _position - _start;
             var text = _text.ToString(_start, length);
-            _kind = SyntaxFacts.GetKeywordKind(text);
+
+            if (!_isReadingDirective)
+                _kind = SyntaxFacts.GetKeywordKind(text);
+            else
+                _kind = SyntaxKind.IdentifierToken;
         }
 
         private void ReadNumberToken()
