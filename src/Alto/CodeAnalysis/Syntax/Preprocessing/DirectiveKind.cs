@@ -2,6 +2,8 @@ namespace Alto.CodeAnalysis.Syntax.Preprocessing
 {
     public enum DirectiveKind
     {
-        UsingDirective
+        UsingDirective,
+        IfDirective,
+        EndIfDirective
     }
 }

@@ -41,7 +41,6 @@ namespace Alto.CodeAnalysis.Syntax.Preprocessing
             switch (kind)
             {
                 case DirectiveKind.UsingDirective:
-                    EvaluateImportDirective(directive);
                     break;
             }
         }
@@ -55,11 +54,6 @@ namespace Alto.CodeAnalysis.Syntax.Preprocessing
                 default:
                     return null;
             }
-        }
-
-        private void EvaluateImportDirective(PreprocessorDirective directive)
-        {
-            
         }
     }
 }

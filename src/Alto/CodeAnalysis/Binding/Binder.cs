@@ -52,7 +52,6 @@ namespace Alto.CodeAnalysis.Binding
                 foreach (var @using in usingDirectives)
                 {
                     var name = @using.Identifiers[1].Text;
-                    Console.WriteLine("n: " + name);
                     var treesToUse = syntaxTrees.Where(t => Path.GetFileNameWithoutExtension(t.Text.FileName) == name);
                     if (treesToUse.Count() == 0)
                         binder._diagnostics.ReportCannotFindFile(@using.Identifiers[1].Location, name);
@@ -878,6 +877,7 @@ namespace Alto.CodeAnalysis.Binding
         {
             // If symbol.Tree is null, it means it's a built-in function
             if (symbol.Tree == null ||
+                tree == symbol.Tree ||
                 tree._importedTrees.Contains(symbol.Tree))
             {
                 return true;
