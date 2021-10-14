@@ -176,6 +176,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return ":";
                 case SyntaxKind.QuestionMarkToken:
                     return "?";
+                case SyntaxKind.HashtagToken:
+                    return "#";
                 default:
                     return null;
             }

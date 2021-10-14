@@ -53,8 +53,12 @@ namespace Alto.CodeAnalysis.Syntax
                     break;
                 case '\n':
                 case '\r':
+                    if (Lookahead == '\n' || Lookahead == '\r')
+                        _position++;
+                    
                     _position++;
                     _isReadingDirective = false;
+                    _kind = SyntaxKind.WhitespaceToken;
                     break;
                 case '+':
                     _kind = SyntaxKind.PlusToken;
