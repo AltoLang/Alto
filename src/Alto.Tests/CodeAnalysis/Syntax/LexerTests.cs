@@ -82,6 +82,23 @@ namespace Alto.Tests.CodeAnalysis.Syntax
             Assert.Equal(t2Text, tokens[2].Text);
         }
 
+        [Fact]
+        public void Lexer_Lexes_Directive()
+        {
+            var text = "#directive true while else TEST";
+            var allTokens = SyntaxTree.ParseTokens(text, out var diagnostics);
+            var tokens = allTokens.Where(t => t.Kind == SyntaxKind.HashtagToken).Concat(allTokens.Where(t => t.Kind == SyntaxKind.IdentifierToken)).ToArray();
+
+            Assert.Equal(6, tokens.Length);
+            Assert.Equal(SyntaxKind.HashtagToken, tokens[0].Kind);
+            
+            for (int i = 1; i < tokens.Length; i++)
+            {
+                var token = tokens[i];
+                Assert.Equal(SyntaxKind.IdentifierToken, token.Kind);
+            }
+        }
+
         public static IEnumerable<object[]> GetTokensData()
         {
             foreach ( var t in GetTokens().Concat(GetSeparators()))
