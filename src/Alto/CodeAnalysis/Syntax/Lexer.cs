@@ -1,6 +1,8 @@
 using System.Text;
+using System.Collections.Generic;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Text;
+using System;
 
 namespace Alto.CodeAnalysis.Syntax
 {
@@ -13,6 +15,7 @@ namespace Alto.CodeAnalysis.Syntax
         private int _start;
         private SyntaxKind _kind;
         private object _value;
+        private bool _isReadingDirective;
         
         /// <summary>
         /// Initializes a new instance of the <see cref="Lexer"/> class.
@@ -53,6 +56,15 @@ namespace Alto.CodeAnalysis.Syntax
             {
                 case '\0':
                     _kind = SyntaxKind.EndOfFileToken;
+                    break;
+                case '\n':
+                case '\r':
+                    if (Lookahead == '\n' || Lookahead == '\r')
+                        _position++;
+                    
+                    _position++;
+                    _isReadingDirective = false;
+                    _kind = SyntaxKind.WhitespaceToken;
                     break;
                 case '+':
                     _kind = SyntaxKind.PlusToken;
@@ -187,8 +199,10 @@ namespace Alto.CodeAnalysis.Syntax
                 case '"':
                     ReadString();
                     break;
+                case '#':
+                    ReadDirective();
+                    break;
                 default:
-
                     if (char.IsDigit(Current))
                     {
                         ReadNumberToken();
@@ -264,6 +278,13 @@ namespace Alto.CodeAnalysis.Syntax
             _value = sb.ToString();
         }
 
+        private void ReadDirective()
+        {
+            _position++;
+            _kind = SyntaxKind.HashtagToken;
+            _isReadingDirective = true;
+        }
+
         private void ReadWhiteSpaceToken()
         {
             while (char.IsWhiteSpace(Current))
@@ -279,7 +300,11 @@ namespace Alto.CodeAnalysis.Syntax
             
             var length = _position - _start;
             var text = _text.ToString(_start, length);
-            _kind = SyntaxFacts.GetKeywordKind(text);
+
+            if (!_isReadingDirective)
+                _kind = SyntaxFacts.GetKeywordKind(text);
+            else
+                _kind = SyntaxKind.IdentifierToken;
         }
 
         private void ReadNumberToken()

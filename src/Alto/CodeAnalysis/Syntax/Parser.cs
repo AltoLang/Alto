@@ -5,6 +5,7 @@ using Alto.CodeAnalysis.Syntax;
 using System.Collections.Immutable;
 using Alto.CodeAnalysis;
 using Alto.CodeAnalysis.Text;
+using Alto.CodeAnalysis.Syntax.Preprocessing;
 
 namespace Alto.CodeAnalysis.Syntax
 {
@@ -76,9 +77,14 @@ namespace Alto.CodeAnalysis.Syntax
 
         internal CompilationUnitSyntax ParseCompilationUnit()
         {
-            var members =  ParseMembers();
+            var members = ParseMembers();
             var endOfFileToken = MatchToken(SyntaxKind.EndOfFileToken);
-            return new CompilationUnitSyntax(_tree, members, endOfFileToken);
+
+            Preprocessor preprocessor = new Preprocessor(members);
+            var processedMembers = preprocessor.Process();
+            _diagnostics.AddRange(preprocessor.Diagnostics);
+
+            return new CompilationUnitSyntax(_tree, processedMembers, endOfFileToken);
         }
 
         private ImmutableArray<MemberSyntax> ParseMembers()
@@ -110,6 +116,9 @@ namespace Alto.CodeAnalysis.Syntax
 
         private MemberSyntax ParseGlobalStatement()
         {
+            if (Current.Kind == SyntaxKind.HashtagToken)
+                return ParseDirective();
+            
             var statement = ParseStatement();
             return new GlobalStatementSyntax(_tree, statement);
         }
@@ -209,8 +218,6 @@ namespace Alto.CodeAnalysis.Syntax
                     return ParseContinueStatement();
                 case SyntaxKind.ReturnKeyword:
                     return ParseReturnStatement();
-                case SyntaxKind.ImportKeyword:
-                    return ParseImportStatement();
                 default:
                     return ParseExpressionStatement();
             }
@@ -320,14 +327,6 @@ namespace Alto.CodeAnalysis.Syntax
             return new ReturnStatementSyntax(_tree, keyword, expression);
         }
 
-        private StatementSyntax ParseImportStatement()
-        {
-            var keyword = MatchToken(SyntaxKind.ImportKeyword);
-            var identifier = MatchToken(SyntaxKind.IdentifierToken);
-
-            return new ImportStatementSyntax(_tree, keyword, identifier);
-        }
-
         private BlockStatementSyntax ParseBlockStatement()
         {
             var statements = ImmutableArray.CreateBuilder<StatementSyntax>();
@@ -419,17 +418,13 @@ namespace Alto.CodeAnalysis.Syntax
             {
                 case SyntaxKind.OpenParenthesesToken:
                     return ParseParenthesizedExpression();
-
                 case SyntaxKind.FalseKeyword:
                 case SyntaxKind.TrueKeyword:
                     return ParseBooleanLiteral();
-
                 case SyntaxKind.NumberToken:
                     return ParseNumberLiteral();
-
                 case SyntaxKind.StringToken:
                     return ParseStringLiteral();
-
                 case SyntaxKind.IdentifierToken:
                 default:
                     return ParseNameOrCallExpression();
@@ -512,5 +507,35 @@ namespace Alto.CodeAnalysis.Syntax
             return new NameExpressionSyntax(_tree, identifierToken);
         }
 
+        private PreprocessorDirective ParseDirective()
+        {
+            var hashtag = MatchToken(SyntaxKind.HashtagToken);
+            var startLine = hashtag.Location.StartLine;
+
+            List<SyntaxToken> identifiers = new List<SyntaxToken>();
+            while (true)
+            {
+                if (Current.Location.StartLine != startLine ||
+                    Current.Kind == SyntaxKind.EndOfFileToken)
+                {
+                    break;
+                }
+                
+                var identifier = MatchToken(SyntaxKind.IdentifierToken);
+                if (identifier.Text == null)
+                {
+                    NextToken();
+                    continue;
+                }
+                
+                identifiers.Add(identifier);
+            }
+
+            var kind = Preprocessor.ClassifyDirective(identifiers.FirstOrDefault().Text);
+            if (kind == null)
+                _diagnostics.ReportDirectiveExpected(identifiers.FirstOrDefault().Location);
+
+            return new PreprocessorDirective(hashtag.SyntaxTree, kind, identifiers);
+        } 
     }
 }

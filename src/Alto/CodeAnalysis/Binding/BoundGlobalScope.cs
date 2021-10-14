@@ -9,7 +9,7 @@ namespace Alto.CodeAnalysis.Binding
     {
         public BoundGlobalScope(BoundGlobalScope previous, ImmutableArray<Diagnostic> diagnostics,
             FunctionSymbol mainFunction, FunctionSymbol scriptFunction, ImmutableArray<FunctionSymbol> functions, ImmutableArray<VariableSymbol> variables, 
-            ImmutableArray<BoundStatement> statements, Dictionary<SyntaxTree, IEnumerable<SyntaxTree>> importedTrees)
+            ImmutableArray<BoundStatement> statements)
         {
             Previous = previous;
             Diagnostics = diagnostics;
@@ -18,7 +18,6 @@ namespace Alto.CodeAnalysis.Binding
             Functions = functions;  
             Variables = variables;
             Statements = statements;
-            ImportedTrees = importedTrees;
         }
 
         public BoundGlobalScope Previous { get; }
@@ -28,6 +27,5 @@ namespace Alto.CodeAnalysis.Binding
         public ImmutableArray<FunctionSymbol> Functions { get; }
         public ImmutableArray<VariableSymbol> Variables { get; }
         public ImmutableArray<BoundStatement> Statements { get; }
-        public Dictionary<SyntaxTree, IEnumerable<SyntaxTree>> ImportedTrees { get; }
     }
 }

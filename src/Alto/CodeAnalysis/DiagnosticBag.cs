@@ -14,6 +14,7 @@ namespace Alto.CodeAnalysis
         public IEnumerator<Diagnostic> GetEnumerator() => _diagnostics.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        
         public void AddRange(DiagnosticBag diagnostics)
         {
             _diagnostics.AddRange(diagnostics._diagnostics);
@@ -198,21 +199,21 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
-        public void MissingImportStatement(TextLocation location, string name, string fileName)
-        {
-            var message = $"You are referencing the object '{name}', but it's contained in a different file '{fileName}', are you missing an import statement?";
-            Report(location, message);
-        }
-
-        public void ReportCannotFindImportFile(TextLocation location, string name)
-        {
-            var message = $"Cannot find file '{name}' to import.";
-            Report(location, message);
-        }
-
         public void ReportInvalidExpressionStatement(TextLocation location)
         {
             var message = $"Only assignment and call expressions can be used as a statement.";
+            Report(location, message);
+        }
+
+        public void ReportDirectiveExpected(TextLocation location)
+        {
+            var message = $"Preporcessor directive exprected.";
+            Report(location, message);
+        }
+
+        public void ReportCannotFindFile(TextLocation location, string fileName)
+        {
+            var message = $"Cannot find file {fileName}.";
             Report(location, message);
         }
     }

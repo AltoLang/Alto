@@ -1,4 +1,4 @@
-import getName
+#using getName
 
 function main() {
     var name = getName()

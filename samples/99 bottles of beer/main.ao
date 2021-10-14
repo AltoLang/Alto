@@ -1,4 +1,4 @@
-import lyrics
+#using lyrics
 
 function playSong() {
     var bottles = 99

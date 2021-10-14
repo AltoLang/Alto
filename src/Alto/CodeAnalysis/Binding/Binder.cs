@@ -6,6 +6,8 @@ using System.Collections.Immutable;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Text;
 using Alto.CodeAnalysis.Lowering;
+using Alto.CodeAnalysis.Syntax.Preprocessing;
+using System.IO;
 
 namespace Alto.CodeAnalysis.Binding
 {
@@ -16,18 +18,15 @@ namespace Alto.CodeAnalysis.Binding
         private readonly FunctionSymbol _function;
         private Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)> _loopStack = new Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)>();
         private Dictionary<string, SyntaxTree> _syntaxTrees = new Dictionary<string, SyntaxTree>();
-        private Dictionary<SyntaxTree, IEnumerable<SyntaxTree>> _importedTrees = new Dictionary<SyntaxTree, IEnumerable<SyntaxTree>>();
         private Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> _localFunctions = new Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>>();
         private int _labelCount;
         private BoundScope _scope;
 
-        public Binder(bool isScript, BoundScope parent, FunctionSymbol function, bool checkCallsiteTrees = true)
+        public Binder(bool isScript, BoundScope parent, FunctionSymbol function)
         {
             _scope = new BoundScope(parent);
             _isScript = isScript;
             _function = function;
-
-            CheckCallsiteTrees = checkCallsiteTrees;
 
             if (function != null)
             {
@@ -36,49 +35,30 @@ namespace Alto.CodeAnalysis.Binding
             }
         }
 
-        private Binder(bool isScript, BoundScope parent, FunctionSymbol function, bool checkCallsiteTrees = true, 
-                       Dictionary<SyntaxTree, IEnumerable<SyntaxTree>> importedTrees = null)
-            : this(isScript, parent, function, checkCallsiteTrees)
-        {
-                if (importedTrees != null)
-                    _importedTrees = importedTrees;
-        }
-
-        /// <summary>
-        /// Gets the value that indicated whether to check function call-sites are in the same syntax tree or if they're imported.
-        /// This is set to false in the interactive experience.
-        /// </summary>
-        private bool CheckCallsiteTrees { get; }
         public Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> LocalFunctions => _localFunctions;
         public DiagnosticBag Diagnostics => _diagnostics;
 
-        public static BoundGlobalScope BindGlobalScope(bool isScript, BoundGlobalScope previous, SyntaxTree coreSyntax, 
+        public static BoundGlobalScope BindGlobalScope(bool isScript, BoundGlobalScope previous, 
                                                        ImmutableArray<SyntaxTree> syntaxTrees, bool checkCallsiteTrees,
                                                        out Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> localFunctions)
         {
             var parentScope = CreateParentScope(previous);
-            var binder = new Binder(isScript, parentScope, null, checkCallsiteTrees);
-
-            { // add the core syntax tree to the syntax tree arr
-                var trees = syntaxTrees.ToList();
-                trees.Add(coreSyntax);
-                syntaxTrees = trees.ToImmutableArray();
-            }
-
-            // load the syntax trees (this is used for imports)
-            foreach (var tree in syntaxTrees)
-            {
-                var name = System.IO.Path.GetFileNameWithoutExtension(tree.Text.FileName);
-                binder._syntaxTrees.Add(name, tree);
-            }
-
-            // automatically import the 0th syntax tree
-            var coreSyntaxes = new SyntaxTree[1] { coreSyntax };
-            foreach (var tree in syntaxTrees)
-                binder._importedTrees.Add(tree, coreSyntaxes);
+            var binder = new Binder(isScript, parentScope, null);
 
             foreach (var tree in syntaxTrees) 
             {
+                // process usings here
+                var usingDirectives = tree.Root.Members.OfType<PreprocessorDirective>().Where(d => d.DirectiveKind == DirectiveKind.UsingDirective);
+                foreach (var @using in usingDirectives)
+                {
+                    var name = @using.Identifiers[1].Text;
+                    var treesToUse = syntaxTrees.Where(t => Path.GetFileNameWithoutExtension(t.Text.FileName) == name);
+                    if (treesToUse.Count() == 0)
+                        binder._diagnostics.ReportCannotFindFile(@using.Identifiers[1].Location, name);
+                    
+                    tree._importedTrees.Add(treesToUse.FirstOrDefault());
+                }
+
                 var functionDeclarations = tree.Root.Members.OfType<FunctionDeclarationSyntax>();
                 foreach (var function in functionDeclarations)
                     binder.BindFunctionDeclaration(function, tree);
@@ -87,8 +67,8 @@ namespace Alto.CodeAnalysis.Binding
             var globalStatements = syntaxTrees.SelectMany(t => t.Root.Members).OfType<GlobalStatementSyntax>();
             var firstGlobalStatementPerSyntaxTree = syntaxTrees.Select(t => t.Root.Members.OfType<GlobalStatementSyntax>().FirstOrDefault())
                                                                .Where(s => s != null)
-                                                               .ToArray();
-
+                                                               .ToArray();  
+    
             var statementBuilder = ImmutableArray.CreateBuilder<BoundStatement>();
             foreach (var globalStatement in globalStatements)
             {
@@ -102,7 +82,7 @@ namespace Alto.CodeAnalysis.Binding
                     binder.Diagnostics.ReportOnlyOneFileCanContainGlobalStatements(globalStatement.Location);
             }
             
-            var functions = binder._scope.GetDeclaredFunctions();
+            var functions = binder._scope.GetDeclaredFunctions(); 
 
             FunctionSymbol mainFunction;
             FunctionSymbol scriptFunction;
@@ -110,7 +90,7 @@ namespace Alto.CodeAnalysis.Binding
             if (isScript)
             {
                 mainFunction = null;
-                if (globalStatements.Any())
+                if (globalStatements.Any()) 
                     scriptFunction = new FunctionSymbol("$eval", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.Any);
                 else
                     scriptFunction = null;
@@ -152,7 +132,7 @@ namespace Alto.CodeAnalysis.Binding
 
             localFunctions = binder._localFunctions;
             return new BoundGlobalScope(previous, diagnostics, mainFunction, scriptFunction, functions, variables, 
-                                        statementBuilder.ToImmutable(), binder._importedTrees);
+                                        statementBuilder.ToImmutable());
         }
 
         public static BoundProgram BindProgram(bool isScript, BoundProgram previous, BoundGlobalScope globalScope)
@@ -163,8 +143,7 @@ namespace Alto.CodeAnalysis.Binding
 
             foreach (var function in globalScope.Functions)
             {
-                // if we're getting 'missing import' errors, this is where we've gone wrong... in checkCallSiteTrees: true
-                var binder = new Binder(isScript, parentScope, function, checkCallsiteTrees: true, globalScope.ImportedTrees);
+                var binder = new Binder(isScript, parentScope, function);
 
                 var body = binder.BindGlobalStatement(function.Declaration.Body);
                 var loweredBody = Lowerer.Lower(body);
@@ -332,8 +311,6 @@ namespace Alto.CodeAnalysis.Binding
                     return BindContinueStatement((ContinueStatementSyntax) syntax);
                 case SyntaxKind.ReturnStatement:
                     return BindReturnStatement((ReturnStatementSyntax) syntax);
-                case SyntaxKind.ImportStatement:
-                    return BindImportStatement((ImportStatementSyntax) syntax);
                 default:
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
@@ -467,34 +444,6 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundReturnStatement(expression);
         }
 
-        private BoundStatement BindImportStatement(ImportStatementSyntax syntax)
-        {
-            var name = syntax.Identifier.Text;
-
-            SyntaxTree importTree = null;
-            if (_syntaxTrees.ContainsKey(name))
-                importTree = _syntaxTrees[name];
-            else
-                _diagnostics.ReportCannotFindImportFile(syntax.Location, name);
-
-            if (_importedTrees.ContainsKey(syntax.SyntaxTree))
-            {
-                var imports = _importedTrees[syntax.SyntaxTree].ToList();
-                imports.Add(importTree);
-
-                _importedTrees.Remove(syntax.SyntaxTree);
-                _importedTrees.Add(syntax.SyntaxTree, imports);
-            }
-            else
-            {
-                var syntaxTrees = new SyntaxTree[] { importTree };
-                _importedTrees.Add(syntax.SyntaxTree, syntaxTrees);
-            }
-            
-            
-            return new BoundImportStatement(importTree, name);
-        }
-
         private BoundStatement BindBlockStatement(BlockStatementSyntax syntax, IEnumerable<VariableSymbol> declareAdditionalVariables = null)
         {
             var statements = ImmutableArray.CreateBuilder<BoundStatement>();
@@ -508,7 +457,7 @@ namespace Alto.CodeAnalysis.Binding
             {
                 var funcSymbol = BindFunctionDeclaration(function, syntax.SyntaxTree, declare: false);
 
-                Binder binder = new Binder(false, _scope, funcSymbol, CheckCallsiteTrees);
+                Binder binder = new Binder(false, _scope, funcSymbol);
 
                 // TODO: Also have to check for duplicate names
                 if (!LocalFunctionNameIsUnique(funcSymbol))
@@ -710,8 +659,13 @@ namespace Alto.CodeAnalysis.Binding
                 boundArguments.Add(boundArgument);
             }
 
-            var symbol = LookupFunction(syntax.Identifier.Text);
+            Symbol symbol = LookupFunction(syntax.Identifier.Text);
             if (symbol == null)
+            {
+                _diagnostics.ReportUndefinedFunction(syntax.Identifier.Location, syntax.Identifier.Text);
+                return new BoundErrorExpression();
+            }
+            else if (!SymbolIsImported(syntax.SyntaxTree, symbol))
             {
                 _diagnostics.ReportUndefinedFunction(syntax.Identifier.Location, syntax.Identifier.Text);
                 return new BoundErrorExpression();
@@ -721,13 +675,6 @@ namespace Alto.CodeAnalysis.Binding
             if (function == null)
             {
                 _diagnostics.ReportNotAFunction(syntax.Identifier.Location, syntax.Identifier.Text);
-                return new BoundErrorExpression();
-            }
-            
-            // if function.Tree == null, it's a built-in function
-            if (CheckCallsiteTrees && function.Tree != null && !IsImported(syntax.SyntaxTree, function.Tree))
-            {
-                _diagnostics.MissingImportStatement(syntax.Identifier.Location, function.Name, function.Tree.Root.Location.FileName);
                 return new BoundErrorExpression();
             }
 
@@ -782,7 +729,7 @@ namespace Alto.CodeAnalysis.Binding
 
             return new BoundCallExpression(function, boundArguments.ToImmutable());
         }
-    
+
         private BoundExpression BindParenthesizedExpression(ParenthesizedExpressionSyntax syntax)
         {
             return BindExpression(syntax.Expression);
@@ -791,8 +738,9 @@ namespace Alto.CodeAnalysis.Binding
         private VariableSymbol BindVariableDeclaration(SyntaxToken identifier, bool isReadOnly, TypeSymbol type)
         {
             var name = identifier.Text ?? "?";
+            var tree = identifier.SyntaxTree;
             var declare = !identifier.IsMissing;
-            var variable = _function == null ? (VariableSymbol) new GlobalVariableSymbol(name, isReadOnly, type) : (VariableSymbol) new LocalVariableSymbol(name, isReadOnly, type);
+            var variable = _function == null ? (VariableSymbol) new GlobalVariableSymbol(name, isReadOnly, type, tree) : (VariableSymbol) new LocalVariableSymbol(name, isReadOnly, type, tree);
 
             if (declare && !_scope.TryDeclareVariable(variable))
                 _diagnostics.ReportSymbolAlreadyDeclared(identifier.Location, name);
@@ -883,22 +831,6 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundLabel(name);
         }
 
-        private bool IsImported(SyntaxTree currentTree, SyntaxTree tree) 
-        {   
-            if (currentTree == tree)
-                return true;
-            
-            if (!_importedTrees.ContainsKey(currentTree))
-                return false;
-            
-            var importedTrees = _importedTrees[currentTree];
-            foreach (var importedTree in importedTrees)
-                if (importedTree.Text.FileName == tree.Text.FileName)
-                    return true;
-            
-            return false;
-        }
-
         private Symbol LookupFunction(string name)
         {
             // search through local functions
@@ -934,6 +866,24 @@ namespace Alto.CodeAnalysis.Binding
                         return false;
 
             return true;
+        }
+
+        /// <summary>
+        /// Checks whether a symbol is imported.
+        /// </summary>
+        /// <param name="tree">The tree we're checking from.</param>
+        /// <param name="symbol">The symbol to check if it's imported.</param>
+        private bool SymbolIsImported(SyntaxTree tree, Symbol symbol)
+        {
+            // If symbol.Tree is null, it means it's a built-in function
+            if (symbol.Tree == null ||
+                tree == symbol.Tree ||
+                tree._importedTrees.Contains(symbol.Tree))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

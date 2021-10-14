@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using Xunit;
 using System.Linq;
-
 using Alto.CodeAnalysis.Syntax;
 using Alto.CodeAnalysis.Text;
 
 namespace Alto.Tests.CodeAnalysis.Syntax
 {
 
-    public class LexerTest
+    public class LexerTests
     {
         [Fact]
         public void Lexer_Lexes_UnterminatedString()
@@ -80,9 +78,25 @@ namespace Alto.Tests.CodeAnalysis.Syntax
 
             Assert.Equal(separatorKind, tokens[1].Kind);
             Assert.Equal(separatorText, tokens[1].Text);
-
-            Assert.Equal(t2Kind, tokens[2].Kind);
+            
             Assert.Equal(t2Text, tokens[2].Text);
+        }
+
+        [Fact]
+        public void Lexer_Lexes_Directive()
+        {
+            var text = "#directive true while else TEST";
+            var allTokens = SyntaxTree.ParseTokens(text, out var diagnostics);
+            var tokens = allTokens.Where(t => t.Kind == SyntaxKind.HashtagToken).Concat(allTokens.Where(t => t.Kind == SyntaxKind.IdentifierToken)).ToArray();
+
+            Assert.Equal(6, tokens.Length);
+            Assert.Equal(SyntaxKind.HashtagToken, tokens[0].Kind);
+            
+            for (int i = 1; i < tokens.Length; i++)
+            {
+                var token = tokens[i];
+                Assert.Equal(SyntaxKind.IdentifierToken, token.Kind);
+            }
         }
 
         public static IEnumerable<object[]> GetTokensData()
@@ -211,6 +225,9 @@ namespace Alto.Tests.CodeAnalysis.Syntax
             {
                 foreach (var t2 in GetTokens())
                 {
+                    if (t1.kind == SyntaxKind.HashtagToken || t2.kind == SyntaxKind.HashtagToken)
+                        continue;
+                    
                     if (!RequiresSeparator(t1.kind, t2.kind))
                         yield return (t1.kind, t1.text, t2.kind, t2.text);
                 }
@@ -223,6 +240,9 @@ namespace Alto.Tests.CodeAnalysis.Syntax
             {
                 foreach (var t2 in GetTokens())
                 {
+                    if (t1.kind == SyntaxKind.HashtagToken || t2.kind == SyntaxKind.HashtagToken)
+                        continue;
+                    
                     if (RequiresSeparator(t1.kind, t2.kind))
                         foreach (var s in GetSeparators())
                             yield return (t1.kind, t1.text, s.kind, s.text, t2.kind, t2.text);
