@@ -876,7 +876,8 @@ namespace Alto.CodeAnalysis.Binding
         private bool SymbolIsImported(SyntaxTree tree, Symbol symbol)
         {
             // If symbol.Tree is null, it means it's a built-in function
-            if (symbol.Tree == null ||
+            if (_isScript ||
+                symbol.Tree == null ||
                 tree == symbol.Tree ||
                 tree._importedTrees.Contains(symbol.Tree))
             {
