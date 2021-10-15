@@ -1,10 +1,68 @@
-# Welcome to Alto!
-Alto is my ongoing project object-oriented general purpose compiler project. This is only for educational purposes and will help me learn about compilers and how they actually work.
+## AltoLang
+Alto is a staticlly typed programming language in development.
+It's currently only interpreted, but actual compilation is in progress.
+It's based on the Minsk compiler.
 
-## Huge thanks to @terrajobst
-So far, I've been following his compiler tutorials and they've been the most-helpful. Although I did change some of the code, just because of personal preference. His videos inspired thousands of people to be better developers.
+## Start it up!
+ - Fork the repo
+ - Run .\build (Please drop us an issue if you encounter build errors)
+ - Add the compiler to vscode tasks
+ - Compile your project!
 
+## Examples
+```ts
+function main() {
+    print("Hello, Alto!")
+    factorial(10, true)
+}
 
+function factorial(n : int, printToConsole : bool = false) : int {
+    var total = 0
+    var number = n
+    while (number ~= 0) {
+        number = number - 1
+        total = total + number
+    }
 
-#### Feel free to report any issues or create pull requests. I will be most-thankful.
+    if (printToConsole)
+        print(tostring(total))
 
+    return total
+}
+```
+
+## Add it to vscode tasks
+Add this to your `tasks.json` file. You can also associate a shortcut for building Alto files.
+```json
+{
+    "label": "aoc",
+    "command": "dotnet",
+    "type": "shell",
+    "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/src/aoc/aoc.csproj",
+        "--",
+        "${fileDirname}"
+    ],
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+    },
+    "problemMatcher": {
+        "fileLocation": "absolute",
+        "pattern": [
+            {
+                "regexp": "^(.*)\\((\\d+,\\d+\\,\\d+\\,\\d+\\))\\: (.*)$",
+                "file": 1,
+                "location": 2,
+                "message": 3
+            }
+        ]
+    }
+}
+```
