@@ -47,6 +47,7 @@ namespace Alto.CodeAnalysis.Syntax
         TrueKeyword,
         VarKeyword,
         FunctionKeyword,
+        ClassKeyword,
         LetKeyword,
         IfKeyword,
         ElseKeyword,
@@ -85,6 +86,6 @@ namespace Alto.CodeAnalysis.Syntax
         DoWhileStatement,
         BreakStatement,
         ContinueStatement,
-        ReturnStatement,
+        ReturnStatement
     }
 }
