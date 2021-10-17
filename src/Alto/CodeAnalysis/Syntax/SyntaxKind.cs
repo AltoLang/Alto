@@ -41,6 +41,7 @@ namespace Alto.CodeAnalysis.Syntax
         ColonToken,
         HashtagToken,
         QuestionMarkToken,
+        FullStopToken,
 
         //Keywords
         FalseKeyword,
@@ -62,7 +63,9 @@ namespace Alto.CodeAnalysis.Syntax
         //Nodes
         CompilationUnit,
         GlobalStatement,
+        VariableDeclaration,
         FunctionDeclaration,
+        ClassDeclaration,
         ElseClause,
         TypeClause,
         Parameter,
@@ -75,11 +78,11 @@ namespace Alto.CodeAnalysis.Syntax
         NameExpression,
         AssignmentExpression,
         CallExpression,
+        MemberAccessExpression,
 
         //Statements
         BlockStatement,
         ExpressionStatement,
-        VariableDeclaration,
         IfStatement,
         WhileStatement,
         ForStatement,

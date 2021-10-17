@@ -51,6 +51,9 @@ namespace Alto.CodeAnalysis.Syntax
         private SyntaxToken Peek(int offset)
         {
             var index = _position + offset;
+            if (index < 0)
+                return null;
+            
             if (index >= _tokens.Length)
                 return _tokens[_tokens.Length - 1];
             
@@ -107,9 +110,14 @@ namespace Alto.CodeAnalysis.Syntax
         }
 
         private MemberSyntax ParseMember()
-        {
-            if (Current.Kind == SyntaxKind.FunctionKeyword)
-                return ParseFunctionDeclaration();
+        {            
+            switch (Current.Kind)
+            {
+                case SyntaxKind.FunctionKeyword:
+                    return ParseFunctionDeclaration();
+                case SyntaxKind.ClassKeyword:
+                    return ParseClassDeclaration();
+            }
             
             return ParseGlobalStatement();
         }
@@ -138,7 +146,15 @@ namespace Alto.CodeAnalysis.Syntax
             return new FunctionDeclarationSyntax(_tree, keyword, identifier, openParenthesis, parameters, closedParenthesis, type, body);
         }
 
+        private ClassDeclarationSyntax ParseClassDeclaration()
+        {
+            var keyword = MatchToken(SyntaxKind.ClassKeyword);
+            var identifier = MatchToken(SyntaxKind.IdentifierToken);
 
+            var body = ParseBlockStatement();
+            
+            return new ClassDeclarationSyntax(_tree, keyword, identifier, body); 
+        }
 
         private SeparatedSyntaxList<ParameterSyntax> ParseParameterList()
         {
@@ -379,8 +395,16 @@ namespace Alto.CodeAnalysis.Syntax
                         var operatorToken = NextToken();
                         var right = ParseAssignmentExpression();
                         return new AssignmentExpressionSyntax(_tree, identifierToken, operatorToken, right);
+                    case SyntaxKind.FullStopToken:
+                        return ParseMemberAccessExpression();
+
                 }
             }
+            else if (Peek(-1) != null && Peek(-1).Kind == SyntaxKind.BlockStatement && Current.Kind == SyntaxKind.FullStopToken)
+            {
+                return ParseMemberAccessExpression();
+            }
+
             return ParseBinaryExpression();
         }
 
@@ -505,6 +529,15 @@ namespace Alto.CodeAnalysis.Syntax
         {
             var identifierToken = MatchToken(SyntaxKind.IdentifierToken);
             return new NameExpressionSyntax(_tree, identifierToken);
+        }
+
+        private ExpressionSyntax ParseMemberAccessExpression()
+        {
+            var parentIdentifier = MatchToken(SyntaxKind.IdentifierToken);
+            var fullStop = MatchToken(SyntaxKind.FullStopToken);
+            var memberIdentifier = MatchToken(SyntaxKind.IdentifierToken);
+
+            return new MemberAccessExpression(_tree, parentIdentifier, fullStop, memberIdentifier);
         }
 
         private PreprocessorDirective ParseDirective()

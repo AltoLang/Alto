@@ -202,6 +202,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return ":";
                 case SyntaxKind.QuestionMarkToken:
                     return "?";
+                case SyntaxKind.FullStopToken:
+                    return ".";
                 case SyntaxKind.HashtagToken:
                     return "#";
                 default:
