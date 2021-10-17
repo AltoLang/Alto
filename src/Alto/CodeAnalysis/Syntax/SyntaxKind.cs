@@ -59,6 +59,7 @@ namespace Alto.CodeAnalysis.Syntax
         BreakKeyword,
         ContinueKeyword,
         ReturnKeyword,
+        NewKeyword,
         
         //Nodes
         CompilationUnit,
@@ -79,6 +80,7 @@ namespace Alto.CodeAnalysis.Syntax
         AssignmentExpression,
         CallExpression,
         MemberAccessExpression,
+        ObjectCreationExpression,
 
         //Statements
         BlockStatement,

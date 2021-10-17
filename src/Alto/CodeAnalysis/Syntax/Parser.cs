@@ -404,6 +404,10 @@ namespace Alto.CodeAnalysis.Syntax
             {
                 return ParseMemberAccessExpression();
             }
+            else if (Peek(0).Kind == SyntaxKind.NewKeyword)
+            {
+                return ParseObjectCreationExpression();
+            }
 
             return ParseBinaryExpression();
         }
@@ -538,6 +542,16 @@ namespace Alto.CodeAnalysis.Syntax
             var memberIdentifier = MatchToken(SyntaxKind.IdentifierToken);
 
             return new MemberAccessExpression(_tree, parentIdentifier, fullStop, memberIdentifier);
+        }
+
+        private ExpressionSyntax ParseObjectCreationExpression()
+        {
+            var newKeyword = MatchToken(SyntaxKind.NewKeyword);
+            var identifier = MatchToken(SyntaxKind.IdentifierToken);
+            var openParenthesis = MatchToken(SyntaxKind.OpenParenthesesToken);
+            var closedParenthesis = MatchToken(SyntaxKind.CloseParenthesesToken);
+
+            return new ObjectCreationExpression(_tree, newKeyword, identifier, openParenthesis, closedParenthesis);
         }
 
         private PreprocessorDirective ParseDirective()
