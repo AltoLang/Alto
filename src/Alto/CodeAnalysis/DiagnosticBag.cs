@@ -199,6 +199,12 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
+        public void ReportUnexpectedGlobalReturnWithExpression(TextLocation location)
+        {
+            var message = "A return cannot have an expression when used as a global statement.";
+            Report(location, message);
+        }
+
         public void ReportInvalidExpressionStatement(TextLocation location)
         {
             var message = $"Only assignment and call expressions can be used as a statement.";
