@@ -15,7 +15,7 @@ namespace Alto
         {
             if (args.Length == 0)
             {   
-                Console.Error.WriteLine("Usage: ac <source-directory>");
+                Console.Error.WriteLine("Usage: aoc <source-directory>");
                 return 1;
             }
             else if (args.Length > 1)

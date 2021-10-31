@@ -422,7 +422,7 @@ namespace Alto.CodeAnalysis.Binding
                 else if (expression != null)
                 {
                     // Main is always of type void
-                    _diagnostics.ReportUnexpectedReturnExpression(syntax.ReturnExpression.Location, _function.Type, _function.Name);
+                    _diagnostics.ReportUnexpectedGlobalReturnWithExpression(syntax.ReturnExpression.Location);
                 }
             }
             else
