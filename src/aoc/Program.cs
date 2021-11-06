@@ -6,6 +6,7 @@ using Alto.CodeAnalysis;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Syntax;
 using Alto.IO;
+using Mono.Options;
 
 namespace Alto
 {
@@ -14,26 +15,51 @@ namespace Alto
         private static int Main(string[] args) 
         {
             if (args.Length == 0)
-            {   
-                Console.Error.WriteLine("Usage: aoc <source-directory>");
-                return 1;
-            }
-            else if (args.Length > 1)
             {
-                Console.Error.WriteLine("ERR: Only single project paths are supported.");
+                Console.Error.WriteLine("Invalid project path");
                 return 1;
             }
 
-            var p = args[0];
-            bool hasErrors = false;
+            List<string> references = new List<string>();
+            string outputPath = null;
+            string moduleName = null;
+            string projectDirectoryPath = args[0];
+            bool helpRequested = false;
 
-            if (!Directory.Exists(p))
+            var options = new OptionSet 
+            {
+                "usage: aoc <project-directory-path> [options]",
+                { "r=", "The {path} of an assembly to reference", r => references.Add(r) },
+                { "o=", "The output {path} of the assembly to create", o => outputPath = o },
+                { "m=", "The {name} of the module", m => moduleName = m },
+                { "help|h|?", "Help!!!", h => helpRequested = true }
+            };
+
+            options.Parse(args);
+
+            if (helpRequested)
+            {
+                options.WriteOptionDescriptions(Console.Out);
+                return 0;
+            } 
+
+            bool hasErrors = false;
+            if (!Directory.Exists(projectDirectoryPath))
             {
                 Console.Error.WriteLine("ERR: One or more directories do not exist.");
                  hasErrors = true;
             }
 
-            var sourcePaths = GetSourcePath(p);
+            if (outputPath == null)
+            {
+                var di = new DirectoryInfo(projectDirectoryPath);
+                outputPath = di.FullName + @"\" + di.Name + ".exe";
+            }
+
+            if (moduleName == null)
+                moduleName = Path.GetFileNameWithoutExtension(outputPath);
+
+            var sourcePaths = GetSourcePath(projectDirectoryPath);
             var syntaxTrees = new List<SyntaxTree>();
             foreach (var path in sourcePaths)
             {
@@ -43,28 +69,20 @@ namespace Alto
                     hasErrors = true;
                     continue;
                 }
-
+    
                 var syntaxTree = SyntaxTree.Load(path);
                 syntaxTrees.Add(syntaxTree);
-            }
+            }   
 
             if (hasErrors)
                 return 1;
             
             var compilation = Compilation.Create(syntaxTrees.ToArray());
-            var result = compilation.Evaluate(new Dictionary<VariableSymbol, object>());
-
-            if (result.Diagnostics.Any())
+            var diagnostics = compilation.Emit(moduleName, references.ToArray(), outputPath);
+            if (diagnostics.Any())
             {
-                DiagnosticsWriter.WriteDiagnostics(Console.Out, result.Diagnostics);
+                DiagnosticsWriter.WriteDiagnostics(Console.Out, diagnostics);
                 return 1;
-            }
-            else
-            {
-                if (result.Value != null)
-                {
-                    Console.WriteLine(result.Value);
-                }
             }
 
             return 0;
