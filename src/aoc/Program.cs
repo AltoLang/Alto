@@ -35,7 +35,9 @@ namespace Alto
                 { "help|h|?", "Help!!!", h => helpRequested = true }
             };
 
-            options.Parse(args);
+            var argsToParse = args.ToList();
+            argsToParse.RemoveAt(0);    
+            options.Parse(argsToParse.ToArray());
 
             if (helpRequested)
             {
@@ -46,9 +48,9 @@ namespace Alto
             bool hasErrors = false;
             if (!Directory.Exists(projectDirectoryPath))
             {
-                Console.Error.WriteLine("ERR: One or more directories do not exist.");
-                 hasErrors = true;
-            }
+                Console.Error.WriteLine($"ERR: One or more project directories do not exist: {projectDirectoryPath}.");
+                hasErrors = true;
+            }   
 
             if (outputPath == null)
             {
@@ -65,7 +67,7 @@ namespace Alto
             {
                 if (!File.Exists(path))
                 {
-                    Console.Error.WriteLine("ERR: One or more files do not exist.");
+                    Console.Error.WriteLine("ERR: One or more source files do not exist.");
                     hasErrors = true;
                     continue;
                 }

@@ -17,7 +17,6 @@ namespace Alto.CodeAnalysis.Emit
                 return program.Diagnostics.ToImmutableArray();
 
             var result = new DiagnosticBag();
-
             var assemblies = new List<AssemblyDefinition>();
             foreach (var reference in references)
             {
@@ -60,6 +59,7 @@ namespace Alto.CodeAnalysis.Emit
                                            .SelectMany(m => m.Types)
                                            .Where(t => t.FullName == metadataName)
                                            .ToArray();
+
                 if (foundTypes.Length == 1)
                 {
                     var typeReference = assembly.MainModule.ImportReference(foundTypes[0]);
@@ -109,9 +109,9 @@ namespace Alto.CodeAnalysis.Emit
 
                         return assembly.MainModule.ImportReference(method);
                     }
-
+                    
                     result.ReportRequiredMethodNotFound(typeName, methodName, parameterTypeNames);
-                    return null!;
+                    return null;
                 }
                 else if (foundTypes.Length == 0)
                 {
@@ -135,14 +135,14 @@ namespace Alto.CodeAnalysis.Emit
 
             var mainMethod = new MethodDefinition("Main", MethodAttributes.Static | MethodAttributes.Private, voidType);
             typeDefinition.Methods.Add(mainMethod);
-            assembly.EntryPoint = mainMethod;
 
             var ilProcessor = mainMethod.Body.GetILProcessor();
 
             ilProcessor.Emit(OpCodes.Ldstr, "Hello, Alto!");
             ilProcessor.Emit(OpCodes.Call, consoleWriteLineReference);
             ilProcessor.Emit(OpCodes.Ret);
-
+            
+            assembly.EntryPoint = mainMethod;
             assembly.Write(outPath);
 
             return result.ToImmutableArray();
