@@ -122,7 +122,7 @@ namespace Alto.CodeAnalysis.Emit
                     result.ReportRequiredTypeAmbiguous(null, typeName, foundTypes);
                 }
 
-                return null!;
+                return null;
             }
 
             var consoleWriteLineReference = ResolveMethod("System.Console", "WriteLine", new string[] {"System.String"});

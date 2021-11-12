@@ -3,15 +3,6 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <OutputType>Exe</OutputType>
-    <DefaultLanguageSourceExtension>.ao</DefaultLanguageSourceExtension>
-    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
   </PropertyGroup>
-
-  <Target Name="CreateManifestResourceNames" />
-
-  <Target Name="CoreCompile" DependsOnTargets="$(CoreCompileDependsOn)">
-    <Exec Command="dotnet run --project &quot;$(MSBuildThisFileDirectory)\..\..\src\aoc\aoc.csproj&quot; -- @(Compile->'$(MSBuildThisFileDirectory)', ' ') /o &quot;@(IntermediateAssembly)&quot; @(ReferencePath->' /r &quot;%(Identity)&quot;', ' ')"
-          WorkingDirectory="$(MSBuildProjectDirectory)" />
-  </Target>
 
 </Project>
