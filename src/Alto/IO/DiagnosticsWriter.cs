@@ -14,7 +14,17 @@ namespace Alto.IO
         public static void WriteDiagnostics(TextWriter writer, IEnumerable<Diagnostic> diagnostics) {
             var isToConsole = writer.IsConsoleOut();
 
-            foreach (var diagnostic in diagnostics.OrderBy(d => d.Location.FileName)
+            foreach (var diagnostic in diagnostics.Where(d => d.Location.Text == null))
+            {
+                if (isToConsole)
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    
+                writer.WriteLine(diagnostic.Message); 
+                writer.ResetColor();
+            }
+
+            foreach (var diagnostic in diagnostics.Where(d => d.Location.Text != null)
+                                                  .OrderBy(d => d.Location.FileName)
                                                   .ThenBy(d => d.Location.Span.Start)
                                                   .ThenBy(d => d.Location.Span.Length))
             {
