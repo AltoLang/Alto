@@ -9,14 +9,15 @@ using Mono.Cecil.Cil;
 
 namespace Alto.CodeAnalysis.Emit
 {
-    internal class Emitter
+    internal sealed class Emitter
     {
-        internal static ImmutableArray<Diagnostic> Emit(BoundProgram program, string moduleName, string[] references, string outPath)
-        {
-            if (program.Diagnostics.Any())
-                return program.Diagnostics.ToImmutableArray();
+        private DiagnosticBag _diagnostics = new DiagnosticBag();
+        private readonly AssemblyDefinition _assembly;
+        private readonly Dictionary<TypeSymbol, TypeReference> _knowsTypes;
+        private readonly MethodReference _consoleWriteLineReference;
 
-            var result = new DiagnosticBag();
+        private Emitter(string moduleName, string[] references)
+        {   
             var assemblies = new List<AssemblyDefinition>();
             foreach (var reference in references)
             {
@@ -27,15 +28,12 @@ namespace Alto.CodeAnalysis.Emit
                 }
                 catch
                 {
-                    result.ReportInvalidReference(reference);
+                    _diagnostics.ReportInvalidReference(reference);
                 }
             }
 
-            if (result.Any())
-                return result.ToImmutableArray();
-
             var assemblyName = new AssemblyNameDefinition(moduleName, new Version(1, 0));
-            var assembly = AssemblyDefinition.CreateAssembly(assemblyName, moduleName, ModuleKind.Console);
+            _assembly = AssemblyDefinition.CreateAssembly(assemblyName, moduleName, ModuleKind.Console);
 
             var builtinTypes = new List<(TypeSymbol type, string MetadataName)>()
             {
@@ -46,11 +44,11 @@ namespace Alto.CodeAnalysis.Emit
                 (TypeSymbol.Void, "System.Void"),
             };
 
-            var knowsTypes = new Dictionary<TypeSymbol, TypeReference>();
+            _knowsTypes = new Dictionary<TypeSymbol, TypeReference>();
             foreach (var (typeSymbol, metadataName) in builtinTypes)
             {
                 var typeReference = ResolveType(typeSymbol.Name, metadataName);
-                knowsTypes.Add(typeSymbol, typeReference);
+                _knowsTypes.Add(typeSymbol, typeReference);
             }
 
             TypeReference ResolveType(string altoName, string metadataName)
@@ -62,16 +60,16 @@ namespace Alto.CodeAnalysis.Emit
 
                 if (foundTypes.Length == 1)
                 {
-                    var typeReference = assembly.MainModule.ImportReference(foundTypes[0]);
+                    var typeReference = _assembly.MainModule.ImportReference(foundTypes[0]);
                     return typeReference;
                 }
                 else if (foundTypes.Length == 0)
                 {
-                    result.ReportRequiredTypeNotFound(altoName, metadataName);
+                    _diagnostics.ReportRequiredTypeNotFound(altoName, metadataName);
                 }
                 else if (foundTypes.Length > 1)
                 {
-                    result.ReportRequiredTypeAmbiguous(altoName, metadataName, foundTypes);
+                    _diagnostics.ReportRequiredTypeAmbiguous(altoName, metadataName, foundTypes);
                 }
 
                 return null;
@@ -107,31 +105,37 @@ namespace Alto.CodeAnalysis.Emit
                         if (!paramsMatching)
                             continue;
 
-                        return assembly.MainModule.ImportReference(method);
+                        return _assembly.MainModule.ImportReference(method);
                     }
                     
-                    result.ReportRequiredMethodNotFound(typeName, methodName, parameterTypeNames);
+                    _diagnostics.ReportRequiredMethodNotFound(typeName, methodName, parameterTypeNames);
                     return null;
                 }
                 else if (foundTypes.Length == 0)
                 {
-                    result.ReportRequiredTypeNotFound(null, typeName);
+                    _diagnostics.ReportRequiredTypeNotFound(null, typeName);
                 }
                 else
                 {
-                    result.ReportRequiredTypeAmbiguous(null, typeName, foundTypes);
+                    _diagnostics.ReportRequiredTypeAmbiguous(null, typeName, foundTypes);
                 }
 
                 return null;
             }
 
-            var consoleWriteLineReference = ResolveMethod("System.Console", "WriteLine", new string[] {"System.String"});
-
-            var voidType = knowsTypes[TypeSymbol.Void];
-            var objectType = knowsTypes[TypeSymbol.Any];
+            _consoleWriteLineReference = ResolveMethod("System.Console", "WriteLine", new string[] {"System.String"});
+        }
+        
+        public ImmutableArray<Diagnostic> Emit(BoundProgram program, string outPath)
+        {
+            if (program.Diagnostics.Any())
+                return program.Diagnostics.ToImmutableArray();
+            
+            var voidType = _knowsTypes[TypeSymbol.Void];
+            var objectType = _knowsTypes[TypeSymbol.Any];
 
             var typeDefinition = new TypeDefinition("", "Program", TypeAttributes.Abstract | TypeAttributes.Sealed, objectType);
-            assembly.MainModule.Types.Add(typeDefinition);
+            _assembly.MainModule.Types.Add(typeDefinition);
 
             var mainMethod = new MethodDefinition("Main", MethodAttributes.Static | MethodAttributes.Private, voidType);
             typeDefinition.Methods.Add(mainMethod);
@@ -139,13 +143,19 @@ namespace Alto.CodeAnalysis.Emit
             var ilProcessor = mainMethod.Body.GetILProcessor();
 
             ilProcessor.Emit(OpCodes.Ldstr, "Hello, Alto!");
-            ilProcessor.Emit(OpCodes.Call, consoleWriteLineReference);
+            ilProcessor.Emit(OpCodes.Call, _consoleWriteLineReference);
             ilProcessor.Emit(OpCodes.Ret);
             
-            assembly.EntryPoint = mainMethod;
-            assembly.Write(outPath);
+            _assembly.EntryPoint = mainMethod;
+            _assembly.Write(outPath);
 
-            return result.ToImmutableArray();
+            return _diagnostics.ToImmutableArray();
+        }
+
+        internal static ImmutableArray<Diagnostic> Emit(BoundProgram program, string moduleName, string[] references, string outPath)
+        {
+            var emitter = new Emitter(moduleName, references);
+            return emitter.Emit(program, outPath);
         }
     }
 }
