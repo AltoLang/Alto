@@ -6,6 +6,7 @@ using Alto.CodeAnalysis.Binding;
 using Alto.CodeAnalysis.Symbols;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 
 namespace Alto.CodeAnalysis.Emit
 {
@@ -171,6 +172,13 @@ namespace Alto.CodeAnalysis.Emit
             var method = _methods[function];
             var ilProcessor = method.Body.GetILProcessor();
             EmitStatement(ilProcessor, body);
+
+            // This should not be here.
+            // We need to make sure that we always have returns in the bound tree. 
+            if (function.Type == TypeSymbol.Void)
+                ilProcessor.Emit(OpCodes.Ret);
+
+            method.Body.OptimizeMacros();
         }
 
         private void EmitStatement(ILProcessor ilProcessor, BoundStatement node)
@@ -206,7 +214,7 @@ namespace Alto.CodeAnalysis.Emit
         private void EmitBlockStatement(ILProcessor ilProcessor, BoundBlockStatement node)
         {
             foreach (var childStatement in node.Statements)
-                EmitStatement(ilProcessor, node);
+                EmitStatement(ilProcessor, childStatement);
         }
 
         private void EmitReturnStatement(ILProcessor ilProcessor, BoundReturnStatement node)
@@ -276,7 +284,26 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitCallExpression(ILProcessor ilProcessor, BoundCallExpression node)
         {
-            throw new NotImplementedException();
+            foreach (var arg in node.Arguments)
+                EmitExpression(ilProcessor, arg);
+            
+            if (node.Function == BuiltInFunctions.Print)
+            {
+                ilProcessor.Emit(OpCodes.Call, _consoleWriteLineReference);
+            }
+            else if (node.Function == BuiltInFunctions.ReadLine)
+            {
+                throw new NotImplementedException();
+            }
+            else if (node.Function == BuiltInFunctions.Random)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                var methodDefinition = _methods[node.Function];
+                ilProcessor.Emit(OpCodes.Call, methodDefinition);
+            }
         }
 
         private void EmitBinaryExpression(ILProcessor ilProcessor, BoundBinaryExpression node)
@@ -296,7 +323,29 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitLiteralExpression(ILProcessor ilProcessor, BoundLiteralExpression node)
         {
-            throw new NotImplementedException();
+            
+            if (node.Type == TypeSymbol.Int)
+            {
+                var value = (int)node.Value;
+                ilProcessor.Emit(OpCodes.Ldc_I4, value);
+            }
+            else if (node.Type == TypeSymbol.Bool)
+            {
+                var value = (bool)node.Value;
+                if (value == true)
+                    ilProcessor.Emit(OpCodes.Ldc_I4_1);
+                else
+                    ilProcessor.Emit(OpCodes.Ldc_I4_0);
+            }
+            else if (node.Type == TypeSymbol.String)
+            {
+                var value = (string)node.Value;
+                ilProcessor.Emit(OpCodes.Ldstr, value);
+            }
+            else
+            {
+                throw new Exception($"Unexpected literal expression type: '{node.Type}'");
+            }
         }
 
         private void EmitUnaryExpression(ILProcessor ilProcessor, BoundUnaryExpression node)

@@ -1,6 +1,1 @@
-#using getName
-
-function main() {
-    var name = getName()
-    print("Hello, " + name + "!")
-}
+print("Hello, Alto!")
