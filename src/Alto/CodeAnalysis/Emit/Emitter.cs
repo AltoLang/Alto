@@ -16,8 +16,11 @@ namespace Alto.CodeAnalysis.Emit
         private readonly AssemblyDefinition _assembly;
         private readonly Dictionary<TypeSymbol, TypeReference> _knowsTypes;
         private readonly MethodReference _consoleWriteLineReference;
-        private TypeDefinition _typeDefinition;
+        private readonly MethodReference _consoleReadLineReference;
+        private  readonly Dictionary<VariableSymbol, VariableDefinition> _locals = new Dictionary<VariableSymbol, VariableDefinition>();
         private readonly Dictionary<FunctionSymbol, MethodDefinition> _methods = new Dictionary<FunctionSymbol, MethodDefinition>();
+
+        private TypeDefinition _typeDefinition;
 
         private Emitter(string moduleName, string[] references)
         {   
@@ -107,7 +110,7 @@ namespace Alto.CodeAnalysis.Emit
 
                         if (!paramsMatching)
                             continue;
-
+                        
                         return _assembly.MainModule.ImportReference(method);
                     }
                     
@@ -127,6 +130,7 @@ namespace Alto.CodeAnalysis.Emit
             }
 
             _consoleWriteLineReference = ResolveMethod("System.Console", "WriteLine", new string[] {"System.String"});
+            _consoleReadLineReference = ResolveMethod("System.Console", "ReadLine", Array.Empty<string>()); // ResolveMethod("System.Console", "ReadLine", Array.Empty<string>());
         }
         
         internal static ImmutableArray<Diagnostic> Emit(BoundProgram program, string moduleName, string[] references, string outPath)
@@ -170,6 +174,8 @@ namespace Alto.CodeAnalysis.Emit
         private void EmitFunctionBody(FunctionSymbol function, BoundBlockStatement body)
         {
             var method = _methods[function];
+            _locals.Clear();
+
             var ilProcessor = method.Body.GetILProcessor();
             EmitStatement(ilProcessor, body);
 
@@ -237,9 +243,15 @@ namespace Alto.CodeAnalysis.Emit
             throw new NotImplementedException();
         }
 
-        private void EmitVariableDeclaration(ILProcessor ilProcessor, BoundVariableDeclaration statement)
+        private void EmitVariableDeclaration(ILProcessor ilProcessor, BoundVariableDeclaration node)
         {
-            throw new NotImplementedException();
+            var typeReference = _knowsTypes[node.Variable.Type];
+            var variableDefinition = new VariableDefinition(typeReference);
+            _locals.Add(node.Variable, variableDefinition);
+            ilProcessor.Body.Variables.Add(variableDefinition);
+
+            EmitExpression(ilProcessor, node.Initializer);
+            ilProcessor.Emit(OpCodes.Stloc, variableDefinition.Index);
         }
 
         private void EmitExpressionStatement(ILProcessor ilProcessor, BoundExpressionStatement node)
@@ -293,7 +305,13 @@ namespace Alto.CodeAnalysis.Emit
             }
             else if (node.Function == BuiltInFunctions.ReadLine)
             {
-                throw new NotImplementedException();
+                // Whenever we call a method that has a return value of not `void`,
+                // We need to pop it off the stack. There's a `Pop` OpCode, use that.
+                // We'll have to check if that value won't be used somewhere else.
+                // Maybe, have stack of locals from method calls and pop everything
+                // once we're at the end of a block statement.
+
+                ilProcessor.Emit(OpCodes.Call, _consoleReadLineReference);
             }
             else if (node.Function == BuiltInFunctions.Random)
             {
@@ -318,7 +336,8 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitVariableExpression(ILProcessor ilProcessor, BoundVariableExpression node)
         {
-            throw new NotImplementedException();
+            var variableDefinition = _locals[node.Variable];
+            ilProcessor.Emit(OpCodes.Ldloc, variableDefinition);
         }
 
         private void EmitLiteralExpression(ILProcessor ilProcessor, BoundLiteralExpression node)
