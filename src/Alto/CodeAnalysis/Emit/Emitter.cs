@@ -17,6 +17,7 @@ namespace Alto.CodeAnalysis.Emit
         private readonly Dictionary<TypeSymbol, TypeReference> _knowsTypes;
         private readonly MethodReference _consoleWriteLineReference;
         private readonly MethodReference _consoleReadLineReference;
+        private readonly MethodReference _stringConcatReference;
         private  readonly Dictionary<VariableSymbol, VariableDefinition> _locals = new Dictionary<VariableSymbol, VariableDefinition>();
         private readonly Dictionary<FunctionSymbol, MethodDefinition> _methods = new Dictionary<FunctionSymbol, MethodDefinition>();
 
@@ -130,7 +131,8 @@ namespace Alto.CodeAnalysis.Emit
             }
 
             _consoleWriteLineReference = ResolveMethod("System.Console", "WriteLine", new string[] {"System.String"});
-            _consoleReadLineReference = ResolveMethod("System.Console", "ReadLine", Array.Empty<string>()); // ResolveMethod("System.Console", "ReadLine", Array.Empty<string>());
+            _consoleReadLineReference = ResolveMethod("System.Console", "ReadLine", Array.Empty<string>());
+            _stringConcatReference = ResolveMethod("System.String", "Concat", new string[] {"System.String", "System.String"});
         }
         
         internal static ImmutableArray<Diagnostic> Emit(BoundProgram program, string moduleName, string[] references, string outPath)
@@ -326,6 +328,17 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitBinaryExpression(ILProcessor ilProcessor, BoundBinaryExpression node)
         {
+            if (node.Op.Kind == BoundBinaryOperatorKind.Addition)
+            {
+                if (node.Left.Type == TypeSymbol.String && node.Right.Type == TypeSymbol.String)
+                {
+                    EmitExpression(ilProcessor, node.Left);
+                    EmitExpression(ilProcessor, node.Right);
+                    ilProcessor.Emit(OpCodes.Call, _stringConcatReference);
+                    return;
+                }
+            }
+
             throw new NotImplementedException();
         }
 
