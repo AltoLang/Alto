@@ -860,10 +860,9 @@ namespace Alto.CodeAnalysis.Binding
 
         private bool LocalFunctionNameIsUnique(FunctionSymbol function)
         {
-            foreach (var localScope in _localFunctions)
-                foreach (var func in localScope.Value)
-                    if (func.Item1.Name == function.Name)
-                        return false;
+            foreach (var (scope, functions) in _localFunctions)
+                if (functions.Where(f => f.Item1.Name == function.Name).Count() > 0)
+                    return false;
 
             return true;
         }
