@@ -259,6 +259,9 @@ namespace Alto.CodeAnalysis.Emit
         private void EmitExpressionStatement(ILProcessor ilProcessor, BoundExpressionStatement node)
         {
             EmitExpression(ilProcessor, node.Expression);
+
+            if (node.Expression.Type != TypeSymbol.Void)
+                ilProcessor.Emit(OpCodes.Pop);
         }
 
         private void EmitExpression(ILProcessor ilProcessor, BoundExpression node)
@@ -307,12 +310,6 @@ namespace Alto.CodeAnalysis.Emit
             }
             else if (node.Function == BuiltInFunctions.ReadLine)
             {
-                // Whenever we call a method that has a return value of not `void`,
-                // We need to pop it off the stack. There's a `Pop` OpCode, use that.
-                // We'll have to check if that value won't be used somewhere else.
-                // Maybe, have stack of locals from method calls and pop everything
-                // once we're at the end of a block statement.
-
                 ilProcessor.Emit(OpCodes.Call, _consoleReadLineReference);
             }
             else if (node.Function == BuiltInFunctions.Random)
