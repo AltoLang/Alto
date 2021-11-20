@@ -227,7 +227,10 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitReturnStatement(ILProcessor ilProcessor, BoundReturnStatement node)
         {
-            throw new NotImplementedException();
+            if (node.ReturnExpression != null)
+                EmitExpression(ilProcessor, node.ReturnExpression);
+            
+            ilProcessor.Emit(OpCodes.Ret);
         }
 
         private void EmitLabelStatement(ILProcessor ilProcessor, BoundLabelStatement node)
