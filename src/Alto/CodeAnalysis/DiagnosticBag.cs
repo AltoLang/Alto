@@ -234,8 +234,8 @@ namespace Alto.CodeAnalysis
         public void ReportRequiredTypeNotFound(string altoName, string metadataName)
         {
             var message = altoName == null 
-                ? $"The required type '{altoName}' ({metadataName}) cannot be found in the references.'"
-                : $"The required type '{metadataName}' cannot be found in the references.'";
+                ? $"The required type '{metadataName} cannot be found in the references.'"
+                : $"The required type {altoName}' ({metadataName}) cannot be found in the references.'";
             
             Report(default, message);
         }
@@ -245,8 +245,8 @@ namespace Alto.CodeAnalysis
             var assemblyNames = foundTypes.Select(t => t.Module.Assembly.Name.Name);
             var names = string.Join(", ", assemblyNames);
             var message = altoName == null 
-                ? $"The built-in type {altoName} ({metadataName}) was found in multiple references: {names}.'"
-                : $"The required type '{altoName}' was found in multiple references: {names}.'";
+                ? $"The built-in type '{metadataName}' was found in multiple references: {names}.'"
+                : $"The required type '{altoName}' ({metadataName}) was found in multiple references: {names}.'";
             
             Report(default, message);
         }

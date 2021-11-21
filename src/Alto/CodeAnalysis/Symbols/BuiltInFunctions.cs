@@ -8,9 +8,9 @@ namespace Alto.CodeAnalysis.Symbols
 {
     internal static class BuiltInFunctions
     {
-        public static readonly FunctionSymbol Print = new FunctionSymbol("print", ImmutableArray.Create(new ParameterSymbol("text", TypeSymbol.String, false)), TypeSymbol.Void);
+        public static readonly FunctionSymbol Print = new FunctionSymbol("print", ImmutableArray.Create(new ParameterSymbol("text", TypeSymbol.String, 0)), TypeSymbol.Void);
         public static readonly FunctionSymbol ReadLine = new FunctionSymbol("readline", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.String);
-        public static readonly FunctionSymbol Random = new FunctionSymbol("random", ImmutableArray.Create(new ParameterSymbol("min", TypeSymbol.Int, false), new ParameterSymbol("max", TypeSymbol.Int, false)), TypeSymbol.Int);
+        public static readonly FunctionSymbol Random = new FunctionSymbol("random", ImmutableArray.Create(new ParameterSymbol("min", TypeSymbol.Int, 0), new ParameterSymbol("max", TypeSymbol.Int, 1)), TypeSymbol.Int);
         
         internal static IEnumerable<FunctionSymbol> GetAll()
         {

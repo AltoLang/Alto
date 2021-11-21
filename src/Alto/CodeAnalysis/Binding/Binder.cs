@@ -187,8 +187,10 @@ namespace Alto.CodeAnalysis.Binding
             var parameters = ImmutableArray.CreateBuilder<ParameterSymbol>();
             var seenParameterNames = new HashSet<string>();
 
-            foreach (var parameterSyntax in syntax.Parameters)
+            for (int i = 0; i < syntax.Parameters.Count; i++)
             {
+                var parameterSyntax = syntax.Parameters[i];
+                
                 var paramName = parameterSyntax.Identifier.Text;
                 var paramType = BindTypeClause(parameterSyntax.Type);
                 var isOptional = parameterSyntax.IsOptional;
@@ -207,7 +209,7 @@ namespace Alto.CodeAnalysis.Binding
                         optionalExpression = BindConversion(expression, paramType, parameterSyntax.OptionalExpression.Location);
                     }
                     
-                    var parameter = new ParameterSymbol(paramName, paramType, isOptional, optionalExpression);
+                    var parameter = new ParameterSymbol(paramName, paramType, i, isOptional, optionalExpression);
                     parameters.Add(parameter);
                 }
             }
@@ -860,10 +862,9 @@ namespace Alto.CodeAnalysis.Binding
 
         private bool LocalFunctionNameIsUnique(FunctionSymbol function)
         {
-            foreach (var localScope in _localFunctions)
-                foreach (var func in localScope.Value)
-                    if (func.Item1.Name == function.Name)
-                        return false;
+            foreach (var (scope, functions) in _localFunctions)
+                if (functions.Where(f => f.Item1.Name == function.Name).Count() > 0)
+                    return false;
 
             return true;
         }
