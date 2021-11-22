@@ -12,7 +12,7 @@ namespace Alto
 {
     internal static class Program
     {
-        private static string[] _requiredAssemblies = new string[] {"System.Runtime", "System.Console"};
+        private static string[] _requiredAssemblies = new string[] {"System.Runtime", "System.Console", "System.Runtime.Extensions"};
 
         private static int Main(string[] args) 
         {
