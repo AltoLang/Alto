@@ -10,6 +10,7 @@ using System.IO;
 using Alto.CodeAnalysis.Lowering;
 using Alto.CodeAnalysis.Symbols;
 using BindingFlags = System.Reflection.BindingFlags;
+using Alto.CodeAnalysis.Emit;
 
 namespace Alto.CodeAnalysis
 {
@@ -193,6 +194,12 @@ namespace Alto.CodeAnalysis
             }
 
             program.FunctionBodies = functionBodies.ToImmutable();
+        }
+
+        public ImmutableArray<Diagnostic> Emit(string moduleName, string[] references, string outPath)
+        {
+            var program = GetProgram();
+            return Emitter.Emit(program, moduleName, references, outPath);
         }
     }
 }

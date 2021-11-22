@@ -1,0 +1,8 @@
+<Project>
+
+  <PropertyGroup>
+    <DefaultLanguageSourceExtension>.ao</DefaultLanguageSourceExtension>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+  </PropertyGroup>
+
+</Project>

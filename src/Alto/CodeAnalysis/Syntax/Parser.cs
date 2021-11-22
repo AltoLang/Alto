@@ -9,6 +9,9 @@ using Alto.CodeAnalysis.Syntax.Preprocessing;
 
 namespace Alto.CodeAnalysis.Syntax
 {
+    /// <summary>
+    /// Represents the class to do semantic analysis in. This class cannot be inherited. 
+    /// </summary>
     internal sealed class Parser
     {
         private readonly DiagnosticBag _diagnostics = new DiagnosticBag();
@@ -17,6 +20,10 @@ namespace Alto.CodeAnalysis.Syntax
         private readonly SyntaxTree _tree;
         private int _position;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Parser"/> class.
+        /// </summary>
+        /// <param name="tree">The <see cref="SyntaxTree"> to initialize the parser for.</param>
         public Parser(SyntaxTree tree)
         {
             var tokens = new List<SyntaxToken>();
@@ -35,6 +42,10 @@ namespace Alto.CodeAnalysis.Syntax
             _tree = tree;
         }
 
+        /// <summary>
+        /// Gets the collection of diagnostics to report.
+        /// </summary>
+        /// <remarks>Also contains methods for error reporting.</remarks>
         public DiagnosticBag Diagnostics => _diagnostics;
 
         private SyntaxToken Peek(int offset)

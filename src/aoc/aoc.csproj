@@ -4,6 +4,10 @@
     <ProjectReference Include="..\Alto\Alto.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Mono.Options" Version="6.12.0.148" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>

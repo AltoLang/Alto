@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Syntax;
 using Alto.CodeAnalysis.Text;
+using Mono.Cecil;
 
 namespace Alto.CodeAnalysis
 {
@@ -221,6 +223,39 @@ namespace Alto.CodeAnalysis
         {
             var message = $"Cannot find file {fileName}.";
             Report(location, message);
+        }
+
+        public void ReportInvalidReference(string referencePath)
+        {
+            var message = $"The references '{referencePath}' in not a valid assembly.";
+            Report(default, message);
+        }
+
+        public void ReportRequiredTypeNotFound(string altoName, string metadataName)
+        {
+            var message = altoName == null 
+                ? $"The required type '{metadataName} cannot be found in the references.'"
+                : $"The required type {altoName}' ({metadataName}) cannot be found in the references.'";
+            
+            Report(default, message);
+        }
+
+        public void ReportRequiredTypeAmbiguous(string altoName, string metadataName, TypeDefinition[] foundTypes)
+        {
+            var assemblyNames = foundTypes.Select(t => t.Module.Assembly.Name.Name);
+            var names = string.Join(", ", assemblyNames);
+            var message = altoName == null 
+                ? $"The built-in type '{metadataName}' was found in multiple references: {names}.'"
+                : $"The required type '{altoName}' ({metadataName}) was found in multiple references: {names}.'";
+            
+            Report(default, message);
+        }
+
+        public void ReportRequiredMethodNotFound(string typeName, string methodName, string[] parameterTypeNames)
+        {
+            var parameters = string.Join(", ", parameterTypeNames);
+            var message = $"The required method '{typeName}.{methodName} ({parameters}) cannot be found in the references.'";
+            Report(default, message);
         }
     }
 }

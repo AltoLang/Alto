@@ -6,11 +6,6 @@ using System;
 
 namespace Alto.CodeAnalysis.Syntax
 {
-
-    /// <summary>
-    /// Here, we lex the input text into their respective SyntaxTokens.
-    /// </summary>
-
     internal class Lexer
     {
         private readonly SourceText _text;
@@ -22,12 +17,19 @@ namespace Alto.CodeAnalysis.Syntax
         private object _value;
         private bool _isReadingDirective;
         
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Lexer"/> class.
+        /// </summary>
         public Lexer(SyntaxTree tree)
         {
             _text = tree.Text;
             _tree = tree;
         }
 
+        /// <summary>
+        /// Gets the bag that contains methods for reporting diagnostics and holds all reported diagnostics
+        /// throughout the life cycle of the application.
+        /// </summary>
         public DiagnosticBag Diagnostics => _diagnostics;
         private char Current => Peek(0);
         private char Lookahead => Peek(1);
@@ -39,7 +41,11 @@ namespace Alto.CodeAnalysis.Syntax
                 return '\0';
             return _text[index];
         }
-
+        
+        /// <summary>
+        /// Steps the lexing process of converting the input code into a series of <see cref="SyntaxToken"/>.
+        /// <summary>
+        /// <returns>The <see cref="SyntaxToken"> for the character input</returns>
         public SyntaxToken Lex()
         {
             _start = _position;
