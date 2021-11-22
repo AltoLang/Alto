@@ -146,7 +146,7 @@ namespace Alto.CodeAnalysis.Binding
                 var binder = new Binder(isScript, parentScope, function);
 
                 var body = binder.BindGlobalStatement(function.Declaration.Body);
-                var loweredBody = Lowerer.Lower(body);
+                var loweredBody = Lowerer.Lower(function, body);
 
                 if (function.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn(loweredBody))
                     binder._diagnostics.ReportNotAllCodePathsReturn(function.Declaration.Identifier.Location, function.Name);
@@ -158,7 +158,7 @@ namespace Alto.CodeAnalysis.Binding
             
             if (globalScope.MainFunction != null && globalScope.Statements.Any())
             {
-                var body = Lowerer.Lower(new BoundBlockStatement(globalScope.Statements));
+                var body = Lowerer.Lower(globalScope.MainFunction, new BoundBlockStatement(globalScope.Statements));
                 functionBodies.Add(globalScope.MainFunction, body);
             }
             else if (globalScope.ScriptFunction != null)
@@ -174,7 +174,7 @@ namespace Alto.CodeAnalysis.Binding
                     statements = statements.Add(new BoundReturnStatement(nullValue));
                 }
 
-                var body = Lowerer.Lower(new BoundBlockStatement(statements));
+                var body = Lowerer.Lower(globalScope.ScriptFunction, new BoundBlockStatement(statements));
                 functionBodies.Add(globalScope.ScriptFunction, body);
             }
 
@@ -466,7 +466,7 @@ namespace Alto.CodeAnalysis.Binding
                     _diagnostics.ReportSymbolAlreadyDeclared(function.Identifier.Location, funcSymbol.Name);
                 
                 var body = binder.BindBlockStatement(function.Body, funcSymbol.Parameters);
-                var loweredBody = Lowerer.Lower(body);
+                var loweredBody = Lowerer.Lower(funcSymbol, body);
 
                 if (funcSymbol.Type != TypeSymbol.Void && !ControlFlowGraph.AllPathsReturn(loweredBody))
                     _diagnostics.ReportNotAllCodePathsReturn(function.Identifier.Location, funcSymbol.Name);

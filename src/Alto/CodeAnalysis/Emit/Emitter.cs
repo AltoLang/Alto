@@ -190,11 +190,6 @@ namespace Alto.CodeAnalysis.Emit
             var ilProcessor = method.Body.GetILProcessor();
             EmitStatement(ilProcessor, body);
 
-            // This should not be here.
-            // We need to make sure that we always have returns in the bound tree. 
-            if (function.Type == TypeSymbol.Void)
-                ilProcessor.Emit(OpCodes.Ret);
-
             method.Body.OptimizeMacros();
         }
 
