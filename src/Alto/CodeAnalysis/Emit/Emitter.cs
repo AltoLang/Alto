@@ -428,8 +428,26 @@ namespace Alto.CodeAnalysis.Emit
         }
 
         private void EmitUnaryExpression(ILProcessor ilProcessor, BoundUnaryExpression node)
-        {
-            throw new NotImplementedException();
+        {   
+            EmitExpression(ilProcessor, node.Operand);
+
+            switch (node.Op.Kind)
+            {
+                case BoundUnaryOperatorKind.Indentity:
+                    break;
+                case BoundUnaryOperatorKind.LogicalNegation:
+                    ilProcessor.Emit(OpCodes.Ldc_I4_0);
+                    ilProcessor.Emit(OpCodes.Ceq);
+                    break;
+                case BoundUnaryOperatorKind.Negation:
+                    ilProcessor.Emit(OpCodes.Neg);
+                    break;
+                case BoundUnaryOperatorKind.OnesComplement:
+                    ilProcessor.Emit(OpCodes.Not);
+                    break;
+                default:
+                    throw new Exception($"Unexpected unary operator '{node.Op.Kind}'.");
+            }
         }
     }
 }
