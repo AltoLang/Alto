@@ -12,6 +12,8 @@ namespace Alto
 {
     internal static class Program
     {
+        private static string[] _requiredAssemblies = new string[] {"System.Runtime", "System.Console"};
+
         private static int Main(string[] args) 
         {
             if (args.Length == 0)
@@ -34,6 +36,11 @@ namespace Alto
                 { "m=", "The {name} of the module", m => moduleName = m },
                 { "help|h|?", "Help!!!", h => helpRequested = true }
             };
+
+            // trim references
+            var referencesToRemove = references.Where(r => !_requiredAssemblies.Contains(r));
+            foreach (var reference in referencesToRemove)
+                references.Remove(reference);
 
             var argsToParse = args.ToList();
             argsToParse.RemoveAt(0);    
