@@ -14,7 +14,7 @@ namespace Alto.CodeAnalysis.Emit
     {
         private DiagnosticBag _diagnostics = new DiagnosticBag();
         private readonly AssemblyDefinition _assembly;
-        private readonly Dictionary<TypeSymbol, TypeReference> _knowsTypes;
+        private readonly Dictionary<TypeSymbol, TypeReference> _knownTypes;
         private readonly MethodReference _consoleWriteLineReference;
         private readonly MethodReference _consoleReadLineReference;
         private readonly MethodReference _stringConcatReference;
@@ -61,11 +61,11 @@ namespace Alto.CodeAnalysis.Emit
                 (TypeSymbol.Void, "System.Void"),
             };
 
-            _knowsTypes = new Dictionary<TypeSymbol, TypeReference>();
+            _knownTypes = new Dictionary<TypeSymbol, TypeReference>();
             foreach (var (typeSymbol, metadataName) in builtinTypes)
             {
                 var typeReference = ResolveType(typeSymbol.Name, metadataName);
-                _knowsTypes.Add(typeSymbol, typeReference);
+                _knownTypes.Add(typeSymbol, typeReference);
             }
 
             TypeReference ResolveType(string altoName, string metadataName)
@@ -165,7 +165,7 @@ namespace Alto.CodeAnalysis.Emit
             if (program.Diagnostics.Any())
                 return program.Diagnostics.ToImmutableArray();
 
-            var objectType = _knowsTypes[TypeSymbol.Any];
+            var objectType = _knownTypes[TypeSymbol.Any];
 
             _typeDefinition = new TypeDefinition("", "Program", TypeAttributes.Abstract | TypeAttributes.Sealed, objectType);
             _assembly.MainModule.Types.Add(_typeDefinition);
@@ -186,12 +186,12 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitFunctionDeclaration(FunctionSymbol function)
         {
-            var functionType = _knowsTypes[function.Type];
+            var functionType = _knownTypes[function.Type];
             var method = new MethodDefinition(function.Name, MethodAttributes.Static | MethodAttributes.Private, functionType);
 
             foreach (var parameter in function.Parameters)
             {
-                var parameterType = _knowsTypes[parameter.Type];
+                var parameterType = _knownTypes[parameter.Type];
                 var parameterAttributes = ParameterAttributes.None;
                 var parameterDefinition = new ParameterDefinition(parameter.Name, parameterAttributes, parameterType);
                 method.Parameters.Add(parameterDefinition);
@@ -290,7 +290,7 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitVariableDeclaration(ILProcessor ilProcessor, BoundVariableDeclaration node)
         {
-            var typeReference = _knowsTypes[node.Variable.Type];
+            var typeReference = _knownTypes[node.Variable.Type];
             var variableDefinition = new VariableDefinition(typeReference);
             _locals.Add(node.Variable, variableDefinition);
             ilProcessor.Body.Variables.Add(variableDefinition);
@@ -343,7 +343,7 @@ namespace Alto.CodeAnalysis.Emit
 
             var needsBoxing = node.Expression.Type == TypeSymbol.Int || node.Expression.Type == TypeSymbol.Bool;
             if (needsBoxing)
-                ilProcessor.Emit(OpCodes.Box, _knowsTypes[node.Expression.Type]);
+                ilProcessor.Emit(OpCodes.Box, _knownTypes[node.Expression.Type]);
 
             if (node.Type == TypeSymbol.Any)
             {
@@ -585,7 +585,7 @@ namespace Alto.CodeAnalysis.Emit
                 MethodAttributes.Private |
                 MethodAttributes.SpecialName |
                 MethodAttributes.RTSpecialName,
-                _knowsTypes[TypeSymbol.Void]
+                _knownTypes[TypeSymbol.Void]
             );
             _typeDefinition.Methods.Insert(0, staticConstructor);
 
