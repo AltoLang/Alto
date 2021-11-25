@@ -22,6 +22,11 @@ namespace Alto.CodeAnalysis
             _diagnostics.AddRange(diagnostics._diagnostics);
         }
 
+        public void Add(Diagnostic diagnostic)
+        {
+            _diagnostics.Add(diagnostic);
+        }
+
         public void Concat(DiagnosticBag diagnostics)
         {
             _diagnostics.AddRange(diagnostics._diagnostics);
