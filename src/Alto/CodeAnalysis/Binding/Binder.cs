@@ -141,6 +141,9 @@ namespace Alto.CodeAnalysis.Binding
             var functionBodies = new Dictionary<FunctionSymbol, BoundBlockStatement>();
             var diagnostics = new DiagnosticBag();
 
+            foreach (var diagnostic in globalScope.Diagnostics)
+                diagnostics.Add(diagnostic);
+
             foreach (var function in globalScope.Functions)
             {
                 var binder = new Binder(isScript, parentScope, function);
@@ -155,11 +158,12 @@ namespace Alto.CodeAnalysis.Binding
                 diagnostics.AddRange(binder.Diagnostics);
             }
             
-            
             if (globalScope.MainFunction != null && globalScope.Statements.Any())
             {
                 var body = Lowerer.Lower(globalScope.MainFunction, new BoundBlockStatement(globalScope.Statements));
-                functionBodies.Add(globalScope.MainFunction, body);
+
+                if (!functionBodies.ContainsKey(globalScope.MainFunction))
+                    functionBodies.Add(globalScope.MainFunction, body);
             }
             else if (globalScope.ScriptFunction != null)
             {
