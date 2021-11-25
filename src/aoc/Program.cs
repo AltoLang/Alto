@@ -38,7 +38,7 @@ namespace Alto
             };
 
             // trim references
-            var referencesToRemove = references.Where(r => !_requiredAssemblies.Contains(r));
+            var referencesToRemove = references.Where(r => r.Contains("System.") && !_requiredAssemblies.Contains(r));
             foreach (var reference in referencesToRemove)
                 references.Remove(reference);
 
