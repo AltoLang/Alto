@@ -140,7 +140,7 @@ namespace Alto.CodeAnalysis.Emit
                 return null;
             }
 
-            _consoleWriteLineReference = ResolveMethod("System.Console", "WriteLine", new string[] {"System.String"});
+            _consoleWriteLineReference = ResolveMethod("System.Console", "WriteLine", new string[] {"System.Object"});
             _consoleReadLineReference = ResolveMethod("System.Console", "ReadLine", Array.Empty<string>());
             _stringConcatReference = ResolveMethod("System.String", "Concat", new string[] {"System.String", "System.String"});
             _objectEqualsReference = ResolveMethod("System.Object", "Equals", new string[] {"System.Object", "System.Object"});
@@ -388,7 +388,7 @@ namespace Alto.CodeAnalysis.Emit
                 EmitExpression(ilProcessor, arg);
             
             if (node.Function == BuiltInFunctions.Print)
-            {
+            {               
                 ilProcessor.Emit(OpCodes.Call, _consoleWriteLineReference);
             }
             else if (node.Function == BuiltInFunctions.ReadLine)
