@@ -14,14 +14,24 @@ namespace Alto.CodeAnalysis.Emit
     {
         private DiagnosticBag _diagnostics = new DiagnosticBag();
         private readonly AssemblyDefinition _assembly;
-        private readonly Dictionary<TypeSymbol, TypeReference> _knowsTypes;
+        private readonly Dictionary<TypeSymbol, TypeReference> _knownTypes;
         private readonly MethodReference _consoleWriteLineReference;
         private readonly MethodReference _consoleReadLineReference;
         private readonly MethodReference _stringConcatReference;
+        private readonly MethodReference _objectEqualsReference;
+        private readonly MethodReference _convertToBooleanReference;
+        private readonly MethodReference _convertToStringReference;
+        private readonly MethodReference _convertToInt32Reference;
+        private readonly TypeReference _randomReference;
+        private readonly MethodReference _randomCtorReference;
+        private readonly MethodReference _randomNextReference;
         private  readonly Dictionary<VariableSymbol, VariableDefinition> _locals = new Dictionary<VariableSymbol, VariableDefinition>();
         private readonly Dictionary<FunctionSymbol, MethodDefinition> _methods = new Dictionary<FunctionSymbol, MethodDefinition>();
+        private readonly List<(int InstructionIndex, BoundLabel Target)> _fixups = new List<(int InstructionIndex, BoundLabel Target)>();
+        private readonly Dictionary<BoundLabel, int> _labels = new Dictionary<BoundLabel, int>();
 
         private TypeDefinition _typeDefinition;
+        private FieldDefinition? _randomFieldDefinition;
 
         private Emitter(string moduleName, string[] references)
         {   
@@ -51,11 +61,11 @@ namespace Alto.CodeAnalysis.Emit
                 (TypeSymbol.Void, "System.Void"),
             };
 
-            _knowsTypes = new Dictionary<TypeSymbol, TypeReference>();
+            _knownTypes = new Dictionary<TypeSymbol, TypeReference>();
             foreach (var (typeSymbol, metadataName) in builtinTypes)
             {
                 var typeReference = ResolveType(typeSymbol.Name, metadataName);
-                _knowsTypes.Add(typeSymbol, typeReference);
+                _knownTypes.Add(typeSymbol, typeReference);
             }
 
             TypeReference ResolveType(string altoName, string metadataName)
@@ -133,9 +143,18 @@ namespace Alto.CodeAnalysis.Emit
             _consoleWriteLineReference = ResolveMethod("System.Console", "WriteLine", new string[] {"System.String"});
             _consoleReadLineReference = ResolveMethod("System.Console", "ReadLine", Array.Empty<string>());
             _stringConcatReference = ResolveMethod("System.String", "Concat", new string[] {"System.String", "System.String"});
+            _objectEqualsReference = ResolveMethod("System.Object", "Equals", new string[] {"System.Object", "System.Object"});
+
+            _convertToBooleanReference = ResolveMethod("System.Convert", "ToBoolean", new string[] {"System.Object"});
+            _convertToStringReference = ResolveMethod("System.Convert", "ToString", new string[] {"System.Object"});
+            _convertToInt32Reference = ResolveMethod("System.Convert", "ToInt32", new string[] {"System.Object"});
+
+            _randomReference = ResolveType(null, "System.Random");
+            _randomCtorReference = ResolveMethod("System.Random", ".ctor", Array.Empty<string>());
+            _randomNextReference = ResolveMethod("System.Random", "Next", new [] {"System.Int32", "System.Int32"});
         }
         
-        internal static ImmutableArray<Diagnostic> Emit(BoundProgram program, string moduleName, string[] references, string outPath)
+        internal static ImmutableArray<Diagnostic> Emit(BoundProgram program, string moduleName, string[]   references, string outPath)
         {
             var emitter = new Emitter(moduleName, references);
             return emitter.Emit(program, outPath);
@@ -146,7 +165,7 @@ namespace Alto.CodeAnalysis.Emit
             if (program.Diagnostics.Any())
                 return program.Diagnostics.ToImmutableArray();
 
-            var objectType = _knowsTypes[TypeSymbol.Any];
+            var objectType = _knownTypes[TypeSymbol.Any];
 
             _typeDefinition = new TypeDefinition("", "Program", TypeAttributes.Abstract | TypeAttributes.Sealed, objectType);
             _assembly.MainModule.Types.Add(_typeDefinition);
@@ -167,12 +186,12 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitFunctionDeclaration(FunctionSymbol function)
         {
-            var functionType = _knowsTypes[function.Type];
+            var functionType = _knownTypes[function.Type];
             var method = new MethodDefinition(function.Name, MethodAttributes.Static | MethodAttributes.Private, functionType);
 
             foreach (var parameter in function.Parameters)
             {
-                var parameterType = _knowsTypes[parameter.Type];
+                var parameterType = _knownTypes[parameter.Type];
                 var parameterAttributes = ParameterAttributes.None;
                 var parameterDefinition = new ParameterDefinition(parameter.Name, parameterAttributes, parameterType);
                 method.Parameters.Add(parameterDefinition);
@@ -186,14 +205,21 @@ namespace Alto.CodeAnalysis.Emit
         {
             var method = _methods[function];
             _locals.Clear();
+            _fixups.Clear();
+            _labels.Clear();
 
             var ilProcessor = method.Body.GetILProcessor();
             EmitStatement(ilProcessor, body);
 
-            // This should not be here.
-            // We need to make sure that we always have returns in the bound tree. 
-            if (function.Type == TypeSymbol.Void)
-                ilProcessor.Emit(OpCodes.Ret);
+            foreach (var fixup in _fixups)
+            {
+                var targetLabel = fixup.Target;
+                var targetInstructionIndex = _labels[targetLabel];
+                var targetInstruction = ilProcessor.Body.Instructions[targetInstructionIndex];
+                var instructionToFixup =  ilProcessor.Body.Instructions[fixup.InstructionIndex];
+
+                instructionToFixup.Operand = targetInstruction;
+            }
 
             method.Body.OptimizeMacros();
         }
@@ -244,22 +270,27 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitLabelStatement(ILProcessor ilProcessor, BoundLabelStatement node)
         {
-            throw new NotImplementedException();
-        }
-
-        private void EmitConditionalGotoStatement(ILProcessor ilProcessor, BoundConditionalGotoStatement node)
-        {
-            throw new NotImplementedException();
+            _labels.Add(node.Label, ilProcessor.Body.Instructions.Count);
         }
 
         private void EmitGotoStatement(ILProcessor ilProcessor, BoundGotoStatement node)
         {
-            throw new NotImplementedException();
+            _fixups.Add((ilProcessor.Body.Instructions.Count, node.Label));
+            ilProcessor.Emit(OpCodes.Br, Instruction.Create(OpCodes.Nop));
+        }
+
+        private void EmitConditionalGotoStatement(ILProcessor ilProcessor, BoundConditionalGotoStatement node)
+        {
+            EmitExpression(ilProcessor, node.Condition);
+
+            var opCode = node.JumpIfTrue ? OpCodes.Brtrue : OpCodes.Brfalse;
+            _fixups.Add((ilProcessor.Body.Instructions.Count, node.Label));
+            ilProcessor.Emit(opCode, Instruction.Create(OpCodes.Nop));
         }
 
         private void EmitVariableDeclaration(ILProcessor ilProcessor, BoundVariableDeclaration node)
         {
-            var typeReference = _knowsTypes[node.Variable.Type];
+            var typeReference = _knownTypes[node.Variable.Type];
             var variableDefinition = new VariableDefinition(typeReference);
             _locals.Add(node.Variable, variableDefinition);
             ilProcessor.Body.Variables.Add(variableDefinition);
@@ -308,11 +339,51 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitConversionExpression(ILProcessor ilProcessor, BoundConversionExpression node)
         {
-            throw new NotImplementedException();
+            EmitExpression(ilProcessor, node.Expression);
+
+            var needsBoxing = node.Expression.Type == TypeSymbol.Int || node.Expression.Type == TypeSymbol.Bool;
+            if (needsBoxing)
+                ilProcessor.Emit(OpCodes.Box, _knownTypes[node.Expression.Type]);
+
+            if (node.Type == TypeSymbol.Any)
+            {
+                // already handled
+                return;
+            }
+            else if (node.Type == TypeSymbol.Bool)
+            {
+                ilProcessor.Emit(OpCodes.Call, _convertToBooleanReference);
+            }
+            else if (node.Type == TypeSymbol.Int)
+            {
+                ilProcessor.Emit(OpCodes.Call, _convertToInt32Reference);
+            }
+            else if (node.Type == TypeSymbol.String)
+            {
+                ilProcessor.Emit(OpCodes.Call, _convertToStringReference);
+            }
+            else
+            {
+                throw new Exception($"Unexpected conversion from '{node.Expression.Type}' to '{node.Type}'.");
+            }
         }
 
         private void EmitCallExpression(ILProcessor ilProcessor, BoundCallExpression node)
         {
+            if (node.Function == BuiltInFunctions.Random)
+            {
+                if (_randomFieldDefinition == null)
+                    EmitRandomField();
+
+                ilProcessor.Emit(OpCodes.Ldsfld, _randomFieldDefinition);
+
+                foreach (var argument in node.Arguments)
+                    EmitExpression(ilProcessor, argument);
+
+                ilProcessor.Emit(OpCodes.Callvirt, _randomNextReference);
+                return;
+            }
+
             foreach (var arg in node.Arguments)
                 EmitExpression(ilProcessor, arg);
             
@@ -324,10 +395,6 @@ namespace Alto.CodeAnalysis.Emit
             {
                 ilProcessor.Emit(OpCodes.Call, _consoleReadLineReference);
             }
-            else if (node.Function == BuiltInFunctions.Random)
-            {
-                throw new NotImplementedException();
-            }
             else
             {
                 var methodDefinition = _methods[node.Function];
@@ -337,18 +404,99 @@ namespace Alto.CodeAnalysis.Emit
 
         private void EmitBinaryExpression(ILProcessor ilProcessor, BoundBinaryExpression node)
         {
+            EmitExpression(ilProcessor, node.Left);
+            EmitExpression(ilProcessor, node.Right);
+
+            // String concatenation
             if (node.Op.Kind == BoundBinaryOperatorKind.Addition)
             {
                 if (node.Left.Type == TypeSymbol.String && node.Right.Type == TypeSymbol.String)
                 {
-                    EmitExpression(ilProcessor, node.Left);
-                    EmitExpression(ilProcessor, node.Right);
                     ilProcessor.Emit(OpCodes.Call, _stringConcatReference);
                     return;
                 }
             }
 
-            throw new NotImplementedException();
+            if (node.Op.Kind == BoundBinaryOperatorKind.Equals)
+            {
+                // (String || Any) equality
+                if (node.Left.Type == TypeSymbol.Any && node.Right.Type == TypeSymbol.Any ||
+                    node.Left.Type == TypeSymbol.String && node.Right.Type == TypeSymbol.String)
+                {
+                    ilProcessor.Emit(OpCodes.Call, _objectEqualsReference);
+                    return;
+                }
+            }
+
+            if (node.Op.Kind == BoundBinaryOperatorKind.NotEquals) 
+            {
+                // (String || Any) equality
+                if (node.Left.Type == TypeSymbol.Any && node.Right.Type == TypeSymbol.Any ||
+                    node.Left.Type == TypeSymbol.String && node.Right.Type == TypeSymbol.String)
+                {
+                    ilProcessor.Emit(OpCodes.Call, _objectEqualsReference);
+                    ilProcessor.Emit(OpCodes.Ldc_I4_0);
+                    ilProcessor.Emit(OpCodes.Ceq);
+                    return;
+                }
+            }
+
+            
+            switch (node.Op.Kind)
+            {
+                case BoundBinaryOperatorKind.Addition:
+                    ilProcessor.Emit(OpCodes.Add);
+                    break;
+                case BoundBinaryOperatorKind.Subtraction:
+                    ilProcessor.Emit(OpCodes.Sub);
+                    break;
+                case BoundBinaryOperatorKind.Multiplication:
+                    ilProcessor.Emit(OpCodes.Mul);
+                    break;
+                case BoundBinaryOperatorKind.Division:
+                    ilProcessor.Emit(OpCodes.Div);
+                    break;
+                case BoundBinaryOperatorKind.Modulus:
+                    ilProcessor.Emit(OpCodes.Rem);
+                    break;
+                // TODO: Short-circuit evaluation
+                case BoundBinaryOperatorKind.BitwiseAND:
+                case BoundBinaryOperatorKind.LogicalAND:
+                    ilProcessor.Emit(OpCodes.And);
+                    break;
+                // TODO: Short-circuit evaluation
+                case BoundBinaryOperatorKind.BitwiseOR:
+                case BoundBinaryOperatorKind.LogicalOR:
+                    ilProcessor.Emit(OpCodes.Or);
+                    break;
+                case BoundBinaryOperatorKind.BitwiseXOR:
+                    ilProcessor.Emit(OpCodes.Xor);
+                    break;
+                case BoundBinaryOperatorKind.Equals:
+                    ilProcessor.Emit(OpCodes.Ceq);
+                    break;
+                case BoundBinaryOperatorKind.NotEquals:
+                    ilProcessor.Emit(OpCodes.Or);
+                    break;
+                case BoundBinaryOperatorKind.LesserThan:
+                    ilProcessor.Emit(OpCodes.Clt);
+                    break;
+                case BoundBinaryOperatorKind.LesserOrEqualTo:
+                    ilProcessor.Emit(OpCodes.Cgt);
+                    ilProcessor.Emit(OpCodes.Ldc_I4_0);
+                    ilProcessor.Emit(OpCodes.Ceq);
+                    break;
+                case BoundBinaryOperatorKind.GreaterThan:
+                    ilProcessor.Emit(OpCodes.Cgt);
+                    break;
+                case BoundBinaryOperatorKind.GreaterOrEqualTo:
+                    ilProcessor.Emit(OpCodes.Clt);
+                    ilProcessor.Emit(OpCodes.Ldc_I4_0);
+                    ilProcessor.Emit(OpCodes.Ceq);
+                    break;
+                default:
+                    throw new Exception($"Unexpected binary operator '{node.Op.Kind}'.");
+            }
         }
 
         private void EmitAssignmentExpression(ILProcessor ilProcessor, BoundAssignmentExpression node)
@@ -400,8 +548,51 @@ namespace Alto.CodeAnalysis.Emit
         }
 
         private void EmitUnaryExpression(ILProcessor ilProcessor, BoundUnaryExpression node)
+        {   
+            EmitExpression(ilProcessor, node.Operand);
+
+            switch (node.Op.Kind)
+            {
+                case BoundUnaryOperatorKind.Indentity:
+                    break;
+                case BoundUnaryOperatorKind.LogicalNegation:
+                    ilProcessor.Emit(OpCodes.Ldc_I4_0);
+                    ilProcessor.Emit(OpCodes.Ceq);
+                    break;
+                case BoundUnaryOperatorKind.Negation:
+                    ilProcessor.Emit(OpCodes.Neg);
+                    break;
+                case BoundUnaryOperatorKind.OnesComplement:
+                    ilProcessor.Emit(OpCodes.Not);
+                    break;
+                default:
+                    throw new Exception($"Unexpected unary operator '{node.Op.Kind}'.");
+            }
+        }
+
+        private void EmitRandomField()
         {
-            throw new NotImplementedException();
+            _randomFieldDefinition = new FieldDefinition(
+                "$rnd",
+                FieldAttributes.Static | FieldAttributes.Private,
+                _randomReference
+            );
+            _typeDefinition.Fields.Add(_randomFieldDefinition);
+
+            var staticConstructor = new MethodDefinition(
+                ".cctor",
+                MethodAttributes.Static |
+                MethodAttributes.Private |
+                MethodAttributes.SpecialName |
+                MethodAttributes.RTSpecialName,
+                _knownTypes[TypeSymbol.Void]
+            );
+            _typeDefinition.Methods.Insert(0, staticConstructor);
+
+            var ilProcessor = staticConstructor.Body.GetILProcessor();
+            ilProcessor.Emit(OpCodes.Newobj, _randomCtorReference);
+            ilProcessor.Emit(OpCodes.Stsfld, _randomFieldDefinition);
+            ilProcessor.Emit(OpCodes.Ret);
         }
     }
 }

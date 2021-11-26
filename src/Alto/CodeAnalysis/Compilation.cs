@@ -92,7 +92,6 @@ namespace Alto.CodeAnalysis
             if (program.Diagnostics.Any())
                 return new EvaluationResult(program.Diagnostics.ToImmutableArray(), null);
 
-            var statement = GetStatement();
             MergeLocalAndGlobalFunctions(program);
             var evaluator = new Evaluator(program, variables);
             var value = evaluator.Evaluate();
@@ -158,26 +157,6 @@ namespace Alto.CodeAnalysis
         {
             var previous = Previous == null ? null : Previous.GetProgram();
             return Binder.BindProgram(IsScript, previous, GlobalScope);
-        }
-
-        private BoundBlockStatement GetStatement()
-        {
-            var statements = GlobalScope.Statements;
-            if (statements.Any())
-            {
-                var result = GlobalScope.Statements[0];
-                if (result.Kind != BoundNodeKind.BlockStatement)
-                    result = new BoundBlockStatement(GlobalScope.Statements);
-
-                return Lowerer.Lower(result);
-            }
-            else
-            {
-                var childStatements = ImmutableArray<BoundStatement>.Empty;
-                var statement = new BoundBlockStatement(childStatements);
-
-                return statement;
-            }   
         }
 
         private void MergeLocalAndGlobalFunctions(BoundProgram program)
