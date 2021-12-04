@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -68,6 +69,32 @@ namespace Alto
             }
         }
 
+        protected void EvaluateSubmissionI(string text)
+        {
+            Console.Title = text;
+            var syntaxTree = SyntaxTree.Parse(text);
+            Compilation compilation = Compilation.CreateScript(_previous, syntaxTree);
+
+            string programFolderPath = CreateBuildPrerequisites();
+            string[] references = new string[] {
+                "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19/ref/net6.0/System.Runtime.dll",
+                "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19/ref/net6.0/System.Runtime.Extensions.dll",
+                "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19/ref/net6.0/System.Console.dll"
+            };
+
+            compilation.Emit(moduleName: "Program", references, Path.Combine(programFolderPath, "obj/Debug/net6.0/Program.dll"));
+
+            // dotnet build
+            var buildCommand = $"/C dotnet build \"C:/Users/Filip/AppData/Local/Alto/Program/Program.aoproj\"";
+            var buildCli = Process.Start("cmd.exe", buildCommand);
+            buildCli.WaitForExit();
+
+            // dotnet run
+            var runCommand = $"/C dotnet \"C:/Users/Filip/AppData/Local/Alto/Program/bin/Debug/net6.0/Program.dll\"";
+            var runCli = Process.Start("cmd.exe", runCommand);
+            runCli.WaitForExit();
+        }
+
         private void LoadSubmissions()
         {
             var dir = GetSubmissionsDirectory();
@@ -92,6 +119,7 @@ namespace Alto
                 var text = File.ReadAllText(file);
                 EvaluateSubmission(text);
             }
+            
             _loadingSubmissions = false;
         }
 
@@ -113,6 +141,14 @@ namespace Alto
             var name = $"submission{count:0000}";
             var filename = Path.Combine(submissionFolder, name);
             File.WriteAllText(filename, text);
+        }
+
+        private string CreateBuildPrerequisites()
+        {
+            var localAppData = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var programFolder = Path.Combine(localAppData, "Alto", "Program");
+
+            return programFolder;
         }
 
         private string GetSubmissionsDirectory()
