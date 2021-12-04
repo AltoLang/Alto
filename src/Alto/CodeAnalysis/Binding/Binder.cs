@@ -91,7 +91,7 @@ namespace Alto.CodeAnalysis.Binding
             {
                 mainFunction = null;
                 if (globalStatements.Any()) 
-                    scriptFunction = new FunctionSymbol("$eval", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.Any);
+                    scriptFunction = new FunctionSymbol("$eval", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.Void);
                 else
                     scriptFunction = null;
             }
@@ -174,8 +174,7 @@ namespace Alto.CodeAnalysis.Binding
                 }
                 else if (statements.Any() && statements.Last().Kind != BoundNodeKind.ReturnStatement)
                 {
-                    var nullValue = new BoundLiteralExpression("");
-                    statements = statements.Add(new BoundReturnStatement(nullValue));
+                    statements = statements.Add(new BoundReturnStatement(null));
                 }
 
                 var body = Lowerer.Lower(globalScope.ScriptFunction, new BoundBlockStatement(statements));
