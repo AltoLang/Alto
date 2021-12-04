@@ -178,6 +178,8 @@ namespace Alto.CodeAnalysis.Emit
 
             if (program.MainFunction != null)
                 _assembly.EntryPoint = _methods[program.MainFunction];
+            else if (program.ScriptFunction != null)
+                _assembly.EntryPoint = _methods[program.ScriptFunction];
             
             _assembly.Write(outPath);
 
