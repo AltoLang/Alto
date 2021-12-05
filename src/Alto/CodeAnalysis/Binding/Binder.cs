@@ -170,7 +170,11 @@ namespace Alto.CodeAnalysis.Binding
                 var statements = globalScope.Statements;
                 if (statements.Length == 1 && statements[0] is BoundExpressionStatement ex && ex.Expression.Type != TypeSymbol.Void)
                 {
-                    statements = statements.SetItem(0, new BoundReturnStatement(ex.Expression));
+                    var castedExpression = new BoundConversionExpression(TypeSymbol.Any, ex.Expression);
+                    var printArgs = new BoundExpression[] { castedExpression };
+                    var printCall = new BoundCallExpression(BuiltInFunctions.Print, printArgs.ToImmutableArray());
+
+                    statements = statements.SetItem(0, new BoundExpressionStatement(printCall));
                 }
                 else if (statements.Any() && statements.Last().Kind != BoundNodeKind.ReturnStatement)
                 {
