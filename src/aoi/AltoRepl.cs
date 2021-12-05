@@ -27,7 +27,7 @@ namespace Alto
             LoadSubmissions();
         }
 
-        protected override void EvaluateSubmission(string text)
+        protected void EvaluateSubmissionOld(string text)
         {
             var syntaxTree = SyntaxTree.Parse(text);
 
@@ -69,7 +69,7 @@ namespace Alto
             }
         }
 
-        protected void EvaluateSubmissionI(string text)
+        protected override void EvaluateSubmission(string text)
         {
             Console.Title = text;
             var syntaxTree = SyntaxTree.Parse(text);
