@@ -83,14 +83,26 @@ namespace Alto
             };
 
             compilation.Emit(moduleName: "Program", references, Path.Combine(programFolderPath, "obj/Debug/net6.0/Program.dll"));
+            
+            var projectPath = programFolderPath + @"/Program.aoproj";
+            var dllPath = programFolderPath + @"/bin/Debug/net6.0/Program.dll";
 
             // dotnet build
-            var buildCommand = $"/C dotnet build \"C:/Users/Filip/AppData/Local/Alto/Program/Program.aoproj\"";
-            var buildCli = Process.Start("cmd.exe", buildCommand);
+            var buildCommand = $"/C dotnet build \"" + projectPath + "\" --nologo";
+            var buildStartInfo = new ProcessStartInfo
+            {            
+                FileName = "cmd.exe",
+                Arguments = buildCommand,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
+            
+            var buildCli = Process.Start(buildStartInfo);
             buildCli.WaitForExit();
 
             // dotnet run
-            var runCommand = $"/C dotnet \"C:/Users/Filip/AppData/Local/Alto/Program/bin/Debug/net6.0/Program.dll\"";
+            var runCommand = $"/C dotnet " + dllPath;
             var runCli = Process.Start("cmd.exe", runCommand);
             runCli.WaitForExit();
         }
