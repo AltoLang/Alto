@@ -4,11 +4,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using Alto.CodeAnalysis;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Syntax;
-using Alto.CodeAnalysis.Text;
 using Alto.IO;
+using Newtonsoft.Json;
 
 namespace Alto
 {
@@ -76,10 +77,12 @@ namespace Alto
             Compilation compilation = Compilation.CreateScript(_previous, syntaxTree);
 
             string programFolderPath = CreateBuildPrerequisites();
+
+            var netCoreRefPath = "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19";
             string[] references = new string[] {
-                "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19/ref/net6.0/System.Runtime.dll",
-                "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19/ref/net6.0/System.Runtime.Extensions.dll",
-                "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19/ref/net6.0/System.Console.dll"
+                Path.Combine(netCoreRefPath, "ref/net6.0/System.Runtime.dll"),
+                Path.Combine(netCoreRefPath, "ref/net6.0/System.Runtime.Extensions.dll"),
+                Path.Combine(netCoreRefPath, "ref/net6.0/System.Console.dll"),
             };
 
             compilation.Emit(moduleName: "Program", references, Path.Combine(programFolderPath, "obj/Debug/net6.0/Program.dll"));
@@ -170,6 +173,37 @@ namespace Alto
             return submissionFolder;
         }
 
+        public Config GetConfig()
+        {
+            var path = GetConfigPath();
+            var text = File.ReadAllText(path);
+            Config config = JsonConvert.DeserializeObject<Config>(text);
+
+            return config;
+        }
+
+        public string GetConfigPath()
+        {
+            var localAppData = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var configPath = Path.Combine(localAppData, "Alto", "config.json");
+
+            if (!File.Exists(configPath))
+                CreateBaseConfig(configPath);
+
+            return configPath;
+        }
+
+        private void CreateBaseConfig(string configPath)
+        {
+            var baseConfig = new Dictionary<string, string>
+            {
+                {"NETCorePath", "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19/"}
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(baseConfig);
+            File.WriteAllText(configPath, json);
+        }
+
         protected override void RenderLine(string line)
         {
             var tokens = SyntaxTree.ParseTokens(line);
@@ -249,7 +283,7 @@ namespace Alto
         }
 
         [MetaCommand("dump", description: "Shows the bound tree representation of a given function.")]
-        private void EvaluateDump(string functionName)
+        private void EvaluateDump(string functionName)  
         {   
             var compilation = _previous ?? emptyCompilation;
             var symbol = compilation.GetSymbols().OfType<FunctionSymbol>().SingleOrDefault(f => f.Name == functionName);
@@ -276,6 +310,40 @@ namespace Alto
         {
             _previous = null;
             ClearSubmissions();
+        }
+
+        [MetaCommand("config", description: "Lists all config items.")]
+        private void EvaluateConfig()
+        {
+            var path = GetConfigPath();
+            Config config = GetConfig();
+            
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Write("NETCorePath: ");
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write($"{config.NETCorePath}");
+
+            Console.ResetColor();
+            Console.WriteLine();
+            Console.WriteLine();
+
+            Console.WriteLine($"Config Path: { path }");
+            Console.WriteLine();
+        }
+
+        [MetaCommand("cadd", description: "Adds a config item.")]
+        private void EvaluateCAdd(string key, string value)
+        {
+
+        }
+
+        [MetaCommand("calter", description: "Changes a config item")]
+        private void EvaluateCAlter(string key, string newValue)
+        {
+
         }
 
         protected override bool IsCompleteSubmission(string text)
