@@ -73,13 +73,15 @@ namespace Alto
 
         protected override void EvaluateSubmission(string text)
         {
+            var config = GetConfig();
+
             Console.Title = text;
             var syntaxTree = SyntaxTree.Parse(text);
             Compilation compilation = Compilation.CreateScript(_previous, syntaxTree);
 
             string programFolderPath = CreateBuildPrerequisites();
 
-            var netCoreRefPath = "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19";
+            var netCoreRefPath = config.NETCorePath;
             string[] references = new string[] {
                 Path.Combine(netCoreRefPath, "ref/net6.0/System.Runtime.dll"),
                 Path.Combine(netCoreRefPath, "ref/net6.0/System.Runtime.Extensions.dll"),
