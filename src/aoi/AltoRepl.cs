@@ -29,48 +29,6 @@ namespace Alto
             LoadSubmissions();
         }
 
-        protected void EvaluateSubmissionOld(string text)
-        {
-            var syntaxTree = SyntaxTree.Parse(text);
-
-            Compilation compilation = Compilation.CreateScript(_previous, syntaxTree);
-
-            if (_showTree)
-            {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                syntaxTree.Root.WriteTo(Console.Out);
-                Console.ResetColor();
-            }
-
-            if (_showProgram)
-            {
-                Console.ForegroundColor = ConsoleColor.DarkGray;
-                compilation.EmitTree(Console.Out);
-                Console.ResetColor();
-            }
-
-            var result = compilation.Evaluate(_variables);
-
-            var diagnostics = result.Diagnostics;
-
-            if (!result.Diagnostics.Any())
-            {
-                if (result.Value != null)
-                {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(result.Value);
-                    Console.ResetColor();
-                }
-
-                _previous = compilation;
-                SaveSubmission(text);
-            }
-            else
-            {
-                DiagnosticsWriter.WriteDiagnostics(Console.Out, result.Diagnostics);
-            }
-        }
-
         protected override void EvaluateSubmission(string text)
         {
             var config = GetConfig();
@@ -130,6 +88,9 @@ namespace Alto
             var runCommand = $"/C dotnet " + dllPath;
             var runCli = Process.Start("cmd.exe", runCommand);
             runCli.WaitForExit();
+
+            _previous = compilation;
+            SaveSubmission(text);
         }
 
         private void LoadSubmissions()
