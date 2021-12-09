@@ -340,10 +340,37 @@ namespace Alto
 
         }
 
+        [MetaCommand("crem", description: "Removes a config item.")]
+        private void EvaluateCRem(string key, string value)
+        {
+
+        }
+
         [MetaCommand("calter", description: "Changes a config item")]
         private void EvaluateCAlter(string key, string newValue)
         {
+            var config = GetConfig();
+            var path = GetConfigPath();
 
+            switch (key)
+            {
+                case "NETCorePath":
+                    config.NETCorePath = newValue;
+                    break;
+                default:
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    Console.WriteLine($"Key {key} not present in the config.");
+                    Console.ResetColor();
+                    break;
+            }
+
+            var json = JsonConvert.SerializeObject(config);
+
+            var stream = new FileStream(path, FileMode.Truncate);
+            using (StreamWriter writer = new StreamWriter(stream))
+            {
+                writer.Write(json);
+            }
         }
 
         protected override bool IsCompleteSubmission(string text)
