@@ -334,18 +334,6 @@ namespace Alto
             Console.WriteLine();
         }
 
-        [MetaCommand("cadd", description: "Adds a config item.")]
-        private void EvaluateCAdd(string key, string value)
-        {
-
-        }
-
-        [MetaCommand("crem", description: "Removes a config item.")]
-        private void EvaluateCRem(string key, string value)
-        {
-
-        }
-
         [MetaCommand("calter", description: "Changes a config item")]
         private void EvaluateCAlter(string key, string newValue)
         {
