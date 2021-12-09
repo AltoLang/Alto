@@ -79,6 +79,20 @@ namespace Alto
             var syntaxTree = SyntaxTree.Parse(text);
             Compilation compilation = Compilation.CreateScript(_previous, syntaxTree);
 
+            if (_showTree)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                syntaxTree.Root.WriteTo(Console.Out);
+                Console.ResetColor();
+            }
+
+            if (_showProgram)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                compilation.EmitTree(Console.Out);
+                Console.ResetColor();
+            }
+
             string programFolderPath = CreateBuildPrerequisites();
 
             var netCoreRefPath = config.NETCorePath;
@@ -88,7 +102,12 @@ namespace Alto
                 Path.Combine(netCoreRefPath, "ref/net6.0/System.Console.dll"),
             };
 
-            compilation.Emit(moduleName: "Program", references, Path.Combine(programFolderPath, "obj/Debug/net6.0/Program.dll"));
+           var diagnostics = compilation.Emit(moduleName: "Program", references, Path.Combine(programFolderPath, "obj/Debug/net6.0/Program.dll"));
+           if (diagnostics.Any())
+            {
+                DiagnosticsWriter.WriteDiagnostics(Console.Out, diagnostics);
+                return;
+            }
             
             var projectPath = programFolderPath + @"/Program.aoproj";
             var dllPath = programFolderPath + @"/bin/Debug/net6.0/Program.dll";
