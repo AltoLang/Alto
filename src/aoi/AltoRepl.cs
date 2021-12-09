@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Reflection;
 using Alto.CodeAnalysis;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Syntax;
@@ -340,16 +341,20 @@ namespace Alto
             var config = GetConfig();
             var path = GetConfigPath();
 
-            switch (key)
+            var configType = config.GetType();
+            var properties = configType.GetProperties().ToList();
+
+            var matchingProperties = properties.Where(p => p.Name == key);
+            if (matchingProperties.Count() != 0)
             {
-                case "NETCorePath":
-                    config.NETCorePath = newValue;
-                    break;
-                default:
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine($"Key {key} not present in the config.");
-                    Console.ResetColor();
-                    break;
+                var property = matchingProperties.First();
+                property.SetValue(config, newValue);
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"Key {key} not present in the config.");
+                Console.ResetColor();
             }
 
             var json = JsonConvert.SerializeObject(config);
