@@ -10,6 +10,9 @@ using Mono.Cecil.Rocks;
 
 namespace Alto.CodeAnalysis.Emit
 {
+    // Suppresses the warning about nullable reference types
+    #pragma warning disable CS8632 
+
     internal sealed class Emitter
     {
         private DiagnosticBag _diagnostics = new DiagnosticBag();

@@ -71,7 +71,7 @@ namespace Alto
             var dllPath = programFolderPath + @"/bin/Debug/net6.0/Program.dll";
 
             // dotnet build
-            var buildCommand = $"/C dotnet build \"" + projectPath + "\" --nologo";
+            var buildCommand = $"/C dotnet build \"" + projectPath + "\" --nologo --interactive";
             var buildStartInfo = new ProcessStartInfo
             {            
                 FileName = "cmd.exe",

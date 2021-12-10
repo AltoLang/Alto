@@ -722,7 +722,6 @@ namespace Alto.CodeAnalysis.Binding
                 var argumentLocation = syntax.Arguments[i].Location;
                 var parameter = function.Parameters[i];
                 var argument = boundArguments[i];
-                Console.WriteLine(parameter.Type);
                 boundArguments[i] = BindConversion(argument, parameter.Type, argumentLocation);
             }
 
