@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Reflection;
 using Alto.CodeAnalysis;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Syntax;
-using Alto.CodeAnalysis.Text;
 using Alto.IO;
+using Newtonsoft.Json;
 
 namespace Alto
 {
@@ -28,8 +31,10 @@ namespace Alto
 
         protected override void EvaluateSubmission(string text)
         {
-            var syntaxTree = SyntaxTree.Parse(text);
+            var config = GetConfig();
 
+            Console.Title = text;
+            var syntaxTree = SyntaxTree.Parse(text);
             Compilation compilation = Compilation.CreateScript(_previous, syntaxTree);
 
             if (_showTree)
@@ -46,26 +51,46 @@ namespace Alto
                 Console.ResetColor();
             }
 
-            var result = compilation.Evaluate(_variables);
+            string programFolderPath = CreateBuildPrerequisites();
 
-            var diagnostics = result.Diagnostics;
+            var netCoreRefPath = config.NETCorePath;
+            string[] references = new string[] {
+                Path.Combine(netCoreRefPath, "ref/net6.0/System.Runtime.dll"),
+                Path.Combine(netCoreRefPath, "ref/net6.0/System.Runtime.Extensions.dll"),
+                Path.Combine(netCoreRefPath, "ref/net6.0/System.Console.dll"),
+            };
 
-            if (!result.Diagnostics.Any())
+           var diagnostics = compilation.Emit(moduleName: "Program", references, Path.Combine(programFolderPath, "obj/Debug/net6.0/Program.dll"));
+           if (diagnostics.Any())
             {
-                if (result.Value != null)
-                {
-                    Console.ForegroundColor = ConsoleColor.White;
-                    Console.WriteLine(result.Value);
-                    Console.ResetColor();
-                }
+                DiagnosticsWriter.WriteDiagnostics(Console.Out, diagnostics);
+                return;
+            }
+            
+            var projectPath = programFolderPath + @"/Program.aoproj";
+            var dllPath = programFolderPath + @"/bin/Debug/net6.0/Program.dll";
 
-                _previous = compilation;
-                SaveSubmission(text);
-            }
-            else
-            {
-                DiagnosticsWriter.WriteDiagnostics(Console.Out, result.Diagnostics);
-            }
+            // dotnet build
+            var buildCommand = $"/C dotnet build \"" + projectPath + "\" --nologo --interactive";
+            var buildStartInfo = new ProcessStartInfo
+            {            
+                FileName = "cmd.exe",
+                Arguments = buildCommand,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true,
+                UseShellExecute = false
+            };
+            
+            var buildCli = Process.Start(buildStartInfo);
+            buildCli.WaitForExit();
+
+            // dotnet run
+            var runCommand = $"/C dotnet " + dllPath;
+            var runCli = Process.Start("cmd.exe", runCommand);
+            runCli.WaitForExit();
+
+            _previous = compilation;
+            SaveSubmission(text);
         }
 
         private void LoadSubmissions()
@@ -92,6 +117,7 @@ namespace Alto
                 var text = File.ReadAllText(file);
                 EvaluateSubmission(text);
             }
+            
             _loadingSubmissions = false;
         }
 
@@ -115,11 +141,50 @@ namespace Alto
             File.WriteAllText(filename, text);
         }
 
+        private string CreateBuildPrerequisites()
+        {
+            var localAppData = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var programFolder = Path.Combine(localAppData, "Alto", "Program");
+
+            return programFolder;
+        }
+
         private string GetSubmissionsDirectory()
         {
             var localAppData = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             var submissionFolder = Path.Combine(localAppData, "Alto", "Submissions");
             return submissionFolder;
+        }
+
+        public Config GetConfig()
+        {
+            var path = GetConfigPath();
+            var text = File.ReadAllText(path);
+            Config config = JsonConvert.DeserializeObject<Config>(text);
+
+            return config;
+        }
+
+        public string GetConfigPath()
+        {
+            var localAppData = System.Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var configPath = Path.Combine(localAppData, "Alto", "config.json");
+
+            if (!File.Exists(configPath))
+                CreateBaseConfig(configPath);
+
+            return configPath;
+        }
+
+        private void CreateBaseConfig(string configPath)
+        {
+            var baseConfig = new Dictionary<string, string>
+            {
+                {"NETCorePath", "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19/"}
+            };
+
+            var json = System.Text.Json.JsonSerializer.Serialize(baseConfig);
+            File.WriteAllText(configPath, json);
         }
 
         protected override void RenderLine(string line)
@@ -201,7 +266,7 @@ namespace Alto
         }
 
         [MetaCommand("dump", description: "Shows the bound tree representation of a given function.")]
-        private void EvaluateDump(string functionName)
+        private void EvaluateDump(string functionName)  
         {   
             var compilation = _previous ?? emptyCompilation;
             var symbol = compilation.GetSymbols().OfType<FunctionSymbol>().SingleOrDefault(f => f.Name == functionName);
@@ -228,6 +293,59 @@ namespace Alto
         {
             _previous = null;
             ClearSubmissions();
+        }
+
+        [MetaCommand("config", description: "Lists all config items.")]
+        private void EvaluateConfig()
+        {
+            var path = GetConfigPath();
+            Config config = GetConfig();
+            
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.Write("NETCorePath: ");
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write($"{config.NETCorePath}");
+
+            Console.ResetColor();
+            Console.WriteLine();
+            Console.WriteLine();
+
+            Console.WriteLine($"Config Path: { path }");
+            Console.WriteLine();
+        }
+
+        [MetaCommand("calter", description: "Changes a config item")]
+        private void EvaluateCAlter(string key, string newValue)
+        {
+            var config = GetConfig();
+            var path = GetConfigPath();
+
+            var configType = config.GetType();
+            var properties = configType.GetProperties().ToList();
+
+            var matchingProperties = properties.Where(p => p.Name == key);
+            if (matchingProperties.Count() != 0)
+            {
+                var property = matchingProperties.First();
+                property.SetValue(config, newValue);
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.DarkRed;
+                Console.WriteLine($"Key {key} not present in the config.");
+                Console.ResetColor();
+            }
+
+            var json = JsonConvert.SerializeObject(config);
+
+            var stream = new FileStream(path, FileMode.Truncate);
+            using (StreamWriter writer = new StreamWriter(stream))
+            {
+                writer.Write(json);
+            }
         }
 
         protected override bool IsCompleteSubmission(string text)

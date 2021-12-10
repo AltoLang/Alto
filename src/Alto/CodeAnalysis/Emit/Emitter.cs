@@ -10,6 +10,9 @@ using Mono.Cecil.Rocks;
 
 namespace Alto.CodeAnalysis.Emit
 {
+    // Suppresses the warning about nullable reference types
+    #pragma warning disable CS8632 
+
     internal sealed class Emitter
     {
         private DiagnosticBag _diagnostics = new DiagnosticBag();
@@ -178,6 +181,8 @@ namespace Alto.CodeAnalysis.Emit
 
             if (program.MainFunction != null)
                 _assembly.EntryPoint = _methods[program.MainFunction];
+            else if (program.ScriptFunction != null)
+                _assembly.EntryPoint = _methods[program.ScriptFunction];
             
             _assembly.Write(outPath);
 

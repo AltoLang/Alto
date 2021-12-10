@@ -91,7 +91,7 @@ namespace Alto.CodeAnalysis.Binding
             {
                 mainFunction = null;
                 if (globalStatements.Any()) 
-                    scriptFunction = new FunctionSymbol("$eval", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.Any);
+                    scriptFunction = new FunctionSymbol("$eval", ImmutableArray<ParameterSymbol>.Empty, TypeSymbol.Void);
                 else
                     scriptFunction = null;
             }
@@ -170,12 +170,15 @@ namespace Alto.CodeAnalysis.Binding
                 var statements = globalScope.Statements;
                 if (statements.Length == 1 && statements[0] is BoundExpressionStatement ex && ex.Expression.Type != TypeSymbol.Void)
                 {
-                    statements = statements.SetItem(0, new BoundReturnStatement(ex.Expression));
+                    var castedExpression = new BoundConversionExpression(TypeSymbol.Any, ex.Expression);
+                    var printArgs = new BoundExpression[] { castedExpression };
+                    var printCall = new BoundCallExpression(BuiltInFunctions.Print, printArgs.ToImmutableArray());
+
+                    statements = statements.SetItem(0, new BoundExpressionStatement(printCall));
                 }
                 else if (statements.Any() && statements.Last().Kind != BoundNodeKind.ReturnStatement)
                 {
-                    var nullValue = new BoundLiteralExpression("");
-                    statements = statements.Add(new BoundReturnStatement(nullValue));
+                    statements = statements.Add(new BoundReturnStatement(null));
                 }
 
                 var body = Lowerer.Lower(globalScope.ScriptFunction, new BoundBlockStatement(statements));
@@ -719,7 +722,6 @@ namespace Alto.CodeAnalysis.Binding
                 var argumentLocation = syntax.Arguments[i].Location;
                 var parameter = function.Parameters[i];
                 var argument = boundArguments[i];
-                Console.WriteLine(parameter.Type);
                 boundArguments[i] = BindConversion(argument, parameter.Type, argumentLocation);
             }
 

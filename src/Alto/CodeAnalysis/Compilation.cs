@@ -68,36 +68,6 @@ namespace Alto.CodeAnalysis
                 return _globalScope;
             }
         }
-
-        public EvaluationResult Evaluate(Dictionary<VariableSymbol, object> variables)
-        {
-            var selectDiagnostics = SyntaxTrees.SelectMany(tree => tree.Diagnostics);
-            var diagnostics = selectDiagnostics.Concat(GlobalScope.Diagnostics).ToImmutableArray();
-            if (diagnostics.Any())
-                return new EvaluationResult(diagnostics, null);
-
-            var program = GetProgram();
-            // var appPath = Environment.GetCommandLineArgs()[0];
-            // var appDir = Path.GetDirectoryName(appPath);
-            // var cfgPath = Path.Combine(appDir, "cfg.dot");
-
-            // var cfgStatement = !program.Statement.Statements.Any() && program.FunctionBodies.Any() 
-            //                    ? program.FunctionBodies.Last().Value 
-            //                    : program.Statement;
-
-            // var cfg = ControlFlowGraph.Create(cfgStatement);
-            // using (var writer = new StreamWriter(cfgPath))
-            //     cfg.WriteTo(writer);
-
-            if (program.Diagnostics.Any())
-                return new EvaluationResult(program.Diagnostics.ToImmutableArray(), null);
-
-            MergeLocalAndGlobalFunctions(program);
-            var evaluator = new Evaluator(program, variables);
-            var value = evaluator.Evaluate();
-
-            return new EvaluationResult(ImmutableArray<Diagnostic>.Empty, value);
-        }
         
         public void EmitTree(TextWriter writer)
         {
