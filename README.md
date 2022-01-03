@@ -5,7 +5,7 @@ It's based on the Minsk compiler.
 
 ## Start it up!
  - Fork the repo
- - Run .\build (Please drop us an issue if you encounter build errors)
+ - Run .\build (Please drop us an issue if you encounter unexpected build errors)
  - Add the compiler to vscode tasks
  - Compile your project!
 
