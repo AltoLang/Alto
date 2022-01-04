@@ -11,7 +11,7 @@ using Mono.Cecil.Rocks;
 namespace Alto.CodeAnalysis.Emit
 {
     // Suppresses the warning about nullable reference types
-    #pragma warning disable CS8632 
+#pragma warning disable CS8632
 
     internal sealed class Emitter
     {
@@ -156,7 +156,7 @@ namespace Alto.CodeAnalysis.Emit
             _randomCtorReference = ResolveMethod("System.Random", ".ctor", Array.Empty<string>());
             _randomNextReference = ResolveMethod("System.Random", "Next", new [] {"System.Int32", "System.Int32"});
         }
-        
+
         internal static ImmutableArray<Diagnostic> Emit(BoundProgram program, string moduleName, string[]   references, string outPath)
         {
             var emitter = new Emitter(moduleName, references);
@@ -598,6 +598,25 @@ namespace Alto.CodeAnalysis.Emit
             ilProcessor.Emit(OpCodes.Newobj, _randomCtorReference);
             ilProcessor.Emit(OpCodes.Stsfld, _randomFieldDefinition);
             ilProcessor.Emit(OpCodes.Ret);
+        }
+
+        internal static TypeSymbol GetTypeSymbol(TypeReference declaringType)
+        {
+            switch (declaringType.FullName)
+            {
+                case "System.String":
+                    return TypeSymbol.String;
+                case "System.Int32":
+                    return TypeSymbol.Int;
+                case "System.Boolean":
+                    return TypeSymbol.Bool;
+                case "System.Object":
+                    return TypeSymbol.Any;
+                case "System.Void":
+                    return TypeSymbol.Void;
+                default:
+                    throw new Exception($"Can't translate C# type '{declaringType.FullName}' to Alto type.");
+            }
         }
     }
 }

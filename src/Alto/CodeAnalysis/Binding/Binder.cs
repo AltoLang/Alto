@@ -8,6 +8,7 @@ using Alto.CodeAnalysis.Text;
 using Alto.CodeAnalysis.Lowering;
 using Alto.CodeAnalysis.Syntax.Preprocessing;
 using System.IO;
+using Alto.CodeAnalysis.Emit;
 
 namespace Alto.CodeAnalysis.Binding
 {
@@ -135,7 +136,7 @@ namespace Alto.CodeAnalysis.Binding
                                         statementBuilder.ToImmutable());
         }
 
-        public static BoundProgram BindProgram(bool isScript, BoundProgram previous, BoundGlobalScope globalScope)
+        public static BoundProgram BindProgram(bool isScript, BoundProgram previous, BoundGlobalScope globalScope, ImmutableArray<AssemblyImport> imports)
         {
             var parentScope = CreateParentScope(globalScope);
             var functionBodies = new Dictionary<FunctionSymbol, BoundBlockStatement>();
@@ -143,6 +144,26 @@ namespace Alto.CodeAnalysis.Binding
 
             foreach (var diagnostic in globalScope.Diagnostics)
                 diagnostics.Add(diagnostic);
+
+            foreach (var import in imports)
+            {
+                foreach (var function in import.Functions)
+                {
+                    var parameters = new List<ParameterSymbol>();
+                    for (int i = 0; i < function.Parameters.Count; i++)
+                    {
+                        var param = function.Parameters[i];
+                        var type = Emitter.GetTypeSymbol(param.ParameterType.DeclaringType);
+                        var parameter = new ParameterSymbol(param.Name, type, i);
+                        parameters.Add(parameter);
+                    }
+
+                    var returnType = Emitter.GetTypeSymbol(function.ReturnType);
+                    var symbol = new FunctionSymbol(function.Name, parameters.ToImmutableArray(), returnType);
+
+                    functionBodies.Add(symbol, new BoundBlockStatement(ImmutableArray<BoundStatement>.Empty));
+                }
+            }
 
             foreach (var function in globalScope.Functions)
             {
@@ -185,7 +206,7 @@ namespace Alto.CodeAnalysis.Binding
                 functionBodies.Add(globalScope.ScriptFunction, body);
             }
 
-            var program = new BoundProgram(previous, diagnostics, globalScope.MainFunction, globalScope.ScriptFunction, functionBodies.ToImmutableDictionary());
+            var program = new BoundProgram(previous, diagnostics, globalScope.MainFunction, globalScope.ScriptFunction, functionBodies.ToImmutableDictionary(), imports.ToImmutableArray());
             return program;
         }
 
