@@ -12,7 +12,7 @@ namespace Alto
 {
     internal static class Program
     {
-        private static string[] _requiredAssemblies = new string[] {"System.Runtime", "System.Console", "System.Runtime.Extensions"};
+        private static string[] _requiredAssemblies = new string[] {"System.Runtime.dll", "System.Console.dll", "System.Runtime.Extensions.dll"};
 
         private static int Main(string[] args) 
         {
@@ -25,6 +25,7 @@ namespace Alto
             List<string> references = new List<string>();
             string outputPath = null;
             string moduleName = null;
+            string dependenciesPath = null;
             string projectDirectoryPath = args[0];
             bool helpRequested = false;
 
@@ -34,17 +35,37 @@ namespace Alto
                 { "r=", "The {path} of an assembly to reference", r => references.Add(r) },
                 { "o=", "The output {path} of the assembly to create", o => outputPath = o },
                 { "m=", "The {name} of the module", m => moduleName = m },
+                { "i=", "Dependencies folder path", i => dependenciesPath = i},
                 { "help|h|?", "Help!!!", h => helpRequested = true }
             };
-
-            // trim references
-            var referencesToRemove = references.Where(r => r.Contains("System.") && !_requiredAssemblies.Contains(r));
-            foreach (var reference in referencesToRemove)
-                references.Remove(reference);
 
             var argsToParse = args.ToList();
             argsToParse.RemoveAt(0);    
             options.Parse(argsToParse.ToArray());
+
+            // trim references
+            var newReferences = new List<string>();
+            foreach (var reference in references)
+            {
+                bool found = false;
+                foreach (var required in _requiredAssemblies)
+                {
+                    if (reference.Contains(required))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found)
+                    newReferences.Add(reference);
+            }
+
+            references = newReferences;
+
+            Console.WriteLine($"rl: {references.Count}");
+            foreach (var r in references)
+                Console.WriteLine($"reference: {r}");
 
             if (helpRequested)
             {
@@ -85,8 +106,18 @@ namespace Alto
 
             if (hasErrors)
                 return 1;
+
+            var dependencies = new List<string>();
+            foreach (var file in Directory.GetFiles(dependenciesPath))
+            {
+                var info = new FileInfo(file);
+                if (info.Extension != ".dll")
+                    continue;
+
+                dependencies.Add(file);
+            }
             
-            var compilation = Compilation.Create(syntaxTrees.ToArray());
+            var compilation = Compilation.Create(dependencies, syntaxTrees.ToArray());
             var diagnostics = compilation.Emit(moduleName, references.ToArray(), outputPath);
             if (diagnostics.Any())
             {
@@ -105,7 +136,7 @@ namespace Alto
                 foreach (var file in Directory.EnumerateFiles(path, "*.ao", SearchOption.AllDirectories))
                     if (file != path)
                         result.Add(file);
-        
+
             return result;
         }
     }

@@ -16,6 +16,7 @@ namespace Alto.CodeAnalysis.Emit
     internal sealed class Emitter
     {
         private DiagnosticBag _diagnostics = new DiagnosticBag();
+        private BoundProgram _program;
         private readonly AssemblyDefinition _assembly;
         private readonly Dictionary<TypeSymbol, TypeReference> _knownTypes;
         private readonly MethodReference _consoleWriteLineReference;
@@ -43,6 +44,7 @@ namespace Alto.CodeAnalysis.Emit
             {
                 try
                 {
+                    Console.WriteLine($"reading reference: {reference}");
                     var refAssembly = AssemblyDefinition.ReadAssembly(reference);
                     assemblies.Add(refAssembly);
                 }
@@ -168,6 +170,10 @@ namespace Alto.CodeAnalysis.Emit
             if (program.Diagnostics.Any())
                 return program.Diagnostics.ToImmutableArray();
 
+            _program = program;
+
+            ImportModules();
+
             var objectType = _knownTypes[TypeSymbol.Any];
 
             _typeDefinition = new TypeDefinition("", "Program", TypeAttributes.Abstract | TypeAttributes.Sealed, objectType);
@@ -187,6 +193,14 @@ namespace Alto.CodeAnalysis.Emit
             _assembly.Write(outPath);
 
             return _diagnostics.ToImmutableArray();
+        }
+
+        private void ImportModules()
+        {
+            foreach (var import in _program.Imports)
+            {
+                import.ImportAndUpdateMethodDefinitions(_assembly);
+            }
         }
 
         private void EmitFunctionDeclaration(FunctionSymbol function)
@@ -402,8 +416,24 @@ namespace Alto.CodeAnalysis.Emit
             }
             else
             {
-                var methodDefinition = _methods[node.Function];
-                ilProcessor.Emit(OpCodes.Call, methodDefinition);
+                if (_methods.ContainsKey(node.Function))
+                {
+                    var methodDefinition = _methods[node.Function];
+                    ilProcessor.Emit(OpCodes.Call, methodDefinition);
+                }
+                else
+                {
+                    // Imported function
+                    MethodReference reference = null;
+                    foreach (var import in _program.Imports)
+                    {
+                        var @ref = import.TryGetImportedMethodReference(node.Function);
+                        reference = @ref;
+                        break;
+                    }
+
+                    ilProcessor.Emit(OpCodes.Call, reference);
+                }
             }
         }
 
