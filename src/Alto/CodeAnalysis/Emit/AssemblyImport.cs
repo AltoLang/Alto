@@ -112,13 +112,10 @@ namespace Alto.CodeAnalysis.Emit
             var methods = new List<MethodDefinition>();
             foreach (var module in _assembly.Modules)
             {
-                Console.WriteLine($"module: {module.Name}");
                 foreach (var type in module.Types)
                 {
-                    Console.WriteLine($"    type: {type.Name}");
                     foreach (var method in type.Methods)
                     {
-                        Console.WriteLine($"        method: {method.Name}");
                         if (method.IsConstructor || method.IsStatic || !method.IsPublic)
                             continue;
 

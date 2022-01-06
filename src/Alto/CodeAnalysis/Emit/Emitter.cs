@@ -44,7 +44,6 @@ namespace Alto.CodeAnalysis.Emit
             {
                 try
                 {
-                    Console.WriteLine($"reading reference: {reference}");
                     var refAssembly = AssemblyDefinition.ReadAssembly(reference);
                     assemblies.Add(refAssembly);
                 }
@@ -181,6 +180,10 @@ namespace Alto.CodeAnalysis.Emit
 
             foreach (var (function, body) in program.FunctionBodies)
             {
+                // imported function
+                if (body == null)
+                    continue;
+                
                 EmitFunctionDeclaration(function);
                 EmitFunctionBody(function, body);
             }
@@ -221,7 +224,7 @@ namespace Alto.CodeAnalysis.Emit
         }
 
         private void EmitFunctionBody(FunctionSymbol function, BoundBlockStatement body)
-        {
+        {   
             var method = _methods[function];
             _locals.Clear();
             _fixups.Clear();
