@@ -11,22 +11,10 @@ namespace Alto.CodeAnalysis.Emit
     {
         private AssemblyDefinition _assembly;
         private Dictionary<FunctionSymbol, MethodDefinition> _functionSymbols = new Dictionary<FunctionSymbol, MethodDefinition>();
-        private List<MethodReference> _importedMethods;
-        private Dictionary<FunctionSymbol, MethodReference> _importedFunctionSymbols;
 
         public AssemblyImport(string path)
         {
             var assembly = AssemblyDefinition.ReadAssembly(path);
-            foreach (var module in assembly.Modules)
-            {
-                foreach (var type in module.Types)
-                {
-                    foreach (var method in type.Methods)
-                    {
-                    }
-                }
-            }
-
             _assembly = assembly;
         }
 
@@ -64,46 +52,6 @@ namespace Alto.CodeAnalysis.Emit
             return _functionSymbols.FirstOrDefault(x => x.Value == method).Key;
         }
 
-        public MethodReference GetImportedMethodReference(FunctionSymbol function) 
-            => _importedFunctionSymbols[function];
-
-        public MethodReference TryGetImportedMethodReference(FunctionSymbol function)
-        {
-            if (!_importedFunctionSymbols.ContainsKey(function))
-                return null;
-               
-            return _importedFunctionSymbols[function];
-        }
-
-        public FunctionSymbol GetImportedFunctionSymbol(MethodReference method)
-            => _importedFunctionSymbols.FirstOrDefault(x => x.Value == method).Key;
-
-        public FunctionSymbol TryGetFunctionSymbol(MethodReference method)
-        {
-            if (!_importedFunctionSymbols.ContainsValue(method))
-                return null;
-               
-            return _importedFunctionSymbols.FirstOrDefault(x => x.Value == method).Key;
-        }
-
-        public void ImportAndUpdateMethodDefinitions(AssemblyDefinition assembly)
-        {
-            var importedMethods = new List<MethodReference>();
-            var importedFunctionSymbols = new Dictionary<FunctionSymbol, MethodReference>();
-
-            foreach (var method in Functions)
-            {
-                var imported = assembly.MainModule.ImportReference(method);
-                var symbol = TryGetFunctionSymbol(method);
-
-                importedMethods.Add(imported);
-                importedFunctionSymbols.Add(symbol, imported);
-            }
-
-            _importedMethods = importedMethods;
-            _importedFunctionSymbols = importedFunctionSymbols;
-        }
-
         private ImmutableArray<MethodDefinition> GetFunctions()
         {
             // TODO: Completely revamp all of this
@@ -116,7 +64,7 @@ namespace Alto.CodeAnalysis.Emit
                 {
                     foreach (var method in type.Methods)
                     {
-                        if (method.IsConstructor || method.IsStatic || !method.IsPublic)
+                        if (method.IsConstructor || !method.IsPublic)
                             continue;
 
                         methods.Add(method);

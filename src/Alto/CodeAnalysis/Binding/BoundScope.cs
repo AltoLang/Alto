@@ -35,18 +35,9 @@ namespace Alto.CodeAnalysis.Binding
 
         public Symbol TryLookupSymbol(string name)
         {
-            // DEBUG
-            // DELETE ME
-            if (_symbols != null)
-            {
-                Console.WriteLine("Symbols:");
-                foreach (var (nm, sym) in _symbols)
-                    Console.WriteLine($"    {nm}");
-            }
-            
             if (_symbols != null && _symbols.TryGetValue(name, out var symbol))
                 return symbol;
-
+            
             return Parent?.TryLookupSymbol(name);
         }
 

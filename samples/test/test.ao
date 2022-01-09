@@ -1,1 +1,3 @@
+print("Hello, Alto!")
+fileCreate("C:/Users/Filip/source/alto/samples/test/hello.txt")
 fileWrite("C:/Users/Filip/source/alto/samples/test/hello.txt", "Hello, Alto!")

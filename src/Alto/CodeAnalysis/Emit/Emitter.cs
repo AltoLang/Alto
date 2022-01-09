@@ -31,13 +31,14 @@ namespace Alto.CodeAnalysis.Emit
         private readonly MethodReference _randomNextReference;
         private  readonly Dictionary<VariableSymbol, VariableDefinition> _locals = new Dictionary<VariableSymbol, VariableDefinition>();
         private readonly Dictionary<FunctionSymbol, MethodDefinition> _methods = new Dictionary<FunctionSymbol, MethodDefinition>();
+        private readonly Dictionary<FunctionSymbol, MethodReference> _importMethods = new Dictionary<FunctionSymbol, MethodReference>(); 
         private readonly List<(int InstructionIndex, BoundLabel Target)> _fixups = new List<(int InstructionIndex, BoundLabel Target)>();
         private readonly Dictionary<BoundLabel, int> _labels = new Dictionary<BoundLabel, int>();
 
         private TypeDefinition _typeDefinition;
         private FieldDefinition? _randomFieldDefinition;
 
-        private Emitter(string moduleName, string[] references)
+        private Emitter(string moduleName, string[] references, ImmutableArray<AssemblyImport> imports)
         {   
             var assemblies = new List<AssemblyDefinition>();
             foreach (var reference in references)
@@ -52,6 +53,9 @@ namespace Alto.CodeAnalysis.Emit
                     _diagnostics.ReportInvalidReference(reference);
                 }
             }
+
+            // add import assemblies
+            assemblies.AddRange(imports.Select(i => i.Assembly));
 
             var assemblyName = new AssemblyNameDefinition(moduleName, new Version(1, 0));
             _assembly = AssemblyDefinition.CreateAssembly(assemblyName, moduleName, ModuleKind.Console);
@@ -102,6 +106,7 @@ namespace Alto.CodeAnalysis.Emit
                                            .SelectMany(m => m.Types)
                                            .Where(t => t.FullName == typeName)
                                            .ToArray();
+                
                 if (foundTypes.Length == 1)
                 {
                     var type = foundTypes[0];
@@ -156,11 +161,28 @@ namespace Alto.CodeAnalysis.Emit
             _randomReference = ResolveType(null, "System.Random");
             _randomCtorReference = ResolveMethod("System.Random", ".ctor", Array.Empty<string>());
             _randomNextReference = ResolveMethod("System.Random", "Next", new [] {"System.Int32", "System.Int32"});
+
+            // resolve import methods
+            foreach (var import in imports)
+            {
+                var methods = import.Functions;
+                foreach (var method in methods)
+                {
+                    var function = import.GetFunctionSymbol(method);
+                    if (function == null)
+                        continue;
+
+                    var parameters = method.Parameters.Select(p => p.ParameterType.FullName).ToArray();
+                    var reference = ResolveMethod(method.DeclaringType.FullName, method.Name, parameters);
+
+                    _importMethods.Add(function, reference);
+                }
+            }
         }
 
         internal static ImmutableArray<Diagnostic> Emit(BoundProgram program, string moduleName, string[]   references, string outPath)
         {
-            var emitter = new Emitter(moduleName, references);
+            var emitter = new Emitter(moduleName, references, program.Imports);
             return emitter.Emit(program, outPath);
         }
         
@@ -170,8 +192,6 @@ namespace Alto.CodeAnalysis.Emit
                 return program.Diagnostics.ToImmutableArray();
 
             _program = program;
-
-            ImportModules();
 
             var objectType = _knownTypes[TypeSymbol.Any];
 
@@ -196,14 +216,6 @@ namespace Alto.CodeAnalysis.Emit
             _assembly.Write(outPath);
 
             return _diagnostics.ToImmutableArray();
-        }
-
-        private void ImportModules()
-        {
-            foreach (var import in _program.Imports)
-            {
-                import.ImportAndUpdateMethodDefinitions(_assembly);
-            }
         }
 
         private void EmitFunctionDeclaration(FunctionSymbol function)
@@ -430,7 +442,7 @@ namespace Alto.CodeAnalysis.Emit
                     MethodReference reference = null;
                     foreach (var import in _program.Imports)
                     {
-                        var @ref = import.TryGetImportedMethodReference(node.Function);
+                        var @ref = _importMethods[node.Function];
                         reference = @ref;
                         break;
                     }

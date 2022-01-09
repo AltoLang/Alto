@@ -163,7 +163,7 @@ namespace Alto.CodeAnalysis.Binding
                 if (function.Declaration == null)
                 {
                     // this is an imported function
-                    functionBodies.Add(function, new BoundBlockStatement(ImmutableArray<BoundStatement>.Empty));
+                    functionBodies.Add(function, null);
                     continue;
                 }
                 
@@ -907,18 +907,19 @@ namespace Alto.CodeAnalysis.Binding
             // Imported symbol
             foreach (var import in _imports)
             {
-                Console.WriteLine($"import: {import.Assembly.Name}");
-                Console.WriteLine($"FLength: {import.Functions.Length}");
                 foreach (var method in import.Functions)
                 {
-                    Console.WriteLine($"function: {method.Name}");
+                    // also check if method is static and public
+                    
                     var function = import.TryGetFunctionSymbol(method);
-                    if (function != null)
+                    if (function != null && function.Name == name)
+                    {
                         return function;
+                    }
                 }
             }
 
-            return null;
+            return symbol;
         }
 
         private bool LocalFunctionNameIsUnique(FunctionSymbol function)

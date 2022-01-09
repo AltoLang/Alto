@@ -63,10 +63,6 @@ namespace Alto
 
             references = newReferences;
 
-            Console.WriteLine($"rl: {references.Count}");
-            foreach (var r in references)
-                Console.WriteLine($"reference: {r}");
-
             if (helpRequested)
             {
                 options.WriteOptionDescriptions(Console.Out);
