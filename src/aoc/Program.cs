@@ -25,7 +25,6 @@ namespace Alto
             List<string> references = new List<string>();
             string outputPath = null;
             string moduleName = null;
-            string dependenciesPath = null;
             string projectDirectoryPath = args[0];
             bool helpRequested = false;
 
@@ -35,7 +34,6 @@ namespace Alto
                 { "r=", "The {path} of an assembly to reference", r => references.Add(r) },
                 { "o=", "The output {path} of the assembly to create", o => outputPath = o },
                 { "m=", "The {name} of the module", m => moduleName = m },
-                { "i=", "Dependencies folder path", i => dependenciesPath = i},
                 { "help|h|?", "Help!!!", h => helpRequested = true }
             };
 
@@ -45,8 +43,16 @@ namespace Alto
 
             // trim references
             var newReferences = new List<string>();
+            var nonSystemReferences = new List<string>();
             foreach (var reference in references)
             {
+                var isSystemAssembly = ( reference.Contains("System.") || reference.Contains("Microsoft.") ) && reference.Contains(".dll");
+                if (!isSystemAssembly)
+                {
+                    nonSystemReferences.Add(reference);
+                    continue;
+                }
+
                 bool found = false;
                 foreach (var required in _requiredAssemblies)
                 {
@@ -102,18 +108,8 @@ namespace Alto
 
             if (hasErrors)
                 return 1;
-
-            var dependencies = new List<string>();
-            foreach (var file in Directory.GetFiles(dependenciesPath))
-            {
-                var info = new FileInfo(file);
-                if (info.Extension != ".dll")
-                    continue;
-
-                dependencies.Add(file);
-            }
             
-            var compilation = Compilation.Create(dependencies, syntaxTrees.ToArray());
+            var compilation = Compilation.Create(nonSystemReferences, syntaxTrees.ToArray());
             var diagnostics = compilation.Emit(moduleName, references.ToArray(), outputPath);
             if (diagnostics.Any())
             {

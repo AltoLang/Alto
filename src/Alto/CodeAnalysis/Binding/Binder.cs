@@ -900,6 +900,7 @@ namespace Alto.CodeAnalysis.Binding
                             }
                         }
                     }
+                    
                     scope = scope.Parent;
                 }
             }
