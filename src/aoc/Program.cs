@@ -12,7 +12,7 @@ namespace Alto
 {
     internal static class Program
     {
-        private static string[] _requiredAssemblies = new string[] {"System.Runtime", "System.Console", "System.Runtime.Extensions"};
+        private static string[] _requiredAssemblies = new string[] {"System.Runtime.dll", "System.Console.dll", "System.Runtime.Extensions.dll"};
 
         private static int Main(string[] args) 
         {
@@ -37,14 +37,37 @@ namespace Alto
                 { "help|h|?", "Help!!!", h => helpRequested = true }
             };
 
-            // trim references
-            var referencesToRemove = references.Where(r => r.Contains("System.") && !_requiredAssemblies.Contains(r));
-            foreach (var reference in referencesToRemove)
-                references.Remove(reference);
-
             var argsToParse = args.ToList();
             argsToParse.RemoveAt(0);    
             options.Parse(argsToParse.ToArray());
+
+            // trim references
+            var newReferences = new List<string>();
+            var nonSystemReferences = new List<string>();
+            foreach (var reference in references)
+            {
+                var isSystemAssembly = ( reference.Contains("System.") || reference.Contains("Microsoft.") ) && reference.Contains(".dll");
+                if (!isSystemAssembly)
+                {
+                    nonSystemReferences.Add(reference);
+                    continue;
+                }
+
+                bool found = false;
+                foreach (var required in _requiredAssemblies)
+                {
+                    if (reference.Contains(required))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found)
+                    newReferences.Add(reference);
+            }
+
+            references = newReferences;
 
             if (helpRequested)
             {
@@ -86,7 +109,7 @@ namespace Alto
             if (hasErrors)
                 return 1;
             
-            var compilation = Compilation.Create(syntaxTrees.ToArray());
+            var compilation = Compilation.Create(nonSystemReferences, syntaxTrees.ToArray());
             var diagnostics = compilation.Emit(moduleName, references.ToArray(), outputPath);
             if (diagnostics.Any())
             {
@@ -105,7 +128,7 @@ namespace Alto
                 foreach (var file in Directory.EnumerateFiles(path, "*.ao", SearchOption.AllDirectories))
                     if (file != path)
                         result.Add(file);
-        
+
             return result;
         }
     }

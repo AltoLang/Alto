@@ -8,6 +8,7 @@ using Alto.CodeAnalysis.Text;
 using Alto.CodeAnalysis.Lowering;
 using Alto.CodeAnalysis.Syntax.Preprocessing;
 using System.IO;
+using Alto.CodeAnalysis.Emit;
 
 namespace Alto.CodeAnalysis.Binding
 {
@@ -19,14 +20,16 @@ namespace Alto.CodeAnalysis.Binding
         private Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)> _loopStack = new Stack<(BoundLabel breakLabel, BoundLabel ContinueLabel)>();
         private Dictionary<string, SyntaxTree> _syntaxTrees = new Dictionary<string, SyntaxTree>();
         private Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> _localFunctions = new Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>>();
+        private ImmutableArray<AssemblyImport> _imports;
         private int _labelCount;
         private BoundScope _scope;
 
-        public Binder(bool isScript, BoundScope parent, FunctionSymbol function)
+        public Binder(bool isScript, BoundScope parent, FunctionSymbol function, ImmutableArray<AssemblyImport> imports)
         {
             _scope = new BoundScope(parent);
             _isScript = isScript;
             _function = function;
+            _imports = imports;
 
             if (function != null)
             {
@@ -37,13 +40,15 @@ namespace Alto.CodeAnalysis.Binding
 
         public Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> LocalFunctions => _localFunctions;
         public DiagnosticBag Diagnostics => _diagnostics;
+        public ImmutableArray<AssemblyImport> Imports => _imports;
 
         public static BoundGlobalScope BindGlobalScope(bool isScript, BoundGlobalScope previous, 
                                                        ImmutableArray<SyntaxTree> syntaxTrees, bool checkCallsiteTrees,
+                                                       ImmutableArray<AssemblyImport> imports,
                                                        out Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> localFunctions)
         {
             var parentScope = CreateParentScope(previous);
-            var binder = new Binder(isScript, parentScope, null);
+            var binder = new Binder(isScript, parentScope, null, imports);
 
             foreach (var tree in syntaxTrees) 
             {
@@ -62,6 +67,15 @@ namespace Alto.CodeAnalysis.Binding
                 var functionDeclarations = tree.Root.Members.OfType<FunctionDeclarationSyntax>();
                 foreach (var function in functionDeclarations)
                     binder.BindFunctionDeclaration(function, tree);
+            }
+
+            // Bind DLL import functions
+            foreach (var import in imports)
+            {
+                foreach (var function in import.Functions)
+                {
+                    binder.BindImportFunction(import, function);
+                }
             }
 
             var globalStatements = syntaxTrees.SelectMany(t => t.Root.Members).OfType<GlobalStatementSyntax>();
@@ -132,7 +146,7 @@ namespace Alto.CodeAnalysis.Binding
 
             localFunctions = binder._localFunctions;
             return new BoundGlobalScope(previous, diagnostics, mainFunction, scriptFunction, functions, variables, 
-                                        statementBuilder.ToImmutable());
+                                        statementBuilder.ToImmutable(), imports.ToImmutableArray());
         }
 
         public static BoundProgram BindProgram(bool isScript, BoundProgram previous, BoundGlobalScope globalScope)
@@ -146,7 +160,14 @@ namespace Alto.CodeAnalysis.Binding
 
             foreach (var function in globalScope.Functions)
             {
-                var binder = new Binder(isScript, parentScope, function);
+                if (function.Declaration == null)
+                {
+                    // this is an imported function
+                    functionBodies.Add(function, null);
+                    continue;
+                }
+                
+                var binder = new Binder(isScript, parentScope, function, globalScope.Imports);
 
                 var body = binder.BindGlobalStatement(function.Declaration.Body);
                 var loweredBody = Lowerer.Lower(function, body);
@@ -185,8 +206,27 @@ namespace Alto.CodeAnalysis.Binding
                 functionBodies.Add(globalScope.ScriptFunction, body);
             }
 
-            var program = new BoundProgram(previous, diagnostics, globalScope.MainFunction, globalScope.ScriptFunction, functionBodies.ToImmutableDictionary());
+            var program = new BoundProgram(previous, diagnostics, globalScope.MainFunction, globalScope.ScriptFunction, functionBodies.ToImmutableDictionary(), globalScope.Imports);
             return program;
+        }
+
+        private void BindImportFunction(AssemblyImport import, Mono.Cecil.MethodDefinition method)
+        {
+            var parameters = new List<ParameterSymbol>();        
+            for (int i = 0; i < method.Parameters.Count; i++)
+            {
+                var param = method.Parameters[i];         
+                var type = Emitter.GetTypeSymbol(param.ParameterType);
+                var parameter = new ParameterSymbol(param.Name, type, i);
+
+                parameters.Add(parameter);
+            }
+            
+            var returnType = Emitter.GetTypeSymbol(method.ReturnType);
+            var symbol = new FunctionSymbol(method.Name, parameters.ToImmutableArray(), returnType);
+
+            _scope.TryDeclareFunction(symbol);
+            import.AddFunctionSymbol(symbol, method);
         }
 
         private FunctionSymbol BindFunctionDeclaration(FunctionDeclarationSyntax syntax, SyntaxTree tree, bool declare = true)
@@ -466,7 +506,7 @@ namespace Alto.CodeAnalysis.Binding
             {
                 var funcSymbol = BindFunctionDeclaration(function, syntax.SyntaxTree, declare: false);
 
-                Binder binder = new Binder(false, _scope, funcSymbol);
+                Binder binder = new Binder(false, _scope, funcSymbol, _imports);
 
                 // TODO: Also have to check for duplicate names
                 if (!LocalFunctionNameIsUnique(funcSymbol))
@@ -860,7 +900,23 @@ namespace Alto.CodeAnalysis.Binding
                             }
                         }
                     }
+                    
                     scope = scope.Parent;
+                }
+            }
+
+            // Imported symbol
+            foreach (var import in _imports)
+            {
+                foreach (var method in import.Functions)
+                {
+                    // also check if method is static and public
+                    
+                    var function = import.TryGetFunctionSymbol(method);
+                    if (function != null && function.Name == name)
+                    {
+                        return function;
+                    }
                 }
             }
 

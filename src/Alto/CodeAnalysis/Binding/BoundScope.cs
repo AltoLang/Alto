@@ -37,7 +37,7 @@ namespace Alto.CodeAnalysis.Binding
         {
             if (_symbols != null && _symbols.TryGetValue(name, out var symbol))
                 return symbol;
-
+            
             return Parent?.TryLookupSymbol(name);
         }
 

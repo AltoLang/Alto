@@ -11,11 +11,12 @@ using Mono.Cecil.Rocks;
 namespace Alto.CodeAnalysis.Emit
 {
     // Suppresses the warning about nullable reference types
-    #pragma warning disable CS8632 
+#pragma warning disable CS8632
 
     internal sealed class Emitter
     {
         private DiagnosticBag _diagnostics = new DiagnosticBag();
+        private BoundProgram _program;
         private readonly AssemblyDefinition _assembly;
         private readonly Dictionary<TypeSymbol, TypeReference> _knownTypes;
         private readonly MethodReference _consoleWriteLineReference;
@@ -30,13 +31,14 @@ namespace Alto.CodeAnalysis.Emit
         private readonly MethodReference _randomNextReference;
         private  readonly Dictionary<VariableSymbol, VariableDefinition> _locals = new Dictionary<VariableSymbol, VariableDefinition>();
         private readonly Dictionary<FunctionSymbol, MethodDefinition> _methods = new Dictionary<FunctionSymbol, MethodDefinition>();
+        private readonly Dictionary<FunctionSymbol, MethodReference> _importMethods = new Dictionary<FunctionSymbol, MethodReference>(); 
         private readonly List<(int InstructionIndex, BoundLabel Target)> _fixups = new List<(int InstructionIndex, BoundLabel Target)>();
         private readonly Dictionary<BoundLabel, int> _labels = new Dictionary<BoundLabel, int>();
 
         private TypeDefinition _typeDefinition;
         private FieldDefinition? _randomFieldDefinition;
 
-        private Emitter(string moduleName, string[] references)
+        private Emitter(string moduleName, string[] references, ImmutableArray<AssemblyImport> imports)
         {   
             var assemblies = new List<AssemblyDefinition>();
             foreach (var reference in references)
@@ -51,6 +53,9 @@ namespace Alto.CodeAnalysis.Emit
                     _diagnostics.ReportInvalidReference(reference);
                 }
             }
+
+            // add import assemblies
+            assemblies.AddRange(imports.Select(i => i.Assembly));
 
             var assemblyName = new AssemblyNameDefinition(moduleName, new Version(1, 0));
             _assembly = AssemblyDefinition.CreateAssembly(assemblyName, moduleName, ModuleKind.Console);
@@ -101,6 +106,7 @@ namespace Alto.CodeAnalysis.Emit
                                            .SelectMany(m => m.Types)
                                            .Where(t => t.FullName == typeName)
                                            .ToArray();
+                
                 if (foundTypes.Length == 1)
                 {
                     var type = foundTypes[0];
@@ -155,11 +161,28 @@ namespace Alto.CodeAnalysis.Emit
             _randomReference = ResolveType(null, "System.Random");
             _randomCtorReference = ResolveMethod("System.Random", ".ctor", Array.Empty<string>());
             _randomNextReference = ResolveMethod("System.Random", "Next", new [] {"System.Int32", "System.Int32"});
+
+            // resolve import methods
+            foreach (var import in imports)
+            {
+                var methods = import.Functions;
+                foreach (var method in methods)
+                {
+                    var function = import.GetFunctionSymbol(method);
+                    if (function == null)
+                        continue;
+
+                    var parameters = method.Parameters.Select(p => p.ParameterType.FullName).ToArray();
+                    var reference = ResolveMethod(method.DeclaringType.FullName, method.Name, parameters);
+
+                    _importMethods.Add(function, reference);
+                }
+            }
         }
-        
+
         internal static ImmutableArray<Diagnostic> Emit(BoundProgram program, string moduleName, string[]   references, string outPath)
         {
-            var emitter = new Emitter(moduleName, references);
+            var emitter = new Emitter(moduleName, references, program.Imports);
             return emitter.Emit(program, outPath);
         }
         
@@ -168,6 +191,8 @@ namespace Alto.CodeAnalysis.Emit
             if (program.Diagnostics.Any())
                 return program.Diagnostics.ToImmutableArray();
 
+            _program = program;
+
             var objectType = _knownTypes[TypeSymbol.Any];
 
             _typeDefinition = new TypeDefinition("", "Program", TypeAttributes.Abstract | TypeAttributes.Sealed, objectType);
@@ -175,6 +200,10 @@ namespace Alto.CodeAnalysis.Emit
 
             foreach (var (function, body) in program.FunctionBodies)
             {
+                // imported function
+                if (body == null)
+                    continue;
+                
                 EmitFunctionDeclaration(function);
                 EmitFunctionBody(function, body);
             }
@@ -207,7 +236,7 @@ namespace Alto.CodeAnalysis.Emit
         }
 
         private void EmitFunctionBody(FunctionSymbol function, BoundBlockStatement body)
-        {
+        {   
             var method = _methods[function];
             _locals.Clear();
             _fixups.Clear();
@@ -402,8 +431,24 @@ namespace Alto.CodeAnalysis.Emit
             }
             else
             {
-                var methodDefinition = _methods[node.Function];
-                ilProcessor.Emit(OpCodes.Call, methodDefinition);
+                if (_methods.ContainsKey(node.Function))
+                {
+                    var methodDefinition = _methods[node.Function];
+                    ilProcessor.Emit(OpCodes.Call, methodDefinition);
+                }
+                else
+                {
+                    // Imported function
+                    MethodReference reference = null;
+                    foreach (var import in _program.Imports)
+                    {
+                        var @ref = _importMethods[node.Function];
+                        reference = @ref;
+                        break;
+                    }
+
+                    ilProcessor.Emit(OpCodes.Call, reference);
+                }
             }
         }
 
@@ -598,6 +643,25 @@ namespace Alto.CodeAnalysis.Emit
             ilProcessor.Emit(OpCodes.Newobj, _randomCtorReference);
             ilProcessor.Emit(OpCodes.Stsfld, _randomFieldDefinition);
             ilProcessor.Emit(OpCodes.Ret);
+        }
+
+        internal static TypeSymbol GetTypeSymbol(TypeReference declaringType)
+        {
+            switch (declaringType.FullName)
+            {
+                case "System.String":
+                    return TypeSymbol.String;
+                case "System.Int32":
+                    return TypeSymbol.Int;
+                case "System.Boolean":
+                    return TypeSymbol.Bool;
+                case "System.Object":
+                    return TypeSymbol.Any;
+                case "System.Void":
+                    return TypeSymbol.Void;
+                default:
+                    throw new Exception($"Can't translate C# type '{declaringType.FullName}' to Alto type.");
+            }
         }
     }
 }

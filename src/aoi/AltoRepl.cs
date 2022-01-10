@@ -35,7 +35,9 @@ namespace Alto
 
             Console.Title = text;
             var syntaxTree = SyntaxTree.Parse(text);
-            Compilation compilation = Compilation.CreateScript(_previous, syntaxTree);
+
+            var dependencies = new List<string>();
+            Compilation compilation = Compilation.CreateScript(dependencies, _previous, syntaxTree);
 
             if (_showTree)
             {
@@ -250,7 +252,8 @@ namespace Alto
             EvaluateSubmission(txt);
 
             var tree = SyntaxTree.Load(path);
-            _previous = Compilation.CreateScript(_previous, tree);
+            var dependencies = new List<string>();
+            _previous = Compilation.CreateScript(dependencies, _previous, tree);
         }
 
         [MetaCommand("ls", description: "Lists all symbols.")]

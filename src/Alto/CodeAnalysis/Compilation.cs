@@ -19,22 +19,37 @@ namespace Alto.CodeAnalysis
         private BoundGlobalScope _globalScope;
         private Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> _localFunctions = new Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>>();
 
-        private Compilation(bool isScript, Compilation previous, bool checkCallsiteTrees = true, params SyntaxTree[] syntaxTrees)
+        private Compilation(bool isScript, List<AssemblyImport> imports, Compilation previous, bool checkCallsiteTrees = true, params SyntaxTree[] syntaxTrees)
         {
             IsScript = isScript;
+            Imports = imports.ToImmutableArray();
             Previous = previous;
             CheckCallsiteTrees = checkCallsiteTrees;
             SyntaxTrees = syntaxTrees.ToImmutableArray();
         }
 
-        public static Compilation Create(params SyntaxTree[] syntaxTrees)
+        public static Compilation Create(List<string> dependencies, params SyntaxTree[] syntaxTrees)
         {
-            return new Compilation(isScript: false, previous: null, checkCallsiteTrees: true, syntaxTrees);
+            var imports = new List<AssemblyImport>();
+            foreach (var dependency in dependencies)
+            {
+                var import = new AssemblyImport(dependency);
+                imports.Add(import);
+            }
+
+            return new Compilation(isScript: false, imports: imports, previous: null, checkCallsiteTrees: true, syntaxTrees);
         }
 
-        public static Compilation CreateScript(Compilation previous, params SyntaxTree[] syntaxTrees)
+        public static Compilation CreateScript(List<string> dependencies, Compilation previous, params SyntaxTree[] syntaxTrees)
         {
-            return new Compilation(isScript: true, previous: previous, checkCallsiteTrees: true, syntaxTrees);
+            var imports = new List<AssemblyImport>();
+            foreach (var dependency in dependencies)
+            {
+                var import = new AssemblyImport(dependency);
+                imports.Add(import);
+            }
+            
+            return new Compilation(isScript: true, imports: imports, previous: previous, checkCallsiteTrees: true, syntaxTrees);
         }
 
         public bool IsScript { get; }
@@ -45,6 +60,7 @@ namespace Alto.CodeAnalysis
         public FunctionSymbol ScriptFunction => GlobalScope.ScriptFunction;
         public ImmutableArray<FunctionSymbol> Functions => GlobalScope.Functions;
         public ImmutableArray<VariableSymbol> Variables => GlobalScope.Variables;
+        internal ImmutableArray<AssemblyImport> Imports { get; }
 
         internal Dictionary<BoundScope, List<Tuple<FunctionSymbol, BoundBlockStatement>>> LocalFunctions 
         {
@@ -60,7 +76,7 @@ namespace Alto.CodeAnalysis
             {
                 if (_globalScope == null)
                 {
-                    var globalScope = Binder.BindGlobalScope(IsScript, Previous?.GlobalScope, SyntaxTrees, CheckCallsiteTrees, out var localFunctions);
+                    var globalScope = Binder.BindGlobalScope(IsScript, Previous?.GlobalScope, SyntaxTrees, CheckCallsiteTrees, Imports, out var localFunctions);
                     _localFunctions = localFunctions;
                     Interlocked.CompareExchange(ref _globalScope, globalScope, null);
                 }
