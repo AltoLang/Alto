@@ -3,7 +3,8 @@
   <Target Name="CreateManifestResourceNames" />
 
   <Target Name="CoreCompile" DependsOnTargets="$(CoreCompileDependsOn)">  
-    <Exec Command="dotnet run --project &quot;$(MSBuildThisFileDirectory)\..\src\aoc\aoc.csproj&quot; -- @(Compile->'$([System.IO.Directory]::GetParent(@(Identity)))', ' ') /o &quot;@(IntermediateAssembly)&quot; @(ReferencePath->' /r &quot;%(Identity)&quot;', ' '), /i $([System.IO.Directory]::GetParent(@(Identity)))\packages"
+    <Message Text="Reference: @(Reference->'%(RequiredTargetFramework)')" />
+    <Exec Command="dotnet run --project &quot;$(MSBuildThisFileDirectory)\..\src\aoc\aoc.csproj&quot; -- @(Compile->'$([System.IO.Directory]::GetParent(@(Identity)))', ' ') /o &quot;@(IntermediateAssembly)&quot; @(ReferencePath->' /r &quot;%(Identity)&quot;', ' ')"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
 
   </Target>
