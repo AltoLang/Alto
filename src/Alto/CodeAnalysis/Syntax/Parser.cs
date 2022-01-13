@@ -381,6 +381,7 @@ namespace Alto.CodeAnalysis.Syntax
                         return new AssignmentExpressionSyntax(_tree, identifierToken, operatorToken, right);
                 }
             }
+
             return ParseBinaryExpression();
         }
 
@@ -425,6 +426,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return ParseNumberLiteral();
                 case SyntaxKind.StringToken:
                     return ParseStringLiteral();
+                case SyntaxKind.NewKeyword:
+                    return ParseObjectCreationExpression();
                 case SyntaxKind.IdentifierToken:
                 default:
                     return ParseNameOrCallExpression();
@@ -458,6 +461,18 @@ namespace Alto.CodeAnalysis.Syntax
             var value = keywordToken.Kind == SyntaxKind.TrueKeyword;
             return new LiteralExpressionSyntax(_tree, Current, value);
         }
+
+        private ExpressionSyntax ParseObjectCreationExpression()
+        {
+            var newKeyword = MatchToken(SyntaxKind.NewKeyword);
+            var type = MatchToken(SyntaxKind.IdentifierToken);
+            var openParenthesisToken = MatchToken(SyntaxKind.OpenParenthesesToken);
+            var args = ParseArguments();
+            var closedParenthesisToken = MatchToken(SyntaxKind.CloseParenthesesToken);
+
+            return new ObjectCreationExpressionSyntax(_tree, newKeyword, type, openParenthesisToken, args, closedParenthesisToken);
+        }
+
 
         private ExpressionSyntax ParseNameOrCallExpression()
         {
