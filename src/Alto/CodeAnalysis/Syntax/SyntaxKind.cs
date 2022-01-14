@@ -77,6 +77,7 @@ namespace Alto.CodeAnalysis.Syntax
         AssignmentExpression,
         CallExpression,
         ObjectCreationExpression,
+        MemberAccessExpression,
 
         //Statements
         BlockStatement,

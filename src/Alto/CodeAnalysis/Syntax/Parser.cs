@@ -19,6 +19,7 @@ namespace Alto.CodeAnalysis.Syntax
         private readonly SourceText _text;
         private readonly SyntaxTree _tree;
         private int _position;
+        private bool _parsingMemberAccessExpression = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Parser"/> class.
@@ -430,7 +431,7 @@ namespace Alto.CodeAnalysis.Syntax
                     return ParseObjectCreationExpression();
                 case SyntaxKind.IdentifierToken:
                 default:
-                    return ParseNameOrCallExpression();
+                    return ParseNameOrCallOrMemberAccessExpression();
             }
         }
 
@@ -474,10 +475,13 @@ namespace Alto.CodeAnalysis.Syntax
         }
 
 
-        private ExpressionSyntax ParseNameOrCallExpression()
+        private ExpressionSyntax ParseNameOrCallOrMemberAccessExpression()
         {
             if (Peek(0).Kind == SyntaxKind.IdentifierToken && Peek(1).Kind == SyntaxKind.OpenParenthesesToken)
                 return ParseCallExpression();
+
+            if (!_parsingMemberAccessExpression && Peek(0).Kind == SyntaxKind.IdentifierToken && Peek(1).Kind == SyntaxKind.FullStopToken)
+                return ParseMemberAcessExpression();
 
             return ParseNameExpression();
         }
@@ -489,6 +493,18 @@ namespace Alto.CodeAnalysis.Syntax
             var args = ParseArguments();
             var closedParenthesisToken = MatchToken(SyntaxKind.CloseParenthesesToken);
             return new CallExpressionSyntax(_tree, identifier, openParenthesisToken, args, closedParenthesisToken);
+        }
+
+        private ExpressionSyntax ParseMemberAcessExpression()
+        {
+            // TODO: Allow for member access chaining: obj.obj.obj.obj = false
+            _parsingMemberAccessExpression = true;
+            var expression = ParseExpression();
+            var fullStop = MatchToken(SyntaxKind.FullStopToken);
+            var identififer = MatchToken(SyntaxKind.IdentifierToken);
+            _parsingMemberAccessExpression = false;
+
+            return new MemberAccessExpression(_tree, expression, fullStop, identififer);
         }
 
         private SeparatedSyntaxList<ExpressionSyntax> ParseArguments()
