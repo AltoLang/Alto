@@ -196,6 +196,10 @@ namespace Alto.CodeAnalysis.Syntax
                     _position++;
                     _kind = SyntaxKind.CommaToken;
                     break;
+                case '.':
+                    _position++;
+                    _kind = SyntaxKind.FullStopToken;
+                    break;
                 case '"':
                     ReadString();
                     break;

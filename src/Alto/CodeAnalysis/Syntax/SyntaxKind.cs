@@ -8,6 +8,7 @@ namespace Alto.CodeAnalysis.Syntax
         WhitespaceToken,
         IdentifierToken,
         PreprocessorDirective,
+        FullStopToken,
 
         //Data-Type Tokens
         NumberToken,
