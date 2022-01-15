@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -26,31 +27,25 @@ namespace Alto.CodeAnalysis.Emit
         public AssemblyDefinition Assembly => _assembly;
         public ImmutableArray<MethodDefinition> Functions => GetFunctions();
         public Dictionary<FunctionSymbol, MethodDefinition> FunctionSymbols => _functionSymbols;
+        public string Name => _assembly.Name.Name;
 
-        public void AddFunctionSymbol(FunctionSymbol function, MethodDefinition method)
+        public void MapFunctionSymbol(FunctionSymbol function, MethodDefinition method)
             => _functionSymbols.Add(function, method);
 
-        public MethodDefinition GetMethodDefinition(FunctionSymbol function) 
-            => _functionSymbols[function];
+        public ImmutableArray<ModuleDefinition> GetModules()
+            => _assembly.Modules.ToImmutableArray();
 
-        public MethodDefinition TryGetMethodDefinition(FunctionSymbol function)
-        {
-            if (!_functionSymbols.ContainsKey(function))
-                return null;
-               
-            return _functionSymbols[function];
+        public ModuleDefinition? GetModuleByName(string name)
+        {   
+            var modules = _assembly.Modules.Where(m => Path.GetFileNameWithoutExtension(m.Name) == name);
+            return modules.FirstOrDefault();
         }
 
-        public FunctionSymbol GetFunctionSymbol(MethodDefinition method)
-            => _functionSymbols.FirstOrDefault(x => x.Value == method).Key;
+        public ImmutableArray<TypeDefinition> GetTypesInModule(ModuleDefinition module)
+            => module.Types.ToImmutableArray();
 
-        public FunctionSymbol TryGetFunctionSymbol(MethodDefinition method)
-        {
-            if (!_functionSymbols.ContainsValue(method))
-                return null;
-               
-            return _functionSymbols.FirstOrDefault(x => x.Value == method).Key;
-        }
+        public ImmutableArray<MethodDefinition> GetMethodsInType(TypeDefinition type)
+            => type.Methods.ToImmutableArray();
 
         private ImmutableArray<MethodDefinition> GetFunctions()
         {
