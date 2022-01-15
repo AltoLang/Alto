@@ -499,12 +499,12 @@ namespace Alto.CodeAnalysis.Syntax
         {
             // TODO: Allow for member access chaining: obj.obj.obj.obj = false
             _parsingMemberAccessExpression = true;
-            var expression = ParseExpression();
+            var left = ParseExpression();
             var fullStop = MatchToken(SyntaxKind.FullStopToken);
-            var identififer = MatchToken(SyntaxKind.IdentifierToken);
+            var right = ParseNameOrCallOrMemberAccessExpression();
             _parsingMemberAccessExpression = false;
 
-            return new MemberAccessExpression(_tree, expression, fullStop, identififer);
+            return new MemberAccessExpression(_tree, left, fullStop, right);
         }
 
         private SeparatedSyntaxList<ExpressionSyntax> ParseArguments()

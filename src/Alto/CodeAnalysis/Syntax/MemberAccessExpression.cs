@@ -2,18 +2,20 @@ namespace Alto.CodeAnalysis.Syntax
 {
     internal class MemberAccessExpression : ExpressionSyntax
     {
-        public MemberAccessExpression(SyntaxTree tree, ExpressionSyntax expression, SyntaxToken fullStop, SyntaxToken identififer)
+        public MemberAccessExpression(SyntaxTree tree, ExpressionSyntax left, SyntaxToken fullStop, ExpressionSyntax right)
             : base(tree)
         {
-            Expression = expression;
+            Tree = tree;
+            Left = left;
             FullStop = fullStop;
-            Identififer = identififer;
+            Right = right;
         }
 
-        public ExpressionSyntax Expression { get; }
+        public SyntaxTree Tree { get; }
+        public ExpressionSyntax Left { get; }
         public SyntaxToken FullStop { get; }
-        public SyntaxToken Identififer { get; }
-
+        public ExpressionSyntax Right { get; }
+    
         public override SyntaxKind Kind => SyntaxKind.MemberAccessExpression;
     }
 }
