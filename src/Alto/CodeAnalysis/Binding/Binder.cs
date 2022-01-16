@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Alto.CodeAnalysis.Syntax;
+using Mono.Cecil;
 using System.Collections.Immutable;
 using Alto.CodeAnalysis.Symbols;
 using Alto.CodeAnalysis.Text;
 using Alto.CodeAnalysis.Lowering;
 using Alto.CodeAnalysis.Syntax.Preprocessing;
-using System.IO;
 using Alto.CodeAnalysis.Emit;
 
 namespace Alto.CodeAnalysis.Binding
@@ -57,25 +57,31 @@ namespace Alto.CodeAnalysis.Binding
                 foreach (var @using in usingDirectives)
                 {
                     var name = @using.Identifiers[1].Text;
-                    var treesToUse = syntaxTrees.Where(t => Path.GetFileNameWithoutExtension(t.Text.FileName) == name);
-                    if (treesToUse.Count() == 0)
-                        binder._diagnostics.ReportCannotFindFile(@using.Identifiers[1].Location, name);
                     
-                    tree._importedTrees.Add(treesToUse.FirstOrDefault());
+                    bool found = false;
+                    foreach (var import in imports)
+                    {
+                        var module = import.GetModuleByName(name);
+                        if (module == default(ModuleDefinition))
+                            continue;
+
+                        // import module members
+                        foreach (var function in import.Functions)
+                        {
+                            binder.BindImportFunction(import, function);
+                        }
+
+                        found = true;
+                        break;
+                    }
+
+                    if (!found)
+                        binder._diagnostics.ReportCannotFindModule(@using.Identifiers[1].Location, name);
                 }
 
                 var functionDeclarations = tree.Root.Members.OfType<FunctionDeclarationSyntax>();
                 foreach (var function in functionDeclarations)
                     binder.BindFunctionDeclaration(function, tree);
-            }
-
-            // Bind DLL import functions
-            foreach (var import in imports)
-            {
-                foreach (var function in import.Functions)
-                {
-                    binder.BindImportFunction(import, function);
-                }
             }
 
             var globalStatements = syntaxTrees.SelectMany(t => t.Root.Members).OfType<GlobalStatementSyntax>();
@@ -226,7 +232,7 @@ namespace Alto.CodeAnalysis.Binding
             var symbol = new FunctionSymbol(method.Name, parameters.ToImmutableArray(), returnType);
 
             _scope.TryDeclareFunction(symbol);
-            import.AddFunctionSymbol(symbol, method);
+            import.MapFunctionSymbol(symbol, method);
         }
 
         private FunctionSymbol BindFunctionDeclaration(FunctionDeclarationSyntax syntax, SyntaxTree tree, bool declare = true)

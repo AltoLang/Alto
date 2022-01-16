@@ -224,9 +224,9 @@ namespace Alto.CodeAnalysis
             Report(location, message);
         }
 
-        public void ReportCannotFindFile(TextLocation location, string fileName)
+        public void ReportCannotFindModule(TextLocation location, string moduleName)
         {
-            var message = $"Cannot find file {fileName}.";
+            var message = $"Cannot find module {moduleName}.";
             Report(location, message);
         }
 
