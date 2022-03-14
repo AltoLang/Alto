@@ -120,6 +120,8 @@ namespace Alto.CodeAnalysis.Syntax
         {
             switch (kind)
             {
+                case SyntaxKind.FullStopToken:
+                    return ".";
                 case SyntaxKind.PlusToken: 
                     return "+";
                 case SyntaxKind.MinusToken: 

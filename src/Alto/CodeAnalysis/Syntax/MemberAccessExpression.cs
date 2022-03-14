@@ -1,8 +1,8 @@
 namespace Alto.CodeAnalysis.Syntax
 {
-    internal class MemberAccessExpression : ExpressionSyntax
+    internal class MemberAccessExpressionSyntax : ExpressionSyntax
     {
-        public MemberAccessExpression(SyntaxTree tree, ExpressionSyntax left, SyntaxToken fullStop, ExpressionSyntax right)
+        public MemberAccessExpressionSyntax(SyntaxTree tree, ExpressionSyntax left, SyntaxToken fullStop, ExpressionSyntax right)
             : base(tree)
         {
             Tree = tree;

@@ -11,7 +11,7 @@ namespace Alto.CodeAnalysis.Emit
     internal class AssemblyImport
     {
         private AssemblyDefinition _assembly;
-        private Dictionary<FunctionSymbol, MethodDefinition> _functionSymbols = new Dictionary<FunctionSymbol, MethodDefinition>();
+        private Dictionary<TypeReference, (FunctionSymbol function, MethodDefinition method)> _functions = new();
 
         public AssemblyImport(string path)
         {
@@ -25,15 +25,8 @@ namespace Alto.CodeAnalysis.Emit
         }
 
         public AssemblyDefinition Assembly => _assembly;
-        public ImmutableArray<MethodDefinition> Functions => GetFunctions();
-        public Dictionary<FunctionSymbol, MethodDefinition> FunctionSymbols => _functionSymbols;
         public string Name => _assembly.Name.Name;
-
-        public void MapFunctionSymbol(FunctionSymbol function, MethodDefinition method)
-            => _functionSymbols.Add(function, method);
-
-        public ImmutableArray<ModuleDefinition> GetModules()
-            => _assembly.Modules.ToImmutableArray();
+        public IEnumerable<ModuleDefinition> Modules => Assembly.Modules;
 
         public ModuleDefinition? GetModuleByName(string name)
         {   
@@ -41,33 +34,23 @@ namespace Alto.CodeAnalysis.Emit
             return modules.FirstOrDefault();
         }
 
-        public ImmutableArray<TypeDefinition> GetTypesInModule(ModuleDefinition module)
+        public static ImmutableArray<TypeDefinition> GetTypesInModule(ModuleDefinition module)
             => module.Types.ToImmutableArray();
 
-        public ImmutableArray<MethodDefinition> GetMethodsInType(TypeDefinition type)
-            => type.Methods.ToImmutableArray();
-
-        private ImmutableArray<MethodDefinition> GetFunctions()
+        public static FunctionSymbol GetFunctionFromMethod(MethodDefinition method)
         {
-            // TODO: Completely revamp all of this
-            // Once we actually have OO-Support #55
-
-            var methods = new List<MethodDefinition>();
-            foreach (var module in _assembly.Modules)
+            var parameters = new List<ParameterSymbol>();
+            for (int i = 0; i < method.Parameters.Count; i++)
             {
-                foreach (var type in module.Types)
-                {
-                    foreach (var method in type.Methods)
-                    {
-                        if (method.IsConstructor || !method.IsPublic)
-                            continue;
-
-                        methods.Add(method);
-                    }
-                }
+                var param = method.Parameters[i];
+                var type = Emitter.GetTypeSymbol(param.ParameterType);
+                var parameter = new ParameterSymbol(param.Name, type, i);
+                parameters.Add(parameter);
             }
-            
-            return methods.ToImmutableArray();
+
+            var returnType = Emitter.GetTypeSymbol(method.ReturnType);
+            var function = new FunctionSymbol(method.Name, parameters.ToImmutableArray(), returnType);
+            return function;
         }
     }
 }

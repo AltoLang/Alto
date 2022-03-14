@@ -65,11 +65,7 @@ namespace Alto.CodeAnalysis.Binding
                         if (module == default(ModuleDefinition))
                             continue;
 
-                        // import module members
-                        foreach (var function in import.Functions)
-                        {
-                            binder.BindImportFunction(import, function);
-                        }
+                        binder.BindImport(import);
 
                         found = true;
                         break;
@@ -216,23 +212,42 @@ namespace Alto.CodeAnalysis.Binding
             return program;
         }
 
-        private void BindImportFunction(AssemblyImport import, Mono.Cecil.MethodDefinition method)
+        private void BindImport(AssemblyImport import)
         {
-            var parameters = new List<ParameterSymbol>();        
-            for (int i = 0; i < method.Parameters.Count; i++)
+            foreach (var module in import.Assembly.Modules)
             {
-                var param = method.Parameters[i];         
-                var type = Emitter.GetTypeSymbol(param.ParameterType);
-                var parameter = new ParameterSymbol(param.Name, type, i);
+                foreach (var typeDef in AssemblyImport.GetTypesInModule(module))
+                {
+                    // TOOD: Allow 'Attribute' names
+                    if (typeDef.Name == "<Module>" || 
+                        typeDef.Name.Contains("Attribute"))
+                    {
+                        continue;
+                    }
+                    
+                    var functionSymbols = new List<FunctionSymbol>();
+                    foreach (var method in typeDef.Methods.Where(m => m.IsStatic))
+                    {
+                        // method to function symbol
+                        var function = AssemblyImport.GetFunctionFromMethod(method);
+                        functionSymbols.Add(function);
+                    }
 
-                parameters.Add(parameter);
+                    var fields = new List<VariableSymbol>();
+
+                    var ctor = AssemblyImport.GetFunctionFromMethod(typeDef.Methods.Where(m => m.Name == ".ctor").FirstOrDefault());
+                    functionSymbols.Add(ctor);
+                    var type = new TypeSymbol(typeDef.Name, 
+                                              functionSymbols.ToImmutableArray(), 
+                                              fields.ToImmutableArray(),
+                                              ctor);
+
+                    if (ctor == null || functionSymbols.Where(m => m.Name == ".ctor").Count() == 0)
+                        Console.WriteLine($"     is here.. ctor==null'{ctor == null}' ctorcount: {type.Functions.Where(f => f.Name == ".ctor").Count()}");
+
+                    _scope.TryDeclareType(type);
+                }
             }
-            
-            var returnType = Emitter.GetTypeSymbol(method.ReturnType);
-            var symbol = new FunctionSymbol(method.Name, parameters.ToImmutableArray(), returnType);
-
-            _scope.TryDeclareFunction(symbol);
-            import.MapFunctionSymbol(symbol, method);
         }
 
         private FunctionSymbol BindFunctionDeclaration(FunctionDeclarationSyntax syntax, SyntaxTree tree, bool declare = true)
@@ -313,6 +328,9 @@ namespace Alto.CodeAnalysis.Binding
 
             foreach (var function in BuiltInFunctions.GetAll())
                 result.TryDeclareFunction(function);
+
+            foreach (var type in BuiltInTypes.GetAll())
+                result.TryDeclareType(type);
             
             return result;
         }
@@ -332,7 +350,8 @@ namespace Alto.CodeAnalysis.Binding
                 {
                     var isAllowed = e.Expression.Kind == BoundNodeKind.ErrorExpression ||
                                     e.Expression.Kind == BoundNodeKind.AssignmentExpression ||
-                                    e.Expression.Kind == BoundNodeKind.CallExpression;
+                                    e.Expression.Kind == BoundNodeKind.CallExpression ||
+                                    e.Expression.Kind == BoundNodeKind.MemberAccessExpression;
 
                     if (!isAllowed)
                         _diagnostics.ReportInvalidExpressionStatement(syntax.Location);
@@ -590,11 +609,63 @@ namespace Alto.CodeAnalysis.Binding
                     return BindAssignmentExpression((AssignmentExpressionSyntax)syntax);
                 case SyntaxKind.CallExpression:
                     return BindCallExpression((CallExpressionSyntax)syntax);
+                case SyntaxKind.MemberAccessExpression:
+                    return BindMemeberAccessExression((MemberAccessExpressionSyntax)syntax);
                 default:
                     throw new Exception($"Unexpected syntax {syntax.Kind}");
             }
         }
- 
+
+        private BoundExpression BindMemeberAccessExression(MemberAccessExpressionSyntax syntax)
+        {
+            // expression chaining...
+            // this is essentially a tree
+            // of MemberAccessExpressions
+
+            // left can be a variable or Type or expression
+            var left = BindExpression(syntax.Left);
+            if (left is BoundErrorExpression b)
+                return b;
+
+            // right can be a method or variable
+            // or another MemberAccessExpression
+            Console.WriteLine(syntax.Left.Kind);
+            if (left is BoundVariableExpression)
+            {
+                var right = BindMemberExpression(syntax.Right, left.Type, false);
+                throw new NotImplementedException();
+            }
+            else if (left is BoundTypeExpression)
+            {
+                var right = BindMemberExpression(syntax.Right, left.Type, true);
+                return new BoundMemberAccessExpression(left, right);
+            }
+            else
+            {
+                Console.WriteLine($"otherexp: {left.Kind}");
+                var right = BindMemberExpression(syntax.Right, left.Type, false);
+                throw new NotImplementedException();
+            }
+        }
+
+        private BoundExpression BindMemberExpression(ExpressionSyntax expression, TypeSymbol context, bool isStatic)
+        {
+            // scan through methods in the type
+            if (isStatic)
+            {
+                // right now, we handle all functions as static
+                // this will be changed later
+                if (expression is CallExpressionSyntax call)
+                    return BindCallExpression(call, context.Scope);
+                else
+                    throw new NotImplementedException();
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         private BoundExpression BindConversion(ExpressionSyntax syntax, TypeSymbol type, bool allowExplicit = false)
         {
             var expression = BindExpression(syntax);
@@ -635,12 +706,18 @@ namespace Alto.CodeAnalysis.Binding
  
             if (syntax.IdentifierToken.IsMissing)
                 return new BoundErrorExpression();
-                
-            var variable = BindVariableReference(syntax.IdentifierToken);
-            if (variable == null)
-                return new BoundErrorExpression();
 
-            return new BoundVariableExpression(variable);
+            var type = BindTypeReference(syntax.IdentifierToken);
+            if (type == null)
+            {
+                var variable = BindVariableReference(syntax.IdentifierToken);
+                if (variable == null)
+                    return new BoundErrorExpression();
+
+                return new BoundVariableExpression(variable);
+            }
+
+            return new BoundTypeExpression(type);
         }
 
         private BoundExpression BindAssignmentExpression(AssignmentExpressionSyntax syntax)
@@ -701,7 +778,8 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundBinaryExpression(boundLeft, boundOperator, boundRight);
         }
 
-        private BoundExpression BindCallExpression(CallExpressionSyntax syntax)
+        /// <param name="overrideScope">The `BoundScope` to override the function lookup</param>
+        private BoundExpression BindCallExpression(CallExpressionSyntax syntax, BoundScope overrideScope = null)
         {
             if (syntax.Arguments.Count == 1 && LookupTypeConversion(syntax.Identifier.Text) is TypeSymbol type)
                 return BindConversion(syntax.Arguments[0], type, allowExplicit: true);
@@ -712,9 +790,14 @@ namespace Alto.CodeAnalysis.Binding
             {
                 var boundArgument = BindExpression(argument);
                 boundArguments.Add(boundArgument);
-            }
+            }  
 
-            Symbol symbol = LookupFunction(syntax.Identifier.Text);
+            Symbol symbol = null;
+            if (overrideScope == null)
+                symbol = LookupFunction(syntax.Identifier.Text);
+            else
+                symbol = LookupFunction(syntax.Identifier.Text, overrideScope);
+            
             if (symbol == null)
             {
                 _diagnostics.ReportUndefinedFunction(syntax.Identifier.Location, syntax.Identifier.Text);
@@ -835,6 +918,21 @@ namespace Alto.CodeAnalysis.Binding
             }
         }
 
+        private TypeSymbol BindTypeReference(SyntaxToken identifier)
+        {
+            var name = identifier.Text;
+            var location = identifier.Location;
+
+            switch (_scope.TryLookupSymbol(name))
+            {
+                case TypeSymbol type:
+                    return type;
+                default:
+                    return null;
+            }
+
+        }
+
         private BoundStatement BindErrorStatement()
         {
             var statement = new BoundExpressionStatement(new BoundErrorExpression());
@@ -886,13 +984,15 @@ namespace Alto.CodeAnalysis.Binding
             return new BoundLabel(name);
         }
 
-        private Symbol LookupFunction(string name)
+        private Symbol LookupFunction(string name, BoundScope overrideScope = null)
         {
-            // search through local functions
-            var symbol = _scope.TryLookupSymbol(name);
+            if (overrideScope == null)
+                overrideScope = _scope;
+
+            var symbol = overrideScope.TryLookupSymbol(name);
             if (symbol == null)
             {
-                var scope = _scope;
+                var scope = overrideScope;
                 while (scope != null)
                 {
                     if (_localFunctions.ContainsKey(scope))
@@ -911,6 +1011,8 @@ namespace Alto.CodeAnalysis.Binding
                 }
             }
 
+            /*
+
             // Imported symbol
             foreach (var import in _imports)
             {
@@ -925,6 +1027,8 @@ namespace Alto.CodeAnalysis.Binding
                     }
                 }
             }
+
+            */
 
             return symbol;
         }

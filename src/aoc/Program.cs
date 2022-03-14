@@ -27,6 +27,7 @@ namespace Alto
             string moduleName = null;
             string projectDirectoryPath = args[0];
             bool helpRequested = false;
+            bool debug = false;
 
             var options = new OptionSet 
             {
@@ -34,7 +35,8 @@ namespace Alto
                 { "r=", "The {path} of an assembly to reference", r => references.Add(r) },
                 { "o=", "The output {path} of the assembly to create", o => outputPath = o },
                 { "m=", "The {name} of the module", m => moduleName = m },
-                { "help|h|?", "Help!!!", h => helpRequested = true }
+                { "help|h|?", "Help!!!", h => helpRequested = true },
+                { "debug|d", "Enables Debug Mode", h => debug = true }
             };
 
             var argsToParse = args.ToList();
@@ -110,6 +112,13 @@ namespace Alto
                 return 1;
             
             var compilation = Compilation.Create(nonSystemReferences, syntaxTrees.ToArray());
+            if (debug)
+            {
+                Console.ForegroundColor = ConsoleColor.DarkGray;
+                compilation.EmitTree(Console.Out);
+                Console.ResetColor();
+            }
+
             var diagnostics = compilation.Emit(moduleName, references.ToArray(), outputPath);
             if (diagnostics.Any())
             {

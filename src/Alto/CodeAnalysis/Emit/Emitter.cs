@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -30,10 +31,12 @@ namespace Alto.CodeAnalysis.Emit
         private readonly MethodReference _randomCtorReference;
         private readonly MethodReference _randomNextReference;
         private  readonly Dictionary<VariableSymbol, VariableDefinition> _locals = new Dictionary<VariableSymbol, VariableDefinition>();
-        private readonly Dictionary<FunctionSymbol, MethodDefinition> _methods = new Dictionary<FunctionSymbol, MethodDefinition>();
-        private readonly Dictionary<FunctionSymbol, MethodReference> _importMethods = new Dictionary<FunctionSymbol, MethodReference>(); 
-        private readonly List<(int InstructionIndex, BoundLabel Target)> _fixups = new List<(int InstructionIndex, BoundLabel Target)>();
+        private readonly List<(int InstructionIndex, BoundLabel Target)> _fixups = new List<(int InstructionIndex, BoundLabel target)>();
         private readonly Dictionary<BoundLabel, int> _labels = new Dictionary<BoundLabel, int>();
+
+        private readonly Dictionary<FunctionSymbol, MethodDefinition> _methods = new();
+        private readonly List<TypeMap> _types = new();
+        
 
         private TypeDefinition _typeDefinition;
         private FieldDefinition? _randomFieldDefinition;
@@ -50,13 +53,13 @@ namespace Alto.CodeAnalysis.Emit
                 }
                 catch
                 {
+                    // TOOD: Show exception text for debug info
                     _diagnostics.ReportInvalidReference(reference);
                 }
             }
 
             // add import assemblies
             assemblies.AddRange(imports.Select(i => i.Assembly));
-
             var assemblyName = new AssemblyNameDefinition(moduleName, new Version(1, 0));
             _assembly = AssemblyDefinition.CreateAssembly(assemblyName, moduleName, ModuleKind.Console);
 
@@ -72,110 +75,73 @@ namespace Alto.CodeAnalysis.Emit
             _knownTypes = new Dictionary<TypeSymbol, TypeReference>();
             foreach (var (typeSymbol, metadataName) in builtinTypes)
             {
-                var typeReference = ResolveType(typeSymbol.Name, metadataName);
+                var typeReference = ResolveType(typeSymbol.Name, metadataName, assemblies);
+                if (typeReference is null)
+                    Console.WriteLine($"Reference to type {typeSymbol.Name} is null!");
                 _knownTypes.Add(typeSymbol, typeReference);
             }
 
-            TypeReference ResolveType(string altoName, string metadataName)
+            _consoleWriteLineReference = ResolveMethod("System.Console", "WriteLine", new string[] {"System.Object"}, assemblies);
+            _consoleReadLineReference = ResolveMethod("System.Console", "ReadLine", Array.Empty<string>(), assemblies);
+            _stringConcatReference = ResolveMethod("System.String", "Concat", new string[] {"System.String", "System.String"}, assemblies);
+            _objectEqualsReference = ResolveMethod("System.Object", "Equals", new string[] {"System.Object", "System.Object"}, assemblies);
+
+            _convertToBooleanReference = ResolveMethod("System.Convert", "ToBoolean", new string[] {"System.Object"}, assemblies);
+            _convertToStringReference = ResolveMethod("System.Convert", "ToString", new string[] {"System.Object"}, assemblies);
+            _convertToInt32Reference = ResolveMethod("System.Convert", "ToInt32", new string[] {"System.Object"}, assemblies);
+
+            _randomReference = ResolveType(null, "System.Random", assemblies);
+            _randomCtorReference = ResolveMethod("System.Random", ".ctor", Array.Empty<string>(), assemblies);
+            _randomNextReference = ResolveMethod("System.Random", "Next", new [] {"System.Int32", "System.Int32"}, assemblies);
+
+            foreach (var import in imports)
+                ResolveImport(import);
+        }
+
+        private void ResolveImport(AssemblyImport import)
+        {
+            var assembly = import.Assembly;
+            foreach (var module in assembly.Modules)
             {
-                var foundTypes = assemblies.SelectMany(a => a.Modules)
-                                           .SelectMany(m => m.Types)
-                                           .Where(t => t.FullName == metadataName)
-                                           .ToArray();
-
-                if (foundTypes.Length == 1)
+                // convert methods to function symbols
+                foreach (var type in module.Types)
                 {
-                    var typeReference = _assembly.MainModule.ImportReference(foundTypes[0]);
-                    return typeReference;
-                }
-                else if (foundTypes.Length == 0)
-                {
-                    _diagnostics.ReportRequiredTypeNotFound(altoName, metadataName);
-                }
-                else if (foundTypes.Length > 1)
-                {
-                    _diagnostics.ReportRequiredTypeAmbiguous(altoName, metadataName, foundTypes);
-                }
-
-                return null;
-            }
-
-            MethodReference ResolveMethod(string typeName, string methodName, string[] parameterTypeNames)
-            {
-                var foundTypes = assemblies.SelectMany(a => a.Modules)
-                                           .SelectMany(m => m.Types)
-                                           .Where(t => t.FullName == typeName)
-                                           .ToArray();
-                
-                if (foundTypes.Length == 1)
-                {
-                    var type = foundTypes[0];
-                    var methods = type.Methods.Where(m => m.Name == methodName);
-
-                    foreach (var method in methods)
+                    // TOOD: Allow 'Attribute' names
+                    if (type.Name == "<Module>" || 
+                        type.Name.Contains("Attribute"))
                     {
-                        if (parameterTypeNames.Length != method.Parameters.Count)
-                            continue;
-
-                        var paramsMatching = true;
-
-                        for (var i = 0; i < parameterTypeNames.Length; i++)
-                        {
-                            if (method.Parameters[i].ParameterType.FullName != parameterTypeNames[i])
-                            {
-                                paramsMatching = false;
-                                break;
-                            }
-                        }
-
-                        if (!paramsMatching)
-                            continue;
-                        
-                        return _assembly.MainModule.ImportReference(method);
+                        continue;
                     }
                     
-                    _diagnostics.ReportRequiredMethodNotFound(typeName, methodName, parameterTypeNames);
-                    return null;
-                }
-                else if (foundTypes.Length == 0)
-                {
-                    _diagnostics.ReportRequiredTypeNotFound(null, typeName);
-                }
-                else
-                {
-                    _diagnostics.ReportRequiredTypeAmbiguous(null, typeName, foundTypes);
-                }
+                    var functions = new Dictionary<FunctionSymbol, MethodReference>();
+                    foreach (var method in type.Methods)
+                    {
+                        var parameters = new List<ParameterSymbol>();
+                        for (int i = 0; i < method.Parameters.Count; i++)
+                        {
+                            var param = method.Parameters[i];
+                            var parameterType = GetTypeSymbolWithAllTypes(param.ParameterType);
+                            var paramSymbol = new ParameterSymbol(param.Name, parameterType, i);
+                            parameters.Add(paramSymbol);
+                        }
+                        
+                        var retType = GetTypeSymbolWithAllTypes(method.ReturnType);
+                        var symbol = new FunctionSymbol(method.Name,
+                                                        parameters.ToImmutableArray(),
+                                                        retType);
+                        var resolved = ResolveMethod(method);
+                        functions.Add(symbol, resolved);
+                    }
 
-                return null;
-            }
+                    var ctor = functions.Where(kvp => kvp.Key.Name == ".ctor").FirstOrDefault().Key;
+                    var typeSymbol = new TypeSymbol(type.Name, 
+                                                    functions.Select(kvp => kvp.Key).ToImmutableArray(), 
+                                                    ImmutableArray<VariableSymbol>.Empty,
+                                                    ctor);
 
-            _consoleWriteLineReference = ResolveMethod("System.Console", "WriteLine", new string[] {"System.Object"});
-            _consoleReadLineReference = ResolveMethod("System.Console", "ReadLine", Array.Empty<string>());
-            _stringConcatReference = ResolveMethod("System.String", "Concat", new string[] {"System.String", "System.String"});
-            _objectEqualsReference = ResolveMethod("System.Object", "Equals", new string[] {"System.Object", "System.Object"});
-
-            _convertToBooleanReference = ResolveMethod("System.Convert", "ToBoolean", new string[] {"System.Object"});
-            _convertToStringReference = ResolveMethod("System.Convert", "ToString", new string[] {"System.Object"});
-            _convertToInt32Reference = ResolveMethod("System.Convert", "ToInt32", new string[] {"System.Object"});
-
-            _randomReference = ResolveType(null, "System.Random");
-            _randomCtorReference = ResolveMethod("System.Random", ".ctor", Array.Empty<string>());
-            _randomNextReference = ResolveMethod("System.Random", "Next", new [] {"System.Int32", "System.Int32"});
-
-            // resolve import methods
-            foreach (var import in imports)
-            {
-                var methods = import.Functions;
-                foreach (var method in methods)
-                {
-                    var function = import.GetFunctionSymbol(method);
-                    if (function == null)
-                        continue;
-
-                    var parameters = method.Parameters.Select(p => p.ParameterType.FullName).ToArray();
-                    var reference = ResolveMethod(method.DeclaringType.FullName, method.Name, parameters);
-
-                    _importMethods.Add(function, reference);
+                    var importedType = _assembly.MainModule.ImportReference(type);
+                    var map = new TypeMap(typeSymbol, type, functions);
+                    _types.Add(map);
                 }
             }
         }
@@ -212,14 +178,18 @@ namespace Alto.CodeAnalysis.Emit
                 _assembly.EntryPoint = _methods[program.MainFunction];
             else if (program.ScriptFunction != null)
                 _assembly.EntryPoint = _methods[program.ScriptFunction];
-            
+
+            var directory = Directory.GetParent(outPath).FullName;
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);     
+                   
             _assembly.Write(outPath);
 
             return _diagnostics.ToImmutableArray();
         }
 
         private void EmitFunctionDeclaration(FunctionSymbol function)
-        {
+        {   
             var functionType = _knownTypes[function.Type];
             var method = new MethodDefinition(function.Name, MethodAttributes.Static | MethodAttributes.Private, functionType);
 
@@ -366,6 +336,9 @@ namespace Alto.CodeAnalysis.Emit
                 case BoundNodeKind.ConversionExpression:
                     EmitConversionExpression(ilProcessor, (BoundConversionExpression)node);
                     break;
+                case BoundNodeKind.MemberAccessExpression:
+                    EmitMemberAccessExpression(ilProcessor, (BoundMemberAccessExpression)node);
+                    break;
                 default:
                     throw new Exception($"Unexpected expression: '{node.Kind}'");
             }
@@ -402,7 +375,34 @@ namespace Alto.CodeAnalysis.Emit
             }
         }
 
-        private void EmitCallExpression(ILProcessor ilProcessor, BoundCallExpression node)
+        private void EmitMemberAccessExpression(ILProcessor ilProcessor, BoundMemberAccessExpression node)
+        {
+            // resolve type context
+            TypeSymbol typeContext;
+            switch (node.Left.Kind)
+            {
+                case BoundNodeKind.TypeExpression:
+                    var typeExp = (BoundTypeExpression)node.Left;
+                    typeContext = typeExp.Type;
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+
+            // TODO: Add contect
+            switch (node.Right.Kind)
+            {
+                case BoundNodeKind.CallExpression:
+                    // add type-space context
+                    EmitCallExpression(ilProcessor, (BoundCallExpression)node.Right, typeContext);
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        ///<param name="typeContext">Type Space to look for the method reference in</param>
+        private void EmitCallExpression(ILProcessor ilProcessor, BoundCallExpression node, TypeSymbol typeContext = null)
         {
             if (node.Function == BuiltInFunctions.Random)
             {
@@ -438,16 +438,12 @@ namespace Alto.CodeAnalysis.Emit
                 }
                 else
                 {
+                    if (typeContext == null)
+                        throw new Exception("Type context null when calling an import function.");
+                    
                     // Imported function
-                    MethodReference reference = null;
-                    foreach (var import in _program.Imports)
-                    {
-                        var @ref = _importMethods[node.Function];
-                        reference = @ref;
-                        break;
-                    }
-
-                    ilProcessor.Emit(OpCodes.Call, reference);
+                    var method = GetImportedMethod(node.Function, typeContext);
+                    ilProcessor.Emit(OpCodes.Call, method);
                 }
             }
         }
@@ -645,9 +641,156 @@ namespace Alto.CodeAnalysis.Emit
             ilProcessor.Emit(OpCodes.Ret);
         }
 
-        internal static TypeSymbol GetTypeSymbol(TypeReference declaringType)
+        private MethodReference GetImportedMethod(FunctionSymbol function, TypeSymbol typeContext)
+        {   
+            foreach (var map in _types)
+            {
+                var method = map.GetMethod(function);
+                if (method != null)
+                {
+                    return method;
+                }
+            }
+
+            return null;
+        }
+
+        private TypeReference ResolveType(string altoName, string metadataName, List<AssemblyDefinition> assemblies)
         {
-            switch (declaringType.FullName)
+            var foundTypes = assemblies.SelectMany(a => a.Modules)
+                                        .SelectMany(m => m.Types)
+                                        .Where(t => t.FullName == metadataName)
+                                        .ToArray();
+
+            if (foundTypes.Length == 1)
+            {
+                var typeReference = _assembly.MainModule.ImportReference(foundTypes[0]);
+                return typeReference;
+            }
+            else if (foundTypes.Length == 0)
+            {
+                Console.WriteLine("foundTypes.Length == 0");
+                foreach (var asm in assemblies)
+                {
+                    Console.WriteLine(asm.Name);
+                    // only the temp assembly shows up in `assemblies`
+                    // we should also see dotnet runtime assemblies
+                    // fix this
+                }
+
+                _diagnostics.ReportRequiredTypeNotFound(altoName, metadataName);
+            }
+            else if (foundTypes.Length > 1)
+            {
+                Console.WriteLine("foundTypes.Length > 1");
+                _diagnostics.ReportRequiredTypeAmbiguous(altoName, metadataName, foundTypes);
+            }
+
+            return null;
+        }
+
+        private MethodReference ResolveMethod(string typeName, string methodName, string[] parameterTypeNames, List<AssemblyDefinition> assemblies)
+        {
+            var foundTypes = assemblies.SelectMany(a => a.Modules)
+                                        .SelectMany(m => m.Types)
+                                        .Where(t => t.FullName == typeName)
+                                        .ToArray();
+            
+            if (foundTypes.Length == 1)
+            {
+                var type = foundTypes[0];
+                var methods = type.Methods.Where(m => m.Name == methodName);
+
+                foreach (var method in methods)
+                {
+                    if (parameterTypeNames.Length != method.Parameters.Count)
+                        continue;
+
+                    var paramsMatching = true;
+
+                    for (var i = 0; i < parameterTypeNames.Length; i++)
+                    {
+                        if (method.Parameters[i].ParameterType.FullName != parameterTypeNames[i])
+                        {
+                            paramsMatching = false;
+                            break;
+                        }
+                    }
+
+                    if (!paramsMatching)
+                        continue;
+                    
+                    return _assembly.MainModule.ImportReference(method);
+                }
+                
+                _diagnostics.ReportRequiredMethodNotFound(typeName, methodName, parameterTypeNames);
+                return null;
+            }
+            else if (foundTypes.Length == 0)
+            {
+                _diagnostics.ReportRequiredTypeNotFound(null, typeName);
+            }
+            else
+            {
+                _diagnostics.ReportRequiredTypeAmbiguous(null, typeName, foundTypes);
+            }
+
+            return null;
+        }
+
+        private MethodReference ResolveMethod(TypeDefinition type, string methodName, string[] parameterTypeNames)
+        {   
+            var methods = type.Methods.Where(kvp => kvp.Name == methodName);
+            foreach (var method in methods)
+            {
+                if (parameterTypeNames.Length != method.Parameters.Count)
+                    continue;
+
+                var paramsMatching = true;
+
+                for (var i = 0; i < parameterTypeNames.Length; i++)
+                {
+                    if (method.Parameters[i].ParameterType.FullName != parameterTypeNames[i])
+                    {
+                        paramsMatching = false;
+                        break;
+                    }
+                }
+
+                if (!paramsMatching)
+                    continue;
+                
+                return _assembly.MainModule.ImportReference(method);
+            }
+            
+            _diagnostics.ReportRequiredMethodNotFound(type.Name, methodName, parameterTypeNames);
+            return null;
+        }
+
+        private MethodReference ResolveMethod(MethodDefinition method)
+        {   
+            return _assembly.MainModule.ImportReference(method);
+        }
+
+        internal TypeSymbol GetTypeSymbolWithAllTypes(TypeReference typeRef, bool throwException = true)
+        {
+            var symbol = GetTypeSymbol(typeRef, throwException: false);
+            if (symbol == null)
+            {
+                symbol = _knownTypes.Where(kvp => kvp.Value == typeRef)
+                                        .FirstOrDefault()
+                                        .Key;
+            }
+
+            if (symbol == null && throwException)
+                throw new Exception($"Can't translate type '{typeRef.FullName}' to Alto type.");
+            
+            return symbol;
+        }
+
+        internal static TypeSymbol GetTypeSymbol(TypeReference typeRef, bool throwException = true)
+        {
+            switch (typeRef.FullName)
             {
                 case "System.String":
                     return TypeSymbol.String;
@@ -660,7 +803,10 @@ namespace Alto.CodeAnalysis.Emit
                 case "System.Void":
                     return TypeSymbol.Void;
                 default:
-                    throw new Exception($"Can't translate C# type '{declaringType.FullName}' to Alto type.");
+                    if (throwException)
+                        throw new Exception($"Can't translate C# type '{typeRef.FullName}' to Alto type.");
+                    else
+                        return null;
             }
         }
     }

@@ -477,11 +477,11 @@ namespace Alto.CodeAnalysis.Syntax
 
         private ExpressionSyntax ParseNameOrCallOrMemberAccessExpression()
         {
+            if (!_parsingMemberAccessExpression && Peek(1).Kind == SyntaxKind.FullStopToken)
+                return ParseMemberAcessExpression();
+            
             if (Peek(0).Kind == SyntaxKind.IdentifierToken && Peek(1).Kind == SyntaxKind.OpenParenthesesToken)
                 return ParseCallExpression();
-
-            if (!_parsingMemberAccessExpression && Peek(0).Kind == SyntaxKind.IdentifierToken && Peek(1).Kind == SyntaxKind.FullStopToken)
-                return ParseMemberAcessExpression();
 
             return ParseNameExpression();
         }
@@ -504,7 +504,7 @@ namespace Alto.CodeAnalysis.Syntax
             var right = ParseNameOrCallOrMemberAccessExpression();
             _parsingMemberAccessExpression = false;
 
-            return new MemberAccessExpression(_tree, left, fullStop, right);
+            return new MemberAccessExpressionSyntax(_tree, left, fullStop, right);
         }
 
         private SeparatedSyntaxList<ExpressionSyntax> ParseArguments()
