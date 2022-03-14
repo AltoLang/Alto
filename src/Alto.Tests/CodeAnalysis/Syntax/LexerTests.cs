@@ -218,6 +218,9 @@ namespace Alto.Tests.CodeAnalysis.Syntax
 
             if (t1IsKeyword && t2Kind == SyntaxKind.NumberToken)
                 return true;
+
+            if (t1Kind == SyntaxKind.IdentifierToken && t2Kind == SyntaxKind.NumberToken)
+                return true;
             
             return false;
         }
