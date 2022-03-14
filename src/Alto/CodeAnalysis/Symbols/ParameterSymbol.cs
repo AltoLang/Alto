@@ -23,5 +23,26 @@ namespace Alto.CodeAnalysis.Symbols
         public bool IsOptional { get; }
         internal BoundExpression OptionalValue { get; }
         public override SymbolKind Kind => SymbolKind.Parameter;
+
+        public override bool Equals(object obj)
+        {
+            if (obj is ParameterSymbol param)
+            {
+                if (Ordinal == param.Ordinal &&
+                    IsOptional == param.IsOptional &&
+                    OptionalValue == param.OptionalValue &&
+                    base.Name == param.Name &&
+                    base.Type == param.Type)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return Equals(obj);
+        }
     }
 }
