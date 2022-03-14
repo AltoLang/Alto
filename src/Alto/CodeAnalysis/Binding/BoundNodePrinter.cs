@@ -66,6 +66,9 @@ namespace Alto.CodeAnalysis.Binding
                 case BoundNodeKind.VariableExpression:
                     WriteVariableExpression((BoundVariableExpression)node, writer);
                     break;
+                case BoundNodeKind.TypeExpression:
+                    WriteTypeExpression((BoundTypeExpression)node, writer);
+                    break;
                 case BoundNodeKind.AssignmentExpression:
                     WriteAssignmentExpression((BoundAssignmentExpression)node, writer);
                     break;
@@ -77,6 +80,9 @@ namespace Alto.CodeAnalysis.Binding
                     break;
                 case BoundNodeKind.ConversionExpression:
                     WriteConversionExpression((BoundConversionExpression)node, writer);
+                    break;
+                case BoundNodeKind.MemberAccessExpression:
+                    WriteMemberAccessExpression((BoundMemberAccessExpression)node, writer);
                     break;
                 case BoundNodeKind.BlockStatement:
                     WriteBlockStatement((BoundBlockStatement)node, writer);
@@ -159,6 +165,11 @@ namespace Alto.CodeAnalysis.Binding
             writer.WriteIdentifier(node.Variable.Name);
         }
 
+        private static void WriteTypeExpression(BoundTypeExpression node, IndentedTextWriter writer)
+        {
+            writer.WriteIdentifier(node.Type.Name);
+        }
+
         private static void WriteAssignmentExpression(BoundAssignmentExpression node, IndentedTextWriter writer)
         {
             writer.WriteIdentifier(node.Variable.Name);
@@ -219,6 +230,13 @@ namespace Alto.CodeAnalysis.Binding
             node.Expression.WriteTo(writer);
             writer.WritePunctuation(SyntaxKind.CloseParenthesesToken);
 
+        }
+
+        private static void WriteMemberAccessExpression(BoundMemberAccessExpression node, IndentedTextWriter writer)
+        {
+            writer.WriteIdentifier(node.Left.ToString());
+            writer.WritePunctuation(SyntaxKind.FullStopToken);
+            WriteTo(node.Right, writer);
         }
 
         private static void WriteBlockStatement(BoundBlockStatement node, IndentedTextWriter writer)

@@ -105,6 +105,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return SyntaxKind.ContinueKeyword;
                 case "return":
                     return SyntaxKind.ReturnKeyword;
+                case "new":
+                    return SyntaxKind.NewKeyword;
                 default:
                     return SyntaxKind.IdentifierToken;
             }
@@ -118,6 +120,8 @@ namespace Alto.CodeAnalysis.Syntax
         {
             switch (kind)
             {
+                case SyntaxKind.FullStopToken:
+                    return ".";
                 case SyntaxKind.PlusToken: 
                     return "+";
                 case SyntaxKind.MinusToken: 
@@ -192,6 +196,8 @@ namespace Alto.CodeAnalysis.Syntax
                     return "continue";
                 case SyntaxKind.ReturnKeyword:
                     return "return";
+                case SyntaxKind.NewKeyword:
+                    return "new";
                 case SyntaxKind.CommaToken:
                     return ",";
                 case SyntaxKind.ColonToken:

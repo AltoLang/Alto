@@ -56,6 +56,8 @@ namespace Alto.CodeAnalysis.Binding
                     return RewriteCallExpression((BoundCallExpression)node);
                 case BoundNodeKind.ConversionExpression:
                     return RewriteConversionExpression((BoundConversionExpression)node);
+                case BoundNodeKind.MemberAccessExpression:
+                    return RewriteMemberAccessExpression((BoundMemberAccessExpression)node);
                 default:
                     throw new Exception($"Unexpected node: {node.Kind}.");
             }
@@ -267,6 +269,11 @@ namespace Alto.CodeAnalysis.Binding
                 return node;
 
             return new BoundConversionExpression(node.Type, expression);
+        }
+
+        private BoundExpression RewriteMemberAccessExpression(BoundMemberAccessExpression node)
+        {
+            return node;
         }
     }
 }

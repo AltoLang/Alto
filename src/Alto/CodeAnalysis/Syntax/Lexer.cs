@@ -196,6 +196,10 @@ namespace Alto.CodeAnalysis.Syntax
                     _position++;
                     _kind = SyntaxKind.CommaToken;
                     break;
+                case '.':
+                    _position++;
+                    _kind = SyntaxKind.FullStopToken;
+                    break;
                 case '"':
                     ReadString();
                     break;
@@ -295,7 +299,10 @@ namespace Alto.CodeAnalysis.Syntax
 
         private void ReadIdentifierOrKeyword()
         {
-            while (char.IsLetter(Current) || Current == '_')
+            // we support numbers as identifiers, but not as the first character,
+            // so the number check is only here, not at the call site of this
+            // method where we also have a similar check.
+            while (char.IsLetter(Current) || char.IsNumber(Current) || Current == '_')
                 _position++;
             
             var length = _position - _start;

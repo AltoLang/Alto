@@ -69,8 +69,8 @@ namespace Alto
                 return;
             }
             
-            var projectPath = programFolderPath + @"/Program.aoproj";
-            var dllPath = programFolderPath + @"/bin/Debug/net6.0/Program.dll";
+            var projectPath = Path.Combine(programFolderPath, @"/Program.aoproj");
+            var dllPath = Path.Combine(programFolderPath, @"/obj/Debug/net6.0/Program.dll");
 
             // dotnet build
             var buildCommand = $"/C dotnet build \"" + projectPath + "\" --nologo --interactive";
@@ -87,7 +87,7 @@ namespace Alto
             buildCli.WaitForExit();
 
             // dotnet run
-            var runCommand = $"/C dotnet " + dllPath;
+            var runCommand = $"/C dotnet " + programFolderPath + dllPath;
             var runCli = Process.Start("cmd.exe", runCommand);
             runCli.WaitForExit();
 
@@ -182,7 +182,7 @@ namespace Alto
         {
             var baseConfig = new Dictionary<string, string>
             {
-                {"NETCorePath", "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.0-preview.7.21377.19/"}
+                {"NETCorePath", "C:/Program Files/dotnet/packs/Microsoft.NETCore.App.Ref/6.0.2/ref/net6.0/"}
             };
 
             var json = System.Text.Json.JsonSerializer.Serialize(baseConfig);

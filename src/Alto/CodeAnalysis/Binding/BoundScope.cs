@@ -18,8 +18,8 @@ namespace Alto.CodeAnalysis.Binding
         }
 
         public bool TryDeclareVariable(VariableSymbol variable) => TryDeclareSymbol(variable);
-
         public bool TryDeclareFunction(FunctionSymbol function) => TryDeclareSymbol(function);
+        public bool TryDeclareType(TypeSymbol type) => TryDeclareSymbol(type);
 
         private bool TryDeclareSymbol<TSymbol>(TSymbol symbol)
             where TSymbol : Symbol
@@ -42,8 +42,8 @@ namespace Alto.CodeAnalysis.Binding
         }
 
         public ImmutableArray<VariableSymbol> GetDeclaredVariables() => GetDeclaredSymbols<VariableSymbol>();
-
         public ImmutableArray<FunctionSymbol> GetDeclaredFunctions() => GetDeclaredSymbols<FunctionSymbol>();
+        public ImmutableArray<TypeSymbol> GetDeclaredTypes() => GetDeclaredSymbols<TypeSymbol>();
 
         private ImmutableArray<TSymbol> GetDeclaredSymbols<TSymbol>()
             where TSymbol : Symbol

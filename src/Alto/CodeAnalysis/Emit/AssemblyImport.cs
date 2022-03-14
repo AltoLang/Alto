@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace Alto.CodeAnalysis.Emit
     internal class AssemblyImport
     {
         private AssemblyDefinition _assembly;
-        private Dictionary<FunctionSymbol, MethodDefinition> _functionSymbols = new Dictionary<FunctionSymbol, MethodDefinition>();
+        private Dictionary<TypeReference, (FunctionSymbol function, MethodDefinition method)> _functions = new();
 
         public AssemblyImport(string path)
         {
@@ -24,55 +25,32 @@ namespace Alto.CodeAnalysis.Emit
         }
 
         public AssemblyDefinition Assembly => _assembly;
-        public ImmutableArray<MethodDefinition> Functions => GetFunctions();
-        public Dictionary<FunctionSymbol, MethodDefinition> FunctionSymbols => _functionSymbols;
+        public string Name => _assembly.Name.Name;
+        public IEnumerable<ModuleDefinition> Modules => Assembly.Modules;
 
-        public void AddFunctionSymbol(FunctionSymbol function, MethodDefinition method)
-            => _functionSymbols.Add(function, method);
-
-        public MethodDefinition GetMethodDefinition(FunctionSymbol function) 
-            => _functionSymbols[function];
-
-        public MethodDefinition TryGetMethodDefinition(FunctionSymbol function)
-        {
-            if (!_functionSymbols.ContainsKey(function))
-                return null;
-               
-            return _functionSymbols[function];
+        public ModuleDefinition? GetModuleByName(string name)
+        {   
+            var modules = _assembly.Modules.Where(m => Path.GetFileNameWithoutExtension(m.Name) == name);
+            return modules.FirstOrDefault();
         }
 
-        public FunctionSymbol GetFunctionSymbol(MethodDefinition method)
-            => _functionSymbols.FirstOrDefault(x => x.Value == method).Key;
+        public static ImmutableArray<TypeDefinition> GetTypesInModule(ModuleDefinition module)
+            => module.Types.ToImmutableArray();
 
-        public FunctionSymbol TryGetFunctionSymbol(MethodDefinition method)
+        public static FunctionSymbol GetFunctionFromMethod(MethodDefinition method)
         {
-            if (!_functionSymbols.ContainsValue(method))
-                return null;
-               
-            return _functionSymbols.FirstOrDefault(x => x.Value == method).Key;
-        }
-
-        private ImmutableArray<MethodDefinition> GetFunctions()
-        {
-            // TODO: Completely revamp all of this
-            // Once we actually have OO-Support #55
-
-            var methods = new List<MethodDefinition>();
-            foreach (var module in _assembly.Modules)
+            var parameters = new List<ParameterSymbol>();
+            for (int i = 0; i < method.Parameters.Count; i++)
             {
-                foreach (var type in module.Types)
-                {
-                    foreach (var method in type.Methods)
-                    {
-                        if (method.IsConstructor || !method.IsPublic)
-                            continue;
-
-                        methods.Add(method);
-                    }
-                }
+                var param = method.Parameters[i];
+                var type = Emitter.GetTypeSymbol(param.ParameterType);
+                var parameter = new ParameterSymbol(param.Name, type, i);
+                parameters.Add(parameter);
             }
-            
-            return methods.ToImmutableArray();
+
+            var returnType = Emitter.GetTypeSymbol(method.ReturnType);
+            var function = new FunctionSymbol(method.Name, parameters.ToImmutableArray(), returnType);
+            return function;
         }
     }
 }

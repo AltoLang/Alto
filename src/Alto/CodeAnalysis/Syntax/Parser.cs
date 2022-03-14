@@ -19,6 +19,7 @@ namespace Alto.CodeAnalysis.Syntax
         private readonly SourceText _text;
         private readonly SyntaxTree _tree;
         private int _position;
+        private bool _parsingMemberAccessExpression = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Parser"/> class.
@@ -381,6 +382,7 @@ namespace Alto.CodeAnalysis.Syntax
                         return new AssignmentExpressionSyntax(_tree, identifierToken, operatorToken, right);
                 }
             }
+
             return ParseBinaryExpression();
         }
 
@@ -425,9 +427,11 @@ namespace Alto.CodeAnalysis.Syntax
                     return ParseNumberLiteral();
                 case SyntaxKind.StringToken:
                     return ParseStringLiteral();
+                case SyntaxKind.NewKeyword:
+                    return ParseObjectCreationExpression();
                 case SyntaxKind.IdentifierToken:
                 default:
-                    return ParseNameOrCallExpression();
+                    return ParseNameOrCallOrMemberAccessExpression();
             }
         }
 
@@ -459,8 +463,23 @@ namespace Alto.CodeAnalysis.Syntax
             return new LiteralExpressionSyntax(_tree, Current, value);
         }
 
-        private ExpressionSyntax ParseNameOrCallExpression()
+        private ExpressionSyntax ParseObjectCreationExpression()
         {
+            var newKeyword = MatchToken(SyntaxKind.NewKeyword);
+            var type = MatchToken(SyntaxKind.IdentifierToken);
+            var openParenthesisToken = MatchToken(SyntaxKind.OpenParenthesesToken);
+            var args = ParseArguments();
+            var closedParenthesisToken = MatchToken(SyntaxKind.CloseParenthesesToken);
+
+            return new ObjectCreationExpressionSyntax(_tree, newKeyword, type, openParenthesisToken, args, closedParenthesisToken);
+        }
+
+
+        private ExpressionSyntax ParseNameOrCallOrMemberAccessExpression()
+        {
+            if (!_parsingMemberAccessExpression && Peek(1).Kind == SyntaxKind.FullStopToken)
+                return ParseMemberAcessExpression();
+            
             if (Peek(0).Kind == SyntaxKind.IdentifierToken && Peek(1).Kind == SyntaxKind.OpenParenthesesToken)
                 return ParseCallExpression();
 
@@ -474,6 +493,18 @@ namespace Alto.CodeAnalysis.Syntax
             var args = ParseArguments();
             var closedParenthesisToken = MatchToken(SyntaxKind.CloseParenthesesToken);
             return new CallExpressionSyntax(_tree, identifier, openParenthesisToken, args, closedParenthesisToken);
+        }
+
+        private ExpressionSyntax ParseMemberAcessExpression()
+        {
+            // TODO: Allow for member access chaining: obj.obj.obj.obj = false
+            _parsingMemberAccessExpression = true;
+            var left = ParseExpression();
+            var fullStop = MatchToken(SyntaxKind.FullStopToken);
+            var right = ParseNameOrCallOrMemberAccessExpression();
+            _parsingMemberAccessExpression = false;
+
+            return new MemberAccessExpressionSyntax(_tree, left, fullStop, right);
         }
 
         private SeparatedSyntaxList<ExpressionSyntax> ParseArguments()

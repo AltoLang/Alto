@@ -12,10 +12,12 @@ namespace Alto.CodeAnalysis.Binding
         UnaryExpression,
         LiteralExpression,
         VariableExpression,
+        TypeExpression,
         AssignmentExpression,
         BinaryExpression,
         CallExpression,
         ConversionExpression,
+        MemberAccessExpression,
 
         // Statements
         BlockStatement,
@@ -29,6 +31,6 @@ namespace Alto.CodeAnalysis.Binding
         ConditionalGotoStatement,
         LabelStatement,
         ReturnStatement,
-        Statement,
+        Statement
     }
 }

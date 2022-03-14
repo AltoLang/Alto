@@ -8,6 +8,7 @@ namespace Alto.CodeAnalysis.Syntax
         WhitespaceToken,
         IdentifierToken,
         PreprocessorDirective,
+        FullStopToken,
 
         //Data-Type Tokens
         NumberToken,
@@ -57,6 +58,7 @@ namespace Alto.CodeAnalysis.Syntax
         BreakKeyword,
         ContinueKeyword,
         ReturnKeyword,
+        NewKeyword,
         
         //Nodes
         CompilationUnit,
@@ -74,6 +76,8 @@ namespace Alto.CodeAnalysis.Syntax
         NameExpression,
         AssignmentExpression,
         CallExpression,
+        ObjectCreationExpression,
+        MemberAccessExpression,
 
         //Statements
         BlockStatement,
@@ -85,6 +89,6 @@ namespace Alto.CodeAnalysis.Syntax
         DoWhileStatement,
         BreakStatement,
         ContinueStatement,
-        ReturnStatement,
+        ReturnStatement
     }
 }
