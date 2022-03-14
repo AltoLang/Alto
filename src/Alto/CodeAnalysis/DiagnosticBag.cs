@@ -124,8 +124,14 @@ namespace Alto.CodeAnalysis
 
         public void ReportNotAVariable(TextLocation location, string name)
         {
-            var message = $"'{name}' is not a variable therefore, it cannot be used like one.";
+            var message = $"'{name}' is not a variable, therefore it cannot be used like one.";
             Report(location, message);
+        }
+
+        public void ReportNotAType(TextLocation location, string name)
+        {
+             var message = $"'{name}' is not a type, therefore it cannot be used like one.";
+             Report(location, message);
         }
 
         public void ReportUnterminatedString(TextLocation location)
